@@ -1,0 +1,76 @@
+2026-10-26T03:45:49+05:30
+........................................................................ [ 12%]
+...............................................................F........ [ 24%]
+........................................................................ [ 36%]
+........................................................................ [ 48%]
+........................................................................ [ 60%]
+........................................................................ [ 73%]
+........................................................................ [ 85%]
+........................................................................ [ 97%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+_____________ test_f1_invalid_commit_msg_kills_process_and_resumes _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-917/test_f1_invalid_commit_msg_kil0')
+
+    def test_f1_invalid_commit_msg_kills_process_and_resumes(tmp_path: Path) -> None:
+        """Watcher-driven invalid_commit_message must kill process and persist conversation_id."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        env = manager.start(
+            prompt="Work on task __SCENARIO:hang_after_invalid_commit_msg__",
+            repo_path=str(repo_dir),
+            title="F1 Invalid Commit Msg Test",
+        )
+    
+        # Wait for needs_review
+        deadline = time.time() + 10.0
+        job = None
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                job = get_job(env.job_id, manager.state_dir)
+                break
+            time.sleep(0.1)
+    
+        assert job is not None
+        assert job.state == JobState.NEEDS_REVIEW
+        assert job.review_reason == "invalid_commit_message"
+        assert job.pid is not None
+    
+        # Wait briefly to confirm process is killed
+        kill_deadline = time.time() + 5.0
+        while time.time() < kill_deadline and _is_alive(job.pid):
+            time.sleep(0.05)
+    
+        # CRITICAL CHECK: process must be dead
+        assert not _is_alive(job.pid), (
+            f"PID {job.pid} is still alive after invalid_commit_msg needs_review"
+        )
+    
+        # Refresh job state from disk after supervisor finalization
+        poll_deadline = time.time() + 5.0
+        while time.time() < poll_deadline:
+            job = get_job(env.job_id, manager.state_dir)
+            if job.conversation_id is not None:
+                break
+            time.sleep(0.05)
+    
+        # conversation_id must be persisted
+        assert job.conversation_id is not None
+        assert "conv-" in job.conversation_id
+    
+        # Resume must succeed
+        res = manager.resume(job.job_id, "Fixed commit message format")
+        assert res.state in (JobState.RUNNING, JobState.DONE)
+        final_env = manager.wait(job.job_id, seconds=5)
+>       assert final_env.state == JobState.DONE
+E       AssertionError: assert <JobState.NEE...needs_review'> == <JobState.DONE: 'done'>
+E         
+E         - done
+E         + needs_review
+
+tests/test_f1.py:166: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f1.py::test_f1_invalid_commit_msg_kills_process_and_resumes
+1 failed, 590 passed in 133.91s (0:02:13)

@@ -1,0 +1,214 @@
+diff --git a/src/agy_mcp/cleanup_fixtures.py b/src/agy_mcp/cleanup_fixtures.py
+index 07333d8..23fcc3d 100644
+--- a/src/agy_mcp/cleanup_fixtures.py
++++ b/src/agy_mcp/cleanup_fixtures.py
+@@ -20,7 +20,46 @@ from datetime import datetime, timezone
+ from pathlib import Path
+ from typing import Any, Callable, Optional
+ 
++# Ensure adequate recursion limit for processing deep payloads
++sys.setrecursionlimit(max(sys.getrecursionlimit(), 5000))
++
+ _UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
++MAX_JSON_DEPTH: int = 128
++
++
++def _raise_on_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
++    """Dict constructor for json.loads that raises ValueError on duplicate keys (SPEC §23, R4)."""
++    d: dict[str, Any] = {}
++    for k, v in pairs:
++        if k in d:
++            raise ValueError(f"duplicate key in JSON object: {k!r}")
++        d[k] = v
++    return d
++
++
++def _check_json_depth(obj: Any, max_depth: int = MAX_JSON_DEPTH) -> None:
++    """Iteratively verify that JSON structure does not exceed max_depth."""
++    stack: list[tuple[Any, int]] = [(obj, 0)]
++    while stack:
++        curr, depth = stack.pop()
++        if depth > max_depth:
++            raise ValueError(f"JSON nesting depth exceeds limit ({max_depth})")
++        if isinstance(curr, dict):
++            for v in curr.values():
++                stack.append((v, depth + 1))
++        elif isinstance(curr, list):
++            for item in curr:
++                stack.append((item, depth + 1))
++
++
++def _safe_json_loads(content: str, max_depth: int = MAX_JSON_DEPTH) -> Any:
++    """Parse JSON string, raising ValueError or JSONDecodeError on duplicate keys or depth."""
++    try:
++        data = json.loads(content, object_pairs_hook=_raise_on_duplicate_keys)
++    except RecursionError as exc:
++        raise ValueError(f"JSON nesting depth exceeds recursion limit: {exc}") from exc
++    _check_json_depth(data, max_depth=max_depth)
++    return data
+ 
+ 
+ def _is_canonical_uuid(val: str) -> bool:
+@@ -170,6 +209,38 @@ def _check_pid_status(pid: Any) -> tuple[bool, Optional[str]]:
+         return True, f"ambiguous pid {pid}: os.kill failed with {exc}"
+ 
+ 
++def _check_pgid_status(pgid: Any) -> tuple[bool, Optional[str]]:
++    """Check a pgid value mirroring _check_pid_status rules.
++
++    Returns:
++        (keep, reason)
++        If keep is True, the row must be kept for the returned reason.
++        If keep is False, the process group is confirmed dead and not ambiguous.
++    """
++    if pgid is None:
++        return False, None
++    if isinstance(pgid, bool) or not isinstance(pgid, int) or pgid <= 0:
++        return True, f"invalid or non-positive pgid value: {pgid!r}"
++
++    pid_max = _get_kernel_pid_max()
++    if pgid > pid_max:
++        return True, f"pgid {pgid} exceeds kernel pid_max ({pid_max})"
++
++    try:
++        os.killpg(pgid, 0)
++        return True, f"process group {pgid} is still alive"
++    except PermissionError:
++        return True, f"process group {pgid} is still alive (permission denied)"
++    except ProcessLookupError:
++        return False, None
++    except (OverflowError, ValueError) as exc:
++        return True, f"ambiguous pgid {pgid}: {exc}"
++    except OSError as exc:
++        if exc.errno == errno.ESRCH:
++            return False, None
++        return True, f"ambiguous pgid {pgid}: os.killpg failed with {exc}"
++
++
+ def _is_pid_alive(pid: int) -> bool:
+     """Return True if the PID represents a live process, treating PermissionError as alive."""
+     keep, _ = _check_pid_status(pid)
+@@ -192,19 +263,27 @@ def _parse_iso_ts(ts_str: Any) -> Optional[datetime]:
+         return None
+ 
+ 
+-def _extract_strings(obj: Any) -> list[str]:
+-    """Recursively collect all dict keys and string values from a JSON structure."""
++def _extract_strings(obj: Any, max_depth: int = MAX_JSON_DEPTH) -> list[str]:
++    """Iteratively collect all dict keys and string values from a JSON structure up to max_depth.
++
++    Raises ValueError if nesting depth exceeds max_depth.
++    """
+     strings: list[str] = []
+-    if isinstance(obj, str):
+-        strings.append(obj)
+-    elif isinstance(obj, dict):
+-        for k, v in obj.items():
+-            if isinstance(k, str):
+-                strings.append(k)
+-            strings.extend(_extract_strings(v))
+-    elif isinstance(obj, list):
+-        for item in obj:
+-            strings.extend(_extract_strings(item))
++    stack: list[tuple[Any, int]] = [(obj, 0)]
++    while stack:
++        curr, depth = stack.pop()
++        if depth > max_depth:
++            raise ValueError(f"JSON nesting depth exceeds limit ({max_depth})")
++        if isinstance(curr, str):
++            strings.append(curr)
++        elif isinstance(curr, dict):
++            for k, v in curr.items():
++                if isinstance(k, str):
++                    strings.append(k)
++                stack.append((v, depth + 1))
++        elif isinstance(curr, list):
++            for item in curr:
++                stack.append((item, depth + 1))
+     return strings
+ 
+ 
+@@ -262,7 +341,7 @@ def _classify_job(
+             return False, ["job.json exceeds 1 MiB limit"], None
+ 
+         content = job_file.read_text(encoding="utf-8")
+-        data = json.loads(content)
++        data = _safe_json_loads(content)
+         if not isinstance(data, dict):
+             return False, ["job.json root is not an object"], None
+ 
+@@ -292,6 +371,12 @@ def _classify_job(
+             if should_keep:
+                 return False, [pid_reason or f"ambiguous pid: {pid!r}"], None
+ 
++        pgid = data.get("pgid")
++        if pgid is not None:
++            should_keep, pgid_reason = _check_pgid_status(pgid)
++            if should_keep:
++                return False, [pgid_reason or f"ambiguous pgid: {pgid!r}"], None
++
+         updated_raw = data.get("updated_at")
+         if updated_raw is not None:
+             ts = _parse_iso_ts(updated_raw)
+@@ -327,8 +412,8 @@ def _classify_job(
+         return True, cand_info["reasons"], cand_info
+     except OSError as exc:
+         return False, [f"job directory or job.json unreadable: {exc}"], None
+-    except json.JSONDecodeError:
+-        return False, ["job.json is not valid JSON"], None
++    except (json.JSONDecodeError, ValueError) as exc:
++        return False, [f"job.json is not valid JSON: {exc}"], None
+     except Exception as exc:
+         return False, [f"unhandled error classifying job: {exc}"], None
+ 
+@@ -444,7 +529,7 @@ def run_cleanup(
+             if k_file.stat().st_size > 1024 * 1024:
+                 unverified_kept.append(kid)
+                 continue
+-            k_data = json.loads(k_file.read_text(encoding="utf-8"))
++            k_data = _safe_json_loads(k_file.read_text(encoding="utf-8"))
+             if not isinstance(k_data, dict):
+                 unverified_kept.append(kid)
+                 continue
+@@ -478,7 +563,7 @@ def run_cleanup(
+             c_file = store_jobs / cid / "job.json"
+             if c_file.is_file() and not c_file.is_symlink():
+                 try:
+-                    c_data = json.loads(c_file.read_text(encoding="utf-8"))
++                    c_data = _safe_json_loads(c_file.read_text(encoding="utf-8"))
+                     if isinstance(c_data, dict):
+                         new_strings.extend(_extract_strings(c_data))
+                 except Exception:
+@@ -564,6 +649,9 @@ def main(argv: Optional[list[str]] = None) -> int:
+         return 2
+ 
+     store_path = args.store
++    if not str(store_path).strip():
++        sys.stderr.write("Error: --store path cannot be empty or whitespace\n")
++        return 2
+     try:
+         abs_store = Path(os.path.abspath(store_path))
+ 
+@@ -595,6 +683,12 @@ def main(argv: Optional[list[str]] = None) -> int:
+             sys.stderr.write(f"Error: store/jobs is missing or not a directory: {store_jobs}\n")
+             return 2
+ 
++        try:
++            next(store_jobs.iterdir(), None)
++        except OSError as exc:
++            sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
++            return 2
++
+         home_env = os.environ.get("HOME")
+         if not home_env:
+             sys.stderr.write("Error: HOME environment variable is not set\n")
+@@ -618,6 +712,9 @@ def main(argv: Optional[list[str]] = None) -> int:
+             dry_run=not args.yes,
+             min_age_days=args.min_age_days,
+         )
++    except OSError as exc:
++        sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
++        return 2
+     except Exception as exc:
+         sys.stderr.write(f"Unexpected internal error: {exc}\n")
+         return 1

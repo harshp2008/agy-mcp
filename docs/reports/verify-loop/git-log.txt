@@ -1,0 +1,10 @@
+d9949fa (HEAD -> main) record test suite and ruff verification reports for verify-loop
+2d1fdb9 docs(spec): document D52 known_hosts rule and D53 verify prompt guidance in SPEC and DECISIONS
+4aa9893 fix(verify): align tools schema snapshot and config error message with D53
+a186e2b record Part D real agy verify-loop smoke test artifacts per D53
+da700df verify Part C break-it-on-purpose mutations against SPEC 12 and 18
+02cbbdd Implement D53 verify-loop review, resolution, and prompt guidance (SPEC 13, 18)
+69723f9 Implement D52 known_hosts append-tolerant rule and tests (SPEC 12)
+c91fe20 test(reports): record full pytest suite and ruff check results
+0a06145 docs(modes): define three execution modes and update decisions (D51)
+0b30184 test(mutations): verify Part G break-it-on-purpose mutations

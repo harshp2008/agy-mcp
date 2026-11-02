@@ -1,0 +1,17 @@
+$ git log --oneline 677c868..HEAD
+26b91e6 chore(privacy): mask account emails in pre-existing reports and fixture
+c09d389 docs: align D58 precedence and stream cap; document usage awareness (D59)
+9584b4e feat(usage): detect login-expired jobs as needs_review
+8ab7b35 feat(usage): detect quota-exhausted jobs as needs_review
+cfc765d feat(usage): record per-job usage cost
+266f7f9 feat(usage): guard agy_start and agy_resume with usage_guard
+494efe3 feat(mcp): add read-only agy_usage tool with low-quota flags
+adc799d feat(usage): read agy /usage with masked account and 60s cache
+d37fbdd feat(usage): parse agy /usage output with fail-soft handling
+
+$ git status --porcelain -b
+## exp/3b-deepseek
+ M docs/reports/fix-batch3b/final-pytest.txt
+ M docs/reports/fix-batch3b/privacy-grep.txt
+?? docs/reports/fix-batch3b/commits-and-status.txt
+?? docs/reports/fix-batch3b/end-timestamp.txt

@@ -1,0 +1,5 @@
+Recorded 2 status poll snapshots during S1.
+Snapshot sample (first, middle, last):
+  - T+0.0s: state=queued, last_cli_log_mtime=0.0, commits=0, worktree_dirty=False
+  - T+15.0s: state=running, last_cli_log_mtime=1792909960.3805537, commits=0, worktree_dirty=False
+  - T+15.0s: state=running, last_cli_log_mtime=1792909960.3805537, commits=0, worktree_dirty=False

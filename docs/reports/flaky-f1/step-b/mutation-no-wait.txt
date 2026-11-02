@@ -1,0 +1,94 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_f1_resume_serializes_with_previous_supervisor_finalization ________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-970/test_f1_resume_serializes_with0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c1eadac2db0>
+
+    def test_f1_resume_serializes_with_previous_supervisor_finalization(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Resume must not overlap the previous supervisor's finalization.
+    
+        The previous supervisor reads job.json, then writes it back while retaining
+        the scratchpad. If resume starts a new generation in that window, the stale
+        write puts ``needs_review`` back over ``running`` (and the old supervisor
+        unregisters the new one), so agy_wait returns needs_review and the resumed
+        run looks failed. Blocking the previous supervisor in that final write makes
+        the interleaving deterministic.
+        """
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        original_retain = manager._retain_scratchpad
+        retain_calls: list[str] = []
+        retain_lock = threading.Lock()
+        retain_started = threading.Event()
+        retain_done = threading.Event()
+    
+        def delayed_retain(job) -> None:
+            with retain_lock:
+                is_first = not retain_calls
+                retain_calls.append(job.job_id)
+            if is_first:
+                retain_started.set()
+                time.sleep(0.5)
+            try:
+                original_retain(job)
+            finally:
+                if is_first:
+                    retain_done.set()
+    
+        monkeypatch.setattr(manager, "_retain_scratchpad", delayed_retain)
+    
+        env = manager.start(
+            prompt="Work on task __SCENARIO:hang_after_invalid_commit_msg__",
+            repo_path=str(repo_dir),
+            title="F1 Resume Serialization Test",
+        )
+    
+        deadline = time.time() + 10.0
+        job = None
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                job = get_job(env.job_id, manager.state_dir)
+                break
+            time.sleep(0.1)
+        assert job is not None
+        assert job.review_reason == "invalid_commit_message"
+    
+        kill_deadline = time.time() + 5.0
+        while time.time() < kill_deadline and _is_alive(job.pid):
+            time.sleep(0.05)
+        assert not _is_alive(job.pid)
+    
+        poll_deadline = time.time() + 5.0
+        while time.time() < poll_deadline:
+            job = get_job(env.job_id, manager.state_dir)
+            if job.conversation_id is not None:
+                break
+            time.sleep(0.05)
+        assert job.conversation_id is not None
+    
+        # The previous supervisor has already read job.json and is now stuck in its
+        # final write. Resuming here is exactly the production race.
+        assert retain_started.wait(timeout=5.0)
+        res = manager.resume(job.job_id, "Fixed commit message format")
+        assert res.state in (JobState.RUNNING, JobState.DONE)
+        assert retain_done.wait(timeout=5.0)
+    
+        resumed = get_job(job.job_id, manager.state_dir)
+>       assert resumed.state != JobState.NEEDS_REVIEW, (
+            f"previous supervisor clobbered the resumed generation: "
+            f"state={resumed.state} reason={resumed.review_reason} "
+            f"run_generation={resumed.run_generation}"
+        )
+E       AssertionError: previous supervisor clobbered the resumed generation: state=JobState.NEEDS_REVIEW reason=invalid_commit_message run_generation=1
+E       assert <JobState.NEEDS_REVIEW: 'needs_review'> != <JobState.NEEDS_REVIEW: 'needs_review'>
+E        +  where <JobState.NEEDS_REVIEW: 'needs_review'> = Job(job_id='1a245ef6-6ca0-493b-88b2-0d574a4c285a', title='F1 Resume Serialization Test', repo_path=PosixPath('/tmp/pyt...ent_report=None, audit_status=None, audit_reason=None, scratchpad_files=['PLAN.md', 'NOTES.md', 'LOG.md', 'REPORT.md']).state
+E        +  and   <JobState.NEEDS_REVIEW: 'needs_review'> = JobState.NEEDS_REVIEW
+
+tests/test_f1.py:245: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f1.py::test_f1_resume_serializes_with_previous_supervisor_finalization
+1 failed in 4.88s

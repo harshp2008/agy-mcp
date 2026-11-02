@@ -1,0 +1,41 @@
+F..                                                                      [100%]
+=================================== FAILURES ===================================
+___________ test_usage_row_exists_when_watcher_review_is_observable ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1374/test_usage_row_exists_when_wat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c771c9b3f80>
+
+    def test_usage_row_exists_when_watcher_review_is_observable(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        job, job_dir, state_dir = _setup_running_job(tmp_path, "C4 Watcher Review")
+        runner, handle = _launch_fake_agy(job, job_dir, tmp_path, "hang_after_invalid_commit_msg")
+        supervisor = JobSupervisor(
+            job=job,
+            handle=handle,
+            runner=runner,
+            job_dir=job_dir,
+            max_minutes=60,
+            home=tmp_path,
+            base_state_dir=state_dir,
+            settle_window_seconds=0.1,
+            poll_interval_seconds=0.02,
+        )
+        _make_usage_slow(monkeypatch)
+        thread = threading.Thread(target=supervisor.run_loop, daemon=True)
+        thread.start()
+        try:
+            observed = _poll_state(state_dir, job.job_id)
+            assert observed is not None, "the job never left running"
+            rows = _usage_rows(state_dir)
+>           assert rows, (
+                f"state {observed.state.value!r} was observable in job.json before the "
+                "usage.jsonl row existed"
+            )
+E           AssertionError: state 'needs_review' was observable in job.json before the usage.jsonl row existed
+E           assert []
+
+tests/test_agymcp_fixes2_c4.py:149: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_agymcp_fixes2_c4.py::test_usage_row_exists_when_watcher_review_is_observable
+1 failed, 2 passed in 2.30s

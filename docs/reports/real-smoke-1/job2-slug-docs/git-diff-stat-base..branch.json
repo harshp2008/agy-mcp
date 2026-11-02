@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "~/agy-smoke-repo",
+    "diff",
+    "--stat",
+    "e4ed76409bc5ce8784d142dba2d1e80e52a490f9..agy/slug-docs-2bf72c13"
+  ],
+  "returncode": 0,
+  "stdout": " README.md        | 16 ++++++++++++++++\n slug/__init__.py |  2 +-\n 2 files changed, 17 insertions(+), 1 deletion(-)\n",
+  "stderr": ""
+}

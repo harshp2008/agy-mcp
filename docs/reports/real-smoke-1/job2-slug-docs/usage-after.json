@@ -1,0 +1,46 @@
+{
+  "available": true,
+  "groups": [
+    {
+      "name": "Gemini Models",
+      "buckets": [
+        {
+          "window": "weekly",
+          "remaining_fraction": 0.24865861237049103,
+          "reset_time_utc": "2026-10-27T21:12:09Z",
+          "resets_in_seconds": 170667
+        },
+        {
+          "window": "5h",
+          "remaining_fraction": 0.9749756455421448,
+          "reset_time_utc": "2026-10-26T02:36:56Z",
+          "resets_in_seconds": 17354
+        }
+      ]
+    },
+    {
+      "name": "Claude and GPT models",
+      "buckets": [
+        {
+          "window": "weekly",
+          "remaining_fraction": 1.0,
+          "reset_time_utc": "2026-11-01T21:47:40Z",
+          "resets_in_seconds": 604798
+        },
+        {
+          "window": "5h",
+          "remaining_fraction": 1.0,
+          "reset_time_utc": "2026-10-26T02:47:40Z",
+          "resets_in_seconds": 17998
+        }
+      ]
+    }
+  ],
+  "cross_check": "ok",
+  "account": {
+    "masked_email": "<user-email>",
+    "auth_method": "consumer"
+  },
+  "fetched_at": "2026-10-25T21:47:41.266903+00:00",
+  "cached": false
+}

@@ -1,0 +1,54 @@
+FF.                                                                      [100%]
+=================================== FAILURES ===================================
+____ test_guard_unmeasurable_model_group_warns_and_never_blocks[warn-True] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-799/test_guard_unmeasurable_model_0')
+guard = 'warn', expect_warning = True
+
+    @pytest.mark.parametrize(
+        ("guard", "expect_warning"),
+        [("warn", True), ("block", True), ("off", False)],
+    )
+    def test_guard_unmeasurable_model_group_warns_and_never_blocks(
+        tmp_path: Path, guard: str, expect_warning: bool
+    ) -> None:
+        """An available reading with no determinable group warns and never blocks."""
+        _scenario(tmp_path, "usage_real")
+        config = Config(usage_guard=guard, model_allowlist=["mystery-model"])
+        manager, repo_dir = _setup(tmp_path, config)
+    
+        env = _start(manager, repo_dir, model="mystery-model")
+        try:
+>           assert ("usage_unmeasurable" in env.warnings) is expect_warning
+E           AssertionError: assert ('usage_unmeasurable' in []) is True
+E            +  where [] = StandardEnvelope(job_id='7d47d711-db70-4bb2-a5a8-b4f30199ab2f', state=<JobState.QUEUED: 'queued'>, elapsed_seconds=0.0...quested': False, 'ran': False, 'passed': None, 'rc': None, 'duration_seconds': None, 'attempts': 0, 'last_tail': None}).warnings
+
+tests/test_usage_guard.py:221: AssertionError
+____ test_guard_unmeasurable_model_group_warns_and_never_blocks[block-True] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-799/test_guard_unmeasurable_model_1')
+guard = 'block', expect_warning = True
+
+    @pytest.mark.parametrize(
+        ("guard", "expect_warning"),
+        [("warn", True), ("block", True), ("off", False)],
+    )
+    def test_guard_unmeasurable_model_group_warns_and_never_blocks(
+        tmp_path: Path, guard: str, expect_warning: bool
+    ) -> None:
+        """An available reading with no determinable group warns and never blocks."""
+        _scenario(tmp_path, "usage_real")
+        config = Config(usage_guard=guard, model_allowlist=["mystery-model"])
+        manager, repo_dir = _setup(tmp_path, config)
+    
+        env = _start(manager, repo_dir, model="mystery-model")
+        try:
+>           assert ("usage_unmeasurable" in env.warnings) is expect_warning
+E           AssertionError: assert ('usage_unmeasurable' in []) is True
+E            +  where [] = StandardEnvelope(job_id='5e2d85db-4ace-462d-954a-a46257d2e2de', state=<JobState.QUEUED: 'queued'>, elapsed_seconds=0.0...quested': False, 'ran': False, 'passed': None, 'rc': None, 'duration_seconds': None, 'attempts': 0, 'last_tail': None}).warnings
+
+tests/test_usage_guard.py:221: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_usage_guard.py::test_guard_unmeasurable_model_group_warns_and_never_blocks[warn-True]
+FAILED tests/test_usage_guard.py::test_guard_unmeasurable_model_group_warns_and_never_blocks[block-True]
+2 failed, 1 passed in 0.33s

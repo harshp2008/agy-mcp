@@ -1,0 +1,23 @@
+# Reviewed exceptions for scripts/check_publishable.py.
+#
+# Every non-comment line is an audit-trail entry and must carry a
+# "# justification". Keep this file short: an entry is a bypass, so it must
+# name the exact reviewed fixture or identifier.
+#
+# Format:
+#   credential:<repo-relative-path>  # why the credential-shaped strings are fake
+#   email-domain:<domain>            # why this domain is not an account email
+
+# The three fake-redaction fixtures. Each contains deliberately fake tokens
+# (Google/OpenAI/GitHub/AWS shapes, and a PEM block) that the redaction tests
+# assert are masked. They are not live credentials; do not replace them with
+# real values and do not add other files to this list without a review.
+credential:tests/test_util.py  # fake API/token fixtures exercised by the redaction tests
+credential:tests/test_recovery.py  # fake Google-key shape used by the tail-redaction test
+credential:tests/supervisor/test_verify_tail_redaction.py  # fake OpenAI-key shape used by the audit redaction test
+
+# GNOME extension id suffix. The committed agy logs and the real-log fixture
+# quote a shell permission-grant error containing an extension id of the form
+# <uuid>@<suffix>; the email regex reads that id as an address. It is an
+# extension identifier captured from a log, not an account email.
+email-domain:harsh.patel  # GNOME extension id suffix in committed logs, not an account email

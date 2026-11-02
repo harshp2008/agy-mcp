@@ -1,0 +1,78 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 4 items
+
+tests/test_f23.py F..F                                                   [100%]
+
+=================================== FAILURES ===================================
+_____________ test_f23_unknown_liveness_does_not_delete_stale_lock _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-387/test_f23_unknown_liveness_does0')
+
+    def test_f23_unknown_liveness_does_not_delete_stale_lock(tmp_path: Path) -> None:
+        """When liveness is unknown (is_process_alive_func is None), stale index.lock must NOT be deleted."""
+        repo_dir = tmp_path / "repo"
+        make_repo(repo_dir, initial_commit=True, env=get_safe_git_env(tmp_path))
+    
+        # Create stale index.lock (age > 300s)
+        lock_file = repo_dir / ".git" / "index.lock"
+        lock_file.write_text("dummy lock\n")
+        old_mtime = time.time() - 600
+        os.utime(lock_file, (old_mtime, old_mtime))
+    
+        def dummy_action():
+            return gitops.GitResult(1, "", "fatal: Unable to create '.git/index.lock': File exists", [])
+    
+        # Action fails on index.lock; execute with unknown liveness (None)
+        gitops.execute_with_index_lock_retry(
+            action=dummy_action,
+            worktree_path=repo_dir,
+            max_attempts=1,
+            sleep_func=lambda _: None,
+            is_process_alive_func=None,
+        )
+    
+>       assert lock_file.exists(), "Unknown liveness must treat process as alive and NOT delete index.lock"
+E       AssertionError: Unknown liveness must treat process as alive and NOT delete index.lock
+E       assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-<user>/pytest-387/test_f23_unknown_liveness_does0/repo/.git/index.lock').exists
+
+tests/test_f23.py:63: AssertionError
+_________________ test_f23_watcher_has_real_liveness_callback __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-387/test_f23_watcher_has_real_live0')
+
+    def test_f23_watcher_has_real_liveness_callback(tmp_path: Path) -> None:
+        """Supervisor watcher must be configured with a real liveness callback."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+        state_dir = tmp_path / "state"
+    
+        env = manager.start(
+            prompt="Simple task __SCENARIO:hang__",
+            repo_path=str(repo_dir),
+            title="Liveness Callback Job",
+        )
+    
+        for _ in range(100):
+            if env.job_id in manager._supervisors:
+                break
+            time.sleep(0.05)
+    
+        supervisor = manager._supervisors.get(env.job_id)
+        assert supervisor is not None
+    
+        # Watcher must have an is_process_alive callback
+        cb = getattr(supervisor.watcher, "is_process_alive", None)
+>       assert cb is not None and callable(cb), "Watcher must have a callable is_process_alive callback"
+E       AssertionError: Watcher must have a callable is_process_alive callback
+E       assert (None is not None)
+
+tests/test_f23.py:135: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f23.py::test_f23_unknown_liveness_does_not_delete_stale_lock
+FAILED tests/test_f23.py::test_f23_watcher_has_real_liveness_callback - Asser...
+========================= 2 failed, 2 passed in 0.18s ==========================

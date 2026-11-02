@@ -1,0 +1,51 @@
+=== PART G BREAK-IT-ON-PURPOSE MUTATION EVIDENCE ===
+
+Mutation 1: Treat "nothing to commit" as an error again
+File mutated: src/agy_mcp/watcher.py:213 (bypass returncode == 0 check)
+Command: pytest tests/test_watcher_bug.py
+Result:
+FAILED tests/test_watcher_bug.py::test_double_commit_msg_skips_empty_commit
+AssertionError: assert <JobState.RUNNING: 'running'> == <JobState.DONE: 'done'>
+  - done
+  + running
+
+Mutation 2: Remove attempt counter in auto-resume
+File mutated: src/agy_mcp/manager.py:351 (if True: instead of checking attempts < auto_resume_on_denial)
+Command: pytest tests/test_denial_recovery.py -k "test_auto_resume_on_denial_exhausted_ends_needs_review"
+Result:
+FAILED tests/test_denial_recovery.py::test_auto_resume_on_denial_exhausted_ends_needs_review
+AssertionError: assert 8 == 1
+ +  where 8 = len([{'ts': '2026-10-25T07:37:41.171452+00:00', 'event': 'denial_auto_resume', 'detail': {'attempt': 1, 'max_attempts': 1}}...])
+
+Mutation 3: Drop new rule from preamble.md
+File mutated: src/agy_mcp/preamble.md (deleted Rule 10)
+Command: pytest tests/test_denial_recovery.py -k "test_preamble_rule_10_file_tools_and_size_caps"
+Result:
+FAILED tests/test_denial_recovery.py::test_preamble_rule_10_file_tools_and_size_caps
+AssertionError: assert 'Use only your built-in file tools (view, create, edit, list, search) to read and change files.' in 'You are an autonomous coding assistant executing a task in this repository worktree.\nRules you must strictly follow:...mptions in .agy/PLAN.md.\n9. Your final response must summarize: what was done, assumptions made, and any open issues.'
+
+Mutation 4: Make extract_denials_from_cli_log always return []
+File mutated: src/agy_mcp/cli_log.py:52 (return [] at function start)
+Command: pytest tests/test_cli_log.py
+Result:
+FAILED tests/test_cli_log.py::test_extract_denials_real_log - assert 0 == 1
+FAILED tests/test_cli_log.py::test_extract_denials_several_denials - assert 0 == 3
+FAILED tests/test_cli_log.py::test_extract_denials_huge_log_tail_read - assert 0 == 1
+
+Mutation 5: Make auto-resume ignore config value 0
+File mutated: src/agy_mcp/manager.py:351 (if attempts < max(1, self.config.auto_resume_on_denial):)
+Command: pytest tests/test_denial_recovery.py -k "test_auto_resume_on_denial_disabled_when_zero"
+Result:
+FAILED tests/test_denial_recovery.py::test_auto_resume_on_denial_disabled_when_zero
+AssertionError: assert 1 == 0
+ +  where 1 = len([{'ts': '2026-10-25T07:38:58.785189+00:00', 'event': 'denial_auto_resume', 'detail': {'attempt': 1, 'max_attempts': 0}}])
+
+Mutation 6: Make files_modified always []
+File mutated: src/agy_mcp/gitops.py:583 (return [] at function start)
+Command: pytest tests/test_files_modified.py
+Result:
+FAILED tests/test_files_modified.py::test_get_files_modified_basic_and_capped
+assert 0 == 200
+ +  where 0 = len([])
+FAILED tests/test_files_modified.py::test_files_modified_in_job_execution
+AssertionError: assert 'src_feature.py' in []

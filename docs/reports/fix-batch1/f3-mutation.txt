@@ -1,0 +1,70 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 1 item
+
+tests/test_f3.py F                                                       [100%]
+
+=================================== FAILURES ===================================
+______________________ test_f3_cancel_during_slow_verify _______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-348/test_f3_cancel_during_slow_ver0')
+
+    def test_f3_cancel_during_slow_verify(tmp_path: Path) -> None:
+        """Cancelling while verify is running must kill verify, end CANCELLED, and not flip to DONE."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        # Slow verify script that sleeps for 5 seconds
+        verify_script = repo_dir / "slow_verify.py"
+        verify_script.write_text("import time\ntime.sleep(5)\n", encoding="utf-8")
+        run_git(["add", "slow_verify.py"], repo_dir)
+        run_git(["commit", "-m", "Add slow verify script"], repo_dir)
+    
+        env = manager.start(
+            prompt="Work on task __SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="F3 Slow Verify Cancel Job",
+            verify="python3 slow_verify.py",
+        )
+    
+        # Wait for verify to start (audit event verify_started)
+        job_dir = tmp_path / "state" / "jobs" / env.job_id
+        audit_file = job_dir / "audit.jsonl"
+        verify_started = False
+        deadline = time.time() + 10.0
+        while time.time() < deadline:
+            if audit_file.is_file():
+                try:
+                    for line in audit_file.read_text(encoding="utf-8").splitlines():
+                        if line.strip():
+                            ev = json.loads(line)
+                            if ev.get("event") == "verify_started":
+                                verify_started = True
+                                break
+                except Exception:
+                    pass
+            if verify_started:
+                break
+            time.sleep(0.05)
+    
+        assert verify_started, "Verify did not start in time"
+    
+        # Now cancel while verify is in progress
+        cancel_res = manager.cancel(env.job_id)
+    
+        # agy_cancel must return the real state: cancelled (not running)
+>       assert cancel_res.state == JobState.CANCELLED, (
+            f"Expected cancelled, but manager.cancel returned {cancel_res.state}"
+        )
+E       AssertionError: Expected cancelled, but manager.cancel returned JobState.NEEDS_REVIEW
+E       assert <JobState.NEE...needs_review'> == <JobState.CAN...: 'cancelled'>
+E         
+E         - cancelled
+E         + needs_review
+
+tests/test_f3.py:86: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f3.py::test_f3_cancel_during_slow_verify - AssertionError: ...
+============================== 1 failed in 1.30s ===============================

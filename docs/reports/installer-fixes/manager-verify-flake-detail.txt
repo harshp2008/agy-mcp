@@ -1,0 +1,47 @@
+Mon Oct 26 10:39:13 AM IST 2026
+CMD: loop until failure with full output: tests/test_manager.py::test_manager_verify_command_not_found_clean_error
+run 1 passed
+run 2 passed
+run 3 passed
+run 4 passed
+run 5 passed
+=== run 6 FAILED ===
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_manager_verify_command_not_found_clean_error _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1189/test_manager_verify_command_no0')
+
+    def test_manager_verify_command_not_found_clean_error(tmp_path: Path) -> None:
+        """When verify command executable is not found, clear error and no crash."""
+        cfg = Config(verify_allowlist=["nonexistent_bin_123"])
+        manager, repo_dir = _setup_manager_and_repo(tmp_path, config=cfg)
+    
+        env = manager.start(
+            prompt="Execute task __SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Verify Not Found Test",
+            verify="nonexistent_bin_123 --test",
+        )
+    
+        deadline = time.time() + 8.0
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                break
+            time.sleep(0.3)
+    
+        st = manager.status(env.job_id)
+        assert st.state == JobState.NEEDS_REVIEW
+        job = get_job(env.job_id, manager.state_dir)
+        assert job.review_reason == "verify_failed"
+        res = manager.result(env.job_id)
+>       assert "Executable not found" in res.response
+E       assert 'Executable not found' in '<untrusted_text id="f1c367b8c03cb29c">\nTask completed successfully without warnings.\n</untrusted_text id="f1c367b8c03cb29c">'
+E        +  where '<untrusted_text id="f1c367b8c03cb29c">\nTask completed successfully without warnings.\n</untrusted_text id="f1c367b8c03cb29c">' = JobResultResponse(job_id='060baf3c-390e-45ea-b3b4-6016b40eb751', state=<JobState.RUNNING: 'running'>, elapsed_seconds=...'from': 'needs_review', 'to': 'running', 'trigger': 'Resumed with answer: Verification failed with the following o'}}]).response
+
+tests/test_manager.py:552: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_manager.py::test_manager_verify_command_not_found_clean_error
+1 failed in 0.63s
+FAILED_ON_RUN=6

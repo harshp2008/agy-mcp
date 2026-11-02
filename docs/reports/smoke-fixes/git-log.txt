@@ -1,0 +1,15 @@
+2e2f970 test(mutations): verify break-it-on-purpose mutations for smoke fixes (SPEC 7, 8, 14, 15)
+6a61051 docs(spec): document verified smoke findings, close open items, and update matrix (SPEC 14, 15, 18, 21)
+f4c4722 feat(telemetry): track files_modified, trim tool schemas, and clean pyproject addopts (SPEC 8, 10)
+ee016cb fix(watcher): handle empty commits gracefully and record rich supervisor_error details (SPEC 11, 17)
+61c7ac3 feat(recovery): implement stop-and-ask preamble rule and auto-resume on tool denial (D48, SPEC 14, 18)
+8ef9f6f feat(denials): record tool denial events and surface denied_commands in envelope (SPEC 15)
+e16d495 docs(smoke-fixes): record denial context and grep evidence for Part A (SPEC 15)
+ea874ab Document findings from real agy smoke testing and update test matrix
+22c5e7a Capture raw execution artifacts from real agy smoke test
+f7743f4 Add real agy smoke test harness
+43b6937 test(server): verify break-it-on-purpose mutations and record test evidence
+8003c9f test(server): implement end-to-end MCP protocol and unit tests
+0bf65db docs(setup): document DSH configuration, safety model, and quick start
+1b869ce feat(server): implement FastMCP stdio server and tools per SPEC section 8
+ae1a382 docs(argv-fix): update test matrix and scaffold notes for argv and prompt hardening

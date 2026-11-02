@@ -1,0 +1,65 @@
+Mon Oct 26 10:26:01 AM IST 2026
+CMD: 20x pytest tests/test_f22.py::test_record_usage_written_on_job_completion -q
+=== run 1 ===
+=========================== short test summary info ============================
+FAILED tests/test_f22.py::test_record_usage_written_on_job_completion - Asser...
+1 failed in 2.06s
+=== run 2 ===
+.                                                                        [100%]
+1 passed in 2.31s
+=== run 3 ===
+=========================== short test summary info ============================
+FAILED tests/test_f22.py::test_record_usage_written_on_job_completion - Asser...
+1 failed in 1.87s
+=== run 4 ===
+.                                                                        [100%]
+1 passed in 1.37s
+=== run 5 ===
+.                                                                        [100%]
+1 passed in 1.36s
+=== run 6 ===
+.                                                                        [100%]
+1 passed in 1.39s
+=== run 7 ===
+.                                                                        [100%]
+1 passed in 1.36s
+=== run 8 ===
+.                                                                        [100%]
+1 passed in 1.37s
+=== run 9 ===
+.                                                                        [100%]
+1 passed in 1.40s
+=== run 10 ===
+.                                                                        [100%]
+1 passed in 1.41s
+=== run 11 ===
+.                                                                        [100%]
+1 passed in 1.50s
+=== run 12 ===
+.                                                                        [100%]
+1 passed in 1.65s
+=== run 13 ===
+.                                                                        [100%]
+1 passed in 1.47s
+=== run 14 ===
+.                                                                        [100%]
+1 passed in 1.62s
+=== run 15 ===
+.                                                                        [100%]
+1 passed in 1.60s
+=== run 16 ===
+.                                                                        [100%]
+1 passed in 1.33s
+=== run 17 ===
+=========================== short test summary info ============================
+FAILED tests/test_f22.py::test_record_usage_written_on_job_completion - Asser...
+1 failed in 1.37s
+=== run 18 ===
+.                                                                        [100%]
+1 passed in 1.39s
+=== run 19 ===
+.                                                                        [100%]
+1 passed in 1.48s
+=== run 20 ===
+.                                                                        [100%]
+1 passed in 1.41s

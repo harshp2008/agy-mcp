@@ -1,0 +1,61 @@
+{
+  "job_id": "97c5139e-ba79-49eb-b050-7a6b70de09d1",
+  "state": "done",
+  "elapsed_seconds": 264.26,
+  "title": "slug docs",
+  "branch": "agy/slug-docs-2bf72c13",
+  "base_commit": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "head_commit": "33fda9e20e144b93b0d2e3d945a7da717a350e75",
+  "commits_count": 2,
+  "files_modified": [
+    "README.md",
+    "slug/__init__.py"
+  ],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 396287,
+    "output_tokens": 17544,
+    "total_tokens": 413831
+  },
+  "next_actions": [
+    "Inspect result with agy_result",
+    "Review diff with agy_review",
+    "Clean up worktree with agy_cleanup"
+  ],
+  "error": null,
+  "usage_cost": {
+    "five_hour_pct_points": 1.35,
+    "weekly_pct_points": 0.39,
+    "measured": true,
+    "concurrent_jobs": 1,
+    "note": "single active job; quota points attributed to this job"
+  },
+  "resume_after": null,
+  "plan": {
+    "total": 0,
+    "done": 0,
+    "remaining": []
+  },
+  "facts": {},
+  "agent_report": null,
+  "scratchpad": [],
+  "verify": {
+    "requested": false,
+    "ran": false,
+    "passed": null,
+    "rc": null,
+    "duration_seconds": null,
+    "attempts": 0,
+    "last_tail": null
+  },
+  "merge_base": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "ahead": 2,
+  "behind": 0,
+  "base_moved": false,
+  "audit_findings": [],
+  "untrusted_diff": "<untrusted_text id=\"a38c1e548e00c79c\">\ndiff --git a/README.md b/README.md\nindex 57ee9c0..d08ab30 100644\n--- a/README.md\n+++ b/README.md\n@@ -1 +1,17 @@\n A tiny slug package used for a smoke test.\n+\n+## Usage\n+\n+Here are two usage examples:\n+\n+```python\n+from slug import slugify\n+\n+# Example 1: Convert a simple string to a slug\n+slugify(\"Hello World\")\n+# Returns: 'hello-world'\n+\n+# Example 2: Convert a title with multiple words\n+slugify(\"My Blog Post Title\")\n+# Returns: 'my-blog-post-title'\n+```\ndiff --git a/slug/__init__.py b/slug/__init__.py\nindex 1ec2524..51b2b0b 100644\n--- a/slug/__init__.py\n+++ b/slug/__init__.py\n@@ -2,5 +2,5 @@\n \n \n def slugify(text):\n-    \"\"\"Lowercase ``text`` and replace spaces with hyphens.\"\"\"\n+    \"\"\"Convert text to a slug by lowercasing and replacing spaces with hyphens.\"\"\"\n     return text.lower().replace(\" \", \"-\")\n\n</untrusted_text id=\"a38c1e548e00c79c\">"
+}

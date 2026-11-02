@@ -1,0 +1,20 @@
+===== RUN 1 =====
+.                                                                        [100%]
+1 passed in 5.97s
+RUN 1 EXIT=0
+===== RUN 2 =====
+.                                                                        [100%]
+1 passed in 6.03s
+RUN 2 EXIT=0
+===== RUN 3 =====
+.                                                                        [100%]
+1 passed in 6.26s
+RUN 3 EXIT=0
+===== RUN 4 =====
+.                                                                        [100%]
+1 passed in 6.45s
+RUN 4 EXIT=0
+===== RUN 5 =====
+.                                                                        [100%]
+1 passed in 6.36s
+RUN 5 EXIT=0

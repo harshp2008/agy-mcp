@@ -1,0 +1,55 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 2 items
+
+tests/test_f4.py F.                                                      [100%]
+
+=================================== FAILURES ===================================
+______________ test_f4_concurrent_resumes_one_launch_one_rejected ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-342/test_f4_concurrent_resumes_one0')
+
+    def test_f4_concurrent_resumes_one_launch_one_rejected(tmp_path: Path) -> None:
+        """Two concurrent resumes must result in exactly one launch and one clean rejection."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        # Start a job that pauses in needs_decision
+        env = manager.start(
+            prompt="Decision task __SCENARIO:needs_decision__",
+            repo_path=str(repo_dir),
+            title="F4 Decision Job",
+        )
+        wait_env = manager.wait(env.job_id, seconds=5)
+        assert wait_env.state == JobState.NEEDS_DECISION
+    
+        results = []
+        errors = []
+    
+        def _do_resume(ans: str) -> None:
+            try:
+                r = manager.resume(env.job_id, ans)
+                results.append(r)
+            except Exception as exc:
+                errors.append(exc)
+    
+        t1 = threading.Thread(target=_do_resume, args=("Option A",))
+        t2 = threading.Thread(target=_do_resume, args=("Option B",))
+    
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+    
+        # Exactly one resume should succeed
+>       assert len(results) == 1, f"Expected 1 successful resume, got {len(results)}"
+E       AssertionError: Expected 1 successful resume, got 2
+E       assert 2 == 1
+E        +  where 2 = len([StandardEnvelope(job_id='a97ef5b6-1cb7-4760-a509-821d2a7db666', state=<JobState.RUNNING: 'running'>, elapsed_seconds=...uested': False, 'ran': False, 'passed': None, 'rc': None, 'duration_seconds': None, 'attempts': 0, 'last_tail': None})])
+
+tests/test_f4.py:81: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f4.py::test_f4_concurrent_resumes_one_launch_one_rejected
+========================= 1 failed, 1 passed in 1.35s ==========================

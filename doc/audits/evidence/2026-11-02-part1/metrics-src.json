@@ -1,0 +1,4249 @@
+[
+ {
+  "path": "src/agy_mcp/cleanup_jobs.py",
+  "lines": 1810,
+  "code_lines": 1563,
+  "comment_lines": 42,
+  "module_doc": true,
+  "top_funcs": 16,
+  "classes": 0,
+  "funcs_total": 16,
+  "funcs_doc": 16,
+  "doc_pct": 100.0,
+  "imports": [
+   "__future__",
+   "argparse",
+   "json",
+   "math",
+   "os",
+   "re",
+   "stat",
+   "unicodedata",
+   "datetime",
+   "pathlib",
+   "typing",
+   "agy_mcp.cleanup_fixtures"
+  ],
+  "functions": [
+   {
+    "name": "_check_worktree_status",
+    "line": 391,
+    "length": 473,
+    "depth": 12,
+    "branches": 115,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "run_cleanup",
+    "line": 1070,
+    "length": 331,
+    "depth": 6,
+    "branches": 94,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "main",
+    "line": 1543,
+    "length": 262,
+    "depth": 5,
+    "branches": 66,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_classify_job_for_cleanup",
+    "line": 871,
+    "length": 125,
+    "depth": 4,
+    "branches": 29,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_read_git_metadata_file",
+    "line": 56,
+    "length": 95,
+    "depth": 3,
+    "branches": 22,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_list_projects",
+    "line": 1458,
+    "length": 83,
+    "depth": 4,
+    "branches": 19,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_git_packed_refs_file",
+    "line": 255,
+    "length": 56,
+    "depth": 3,
+    "branches": 15,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_git_config_file",
+    "line": 185,
+    "length": 68,
+    "depth": 3,
+    "branches": 14,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_collect_kept_strings",
+    "line": 998,
+    "length": 70,
+    "depth": 3,
+    "branches": 13,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_full_git_dir",
+    "line": 348,
+    "length": 41,
+    "depth": 2,
+    "branches": 10,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_git_head_file",
+    "line": 153,
+    "length": 30,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_git_dir",
+    "line": 335,
+    "length": 11,
+    "depth": 2,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_has_git_dir_markers",
+    "line": 323,
+    "length": 10,
+    "depth": 3,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "normalize_repo_path",
+    "line": 34,
+    "length": 14,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "parse_args",
+    "line": 1403,
+    "length": 53,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_is_worktree_registered",
+    "line": 866,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/manager.py",
+  "lines": 1737,
+  "code_lines": 1490,
+  "comment_lines": 89,
+  "module_doc": true,
+  "top_funcs": 1,
+  "classes": 2,
+  "funcs_total": 30,
+  "funcs_doc": 23,
+  "doc_pct": 76.7,
+  "imports": [
+   "json",
+   "logging",
+   "os",
+   "re",
+   "threading",
+   "time",
+   "datetime",
+   "pathlib",
+   "typing",
+   "agy_mcp",
+   "agy_mcp",
+   "agy_mcp.audit",
+   "agy_mcp.cli_log",
+   "agy_mcp.config",
+   "agy_mcp.gitops",
+   "agy_mcp.jobs",
+   "agy_mcp.models",
+   "agy_mcp.recovery",
+   "agy_mcp.runner",
+   "agy_mcp.states",
+   "agy_mcp.supervisor",
+   "agy_mcp.util",
+   "agy_mcp.verify",
+   "agy_mcp.worktree"
+  ],
+  "functions": [
+   {
+    "name": "result",
+    "line": 1077,
+    "length": 133,
+    "depth": 6,
+    "branches": 36,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_build_state_block",
+    "line": 1303,
+    "length": 71,
+    "depth": 3,
+    "branches": 28,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "resume",
+    "line": 1375,
+    "length": 233,
+    "depth": 6,
+    "branches": 26,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "start",
+    "line": 228,
+    "length": 182,
+    "depth": 2,
+    "branches": 23,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_run_supervisor",
+    "line": 603,
+    "length": 63,
+    "depth": 6,
+    "branches": 23,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "wait",
+    "line": 921,
+    "length": 78,
+    "depth": 3,
+    "branches": 21,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_provision_and_launch",
+    "line": 411,
+    "length": 191,
+    "depth": 6,
+    "branches": 18,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "cancel",
+    "line": 1211,
+    "length": 60,
+    "depth": 8,
+    "branches": 18,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "status",
+    "line": 855,
+    "length": 65,
+    "depth": 4,
+    "branches": 16,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "review",
+    "line": 1609,
+    "length": 84,
+    "depth": 3,
+    "branches": 15,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_apply_usage_guard",
+    "line": 781,
+    "length": 50,
+    "depth": 2,
+    "branches": 13,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "reconcile",
+    "line": 1000,
+    "length": 76,
+    "depth": 4,
+    "branches": 11,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_handle_verification_auto_fix",
+    "line": 747,
+    "length": 33,
+    "depth": 7,
+    "branches": 9,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "list",
+    "line": 1272,
+    "length": 30,
+    "depth": 5,
+    "branches": 8,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_validate_checklist",
+    "line": 204,
+    "length": 23,
+    "depth": 2,
+    "branches": 7,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "cleanup",
+    "line": 1694,
+    "length": 34,
+    "depth": 4,
+    "branches": 5,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_handle_plan_nudge",
+    "line": 688,
+    "length": 26,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_wait_for_prior_supervisor",
+    "line": 166,
+    "length": 23,
+    "depth": 1,
+    "branches": 4,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_retain_scratchpad",
+    "line": 667,
+    "length": 20,
+    "depth": 2,
+    "branches": 4,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__init__",
+    "line": 126,
+    "length": 25,
+    "depth": 0,
+    "branches": 3,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "shutdown",
+    "line": 1729,
+    "length": 9,
+    "depth": 1,
+    "branches": 3,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_handle_denial_auto_resume",
+    "line": 715,
+    "length": 31,
+    "depth": 3,
+    "branches": 2,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_get_elapsed",
+    "line": 194,
+    "length": 9,
+    "depth": 2,
+    "branches": 2,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_get_job_lock",
+    "line": 152,
+    "length": 6,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_get_job_commit_lock",
+    "line": 159,
+    "length": 6,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_validate_job_id",
+    "line": 190,
+    "length": 3,
+    "depth": 1,
+    "branches": 2,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "usage",
+    "line": 842,
+    "length": 12,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_record_cleanup_error",
+    "line": 101,
+    "length": 11,
+    "depth": 2,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_read_usage",
+    "line": 832,
+    "length": 9,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__init__",
+    "line": 117,
+    "length": 4,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/supervisor.py",
+  "lines": 1622,
+  "code_lines": 1379,
+  "comment_lines": 113,
+  "module_doc": true,
+  "top_funcs": 3,
+  "classes": 1,
+  "funcs_total": 32,
+  "funcs_doc": 30,
+  "doc_pct": 93.8,
+  "imports": [
+   "logging",
+   "os",
+   "shlex",
+   "threading",
+   "time",
+   "datetime",
+   "pathlib",
+   "typing",
+   "agy_mcp",
+   "agy_mcp",
+   "agy_mcp.audit",
+   "agy_mcp.cli_log",
+   "agy_mcp.gitops",
+   "agy_mcp.jobs",
+   "agy_mcp.models",
+   "agy_mcp.parse_result",
+   "agy_mcp.runner",
+   "agy_mcp.states",
+   "agy_mcp.transcript",
+   "agy_mcp.util",
+   "agy_mcp.watcher"
+  ],
+  "functions": [
+   {
+    "name": "_finalize_terminated_process",
+    "line": 928,
+    "length": 588,
+    "depth": 6,
+    "branches": 126,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "run_loop",
+    "line": 1521,
+    "length": 102,
+    "depth": 7,
+    "branches": 21,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_finalize_non_running_process",
+    "line": 699,
+    "length": 93,
+    "depth": 3,
+    "branches": 16,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_extract_conversation_id",
+    "line": 342,
+    "length": 51,
+    "depth": 2,
+    "branches": 15,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_persist_early_conversation_id",
+    "line": 438,
+    "length": 50,
+    "depth": 3,
+    "branches": 14,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_try_pre_kill_checkpoint",
+    "line": 793,
+    "length": 47,
+    "depth": 5,
+    "branches": 11,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "tick",
+    "line": 841,
+    "length": 64,
+    "depth": 3,
+    "branches": 10,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__init__",
+    "line": 126,
+    "length": 122,
+    "depth": 2,
+    "branches": 9,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_record_usage_before_state",
+    "line": 648,
+    "length": 50,
+    "depth": 2,
+    "branches": 7,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_record_run",
+    "line": 495,
+    "length": 35,
+    "depth": 2,
+    "branches": 7,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_detect_interruption_reason",
+    "line": 549,
+    "length": 23,
+    "depth": 1,
+    "branches": 7,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_classify_tool_kind",
+    "line": 109,
+    "length": 12,
+    "depth": 4,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_update_conversation_continued",
+    "line": 412,
+    "length": 25,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_process_audit_findings",
+    "line": 906,
+    "length": 21,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_capture_agent_report",
+    "line": 628,
+    "length": 19,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_stdout_payload",
+    "line": 297,
+    "length": 25,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "terminate_group",
+    "line": 254,
+    "length": 22,
+    "depth": 3,
+    "branches": 5,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_apply_conversation_id",
+    "line": 394,
+    "length": 17,
+    "depth": 1,
+    "branches": 3,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_compute_quota_estimate",
+    "line": 531,
+    "length": 17,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_read_plan_summary",
+    "line": 608,
+    "length": 14,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_final_usage_cost",
+    "line": 586,
+    "length": 21,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "select_conversation_id",
+    "line": 77,
+    "length": 17,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_audit_conversation_id_mismatch",
+    "line": 277,
+    "length": 14,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_generation_cli_log_text",
+    "line": 328,
+    "length": 13,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_verify_passed",
+    "line": 623,
+    "length": 4,
+    "depth": 0,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_record_cleanup_error",
+    "line": 96,
+    "length": 11,
+    "depth": 2,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_warn_conversation_id_mismatch",
+    "line": 292,
+    "length": 4,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_stdout_json_conversation_id",
+    "line": 323,
+    "length": 4,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_current_run_seconds",
+    "line": 490,
+    "length": 4,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_fresh_usage_reading",
+    "line": 573,
+    "length": 12,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_handle_watcher_audit_violation",
+    "line": 249,
+    "length": 4,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "stop",
+    "line": 1517,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/models.py",
+  "lines": 1077,
+  "code_lines": 955,
+  "comment_lines": 32,
+  "module_doc": true,
+  "top_funcs": 12,
+  "classes": 9,
+  "funcs_total": 24,
+  "funcs_doc": 24,
+  "doc_pct": 100.0,
+  "imports": [
+   "re",
+   "secrets",
+   "dataclasses",
+   "datetime",
+   "pathlib",
+   "typing",
+   "agy_mcp.states",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "derive_next_actions",
+    "line": 445,
+    "length": 147,
+    "depth": 8,
+    "branches": 34,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_effective_verify_envelope",
+    "line": 594,
+    "length": 86,
+    "depth": 2,
+    "branches": 14,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "from_dict",
+    "line": 353,
+    "length": 90,
+    "depth": 1,
+    "branches": 9,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "build_facts",
+    "line": 707,
+    "length": 48,
+    "depth": 2,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "build_result_response",
+    "line": 919,
+    "length": 63,
+    "depth": 4,
+    "branches": 8,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_plan_envelope",
+    "line": 682,
+    "length": 23,
+    "depth": 2,
+    "branches": 8,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_error_with_untrusted_first_line",
+    "line": 757,
+    "length": 15,
+    "depth": 1,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "build_standard_envelope",
+    "line": 774,
+    "length": 47,
+    "depth": 0,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "to_dict",
+    "line": 292,
+    "length": 59,
+    "depth": 0,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_optional_int",
+    "line": 65,
+    "length": 8,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "build_review_response",
+    "line": 1011,
+    "length": 34,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "to_dict",
+    "line": 188,
+    "length": 31,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "wrap_untrusted_text",
+    "line": 30,
+    "length": 20,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "unwrap_untrusted_text",
+    "line": 52,
+    "length": 11,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "to_dict",
+    "line": 1070,
+    "length": 8,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "standard_envelope_fields",
+    "line": 823,
+    "length": 40,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "to_dict",
+    "line": 878,
+    "length": 16,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "to_dict",
+    "line": 995,
+    "length": 14,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "to_dict",
+    "line": 905,
+    "length": 12,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "from_dict",
+    "line": 97,
+    "length": 10,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "to_dict",
+    "line": 117,
+    "length": 7,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "from_dict",
+    "line": 126,
+    "length": 7,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "to_dict",
+    "line": 92,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "to_dict",
+    "line": 1056,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/gitops.py",
+  "lines": 1049,
+  "code_lines": 847,
+  "comment_lines": 46,
+  "module_doc": true,
+  "top_funcs": 27,
+  "classes": 4,
+  "funcs_total": 39,
+  "funcs_doc": 32,
+  "doc_pct": 82.1,
+  "imports": [
+   "os",
+   "re",
+   "subprocess",
+   "time",
+   "unicodedata",
+   "dataclasses",
+   "datetime",
+   "pathlib",
+   "typing",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "stage_changes",
+    "line": 431,
+    "length": 136,
+    "depth": 4,
+    "branches": 27,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "is_sensitive_path",
+    "line": 206,
+    "length": 57,
+    "depth": 1,
+    "branches": 21,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "execute_with_index_lock_retry",
+    "line": 349,
+    "length": 48,
+    "depth": 5,
+    "branches": 12,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "safety_net_commit",
+    "line": 848,
+    "length": 68,
+    "depth": 2,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "find_most_recent_commit_msg",
+    "line": 808,
+    "length": 38,
+    "depth": 4,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "is_build_artifact",
+    "line": 162,
+    "length": 42,
+    "depth": 1,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "sanitize_commit_subject",
+    "line": 660,
+    "length": 29,
+    "depth": 2,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "commit_message_problem",
+    "line": 717,
+    "length": 25,
+    "depth": 2,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "merge_skipped_files",
+    "line": 107,
+    "length": 20,
+    "depth": 2,
+    "branches": 8,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "checkpoint_commit",
+    "line": 766,
+    "length": 40,
+    "depth": 1,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "parse_porcelain_z",
+    "line": 399,
+    "length": 30,
+    "depth": 3,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_files_modified",
+    "line": 1001,
+    "length": 23,
+    "depth": 1,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "sanitize_commit_body",
+    "line": 691,
+    "length": 9,
+    "depth": 0,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "is_worktree_dirty",
+    "line": 630,
+    "length": 24,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_resolve_index_lock_path",
+    "line": 330,
+    "length": 17,
+    "depth": 4,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "run_git",
+    "line": 283,
+    "length": 45,
+    "depth": 2,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_commits_list",
+    "line": 965,
+    "length": 34,
+    "depth": 2,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "commit_with_retry",
+    "line": 569,
+    "length": 59,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "__eq__",
+    "line": 87,
+    "length": 9,
+    "depth": 1,
+    "branches": 3,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "get_hardened_git_env",
+    "line": 265,
+    "length": 16,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "diff_git_config_snapshots",
+    "line": 1037,
+    "length": 13,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "take_git_config_snapshot",
+    "line": 1026,
+    "length": 9,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "write_wrapper_commit_msg",
+    "line": 744,
+    "length": 20,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_ahead_behind",
+    "line": 924,
+    "length": 17,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "build_wrapper_commit_text",
+    "line": 702,
+    "length": 13,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "do_commit",
+    "line": 594,
+    "length": 15,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "has_base_moved",
+    "line": 943,
+    "length": 9,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_diff_stat",
+    "line": 954,
+    "length": 9,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "__init__",
+    "line": 32,
+    "length": 7,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "get_merge_base",
+    "line": 918,
+    "length": 4,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "args_list",
+    "line": 41,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__str__",
+    "line": 45,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "path",
+    "line": 78,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "reason",
+    "line": 83,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "do_add",
+    "line": 447,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__init__",
+    "line": 74,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "__hash__",
+    "line": 97,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "__str__",
+    "line": 100,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "__repr__",
+    "line": 103,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/usage.py",
+  "lines": 917,
+  "code_lines": 756,
+  "comment_lines": 29,
+  "module_doc": true,
+  "top_funcs": 33,
+  "classes": 1,
+  "funcs_total": 37,
+  "funcs_doc": 29,
+  "doc_pct": 78.4,
+  "imports": [
+   "copy",
+   "fcntl",
+   "json",
+   "math",
+   "os",
+   "re",
+   "shutil",
+   "signal",
+   "subprocess",
+   "tempfile",
+   "threading",
+   "time",
+   "datetime",
+   "pathlib",
+   "typing",
+   "agy_mcp.jobs",
+   "agy_mcp.jobs",
+   "agy_mcp.models"
+  ],
+  "functions": [
+   {
+    "name": "read_usage_once",
+    "line": 654,
+    "length": 103,
+    "depth": 5,
+    "branches": 19,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_parse_structured_groups",
+    "line": 108,
+    "length": 37,
+    "depth": 3,
+    "branches": 16,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_parse_text_groups",
+    "line": 156,
+    "length": 36,
+    "depth": 3,
+    "branches": 15,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "compute_quota_estimate",
+    "line": 503,
+    "length": 59,
+    "depth": 3,
+    "branches": 12,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "has_usage_record_for_generation",
+    "line": 878,
+    "length": 35,
+    "depth": 3,
+    "branches": 12,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "compute_usage_cost",
+    "line": 425,
+    "length": 62,
+    "depth": 1,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_cross_check",
+    "line": 194,
+    "length": 29,
+    "depth": 3,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "exhausted_bucket_reset",
+    "line": 345,
+    "length": 22,
+    "depth": 3,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_load_json_output",
+    "line": 261,
+    "length": 21,
+    "depth": 3,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "parse_usage_payload",
+    "line": 225,
+    "length": 34,
+    "depth": 2,
+    "branches": 10,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "annotate_low_flags",
+    "line": 382,
+    "length": 29,
+    "depth": 4,
+    "branches": 10,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "find_group",
+    "line": 307,
+    "length": 14,
+    "depth": 3,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_usage",
+    "line": 759,
+    "length": 42,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "low_buckets",
+    "line": 323,
+    "length": 20,
+    "depth": 3,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "matches_patterns",
+    "line": 369,
+    "length": 11,
+    "depth": 3,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_fraction_for",
+    "line": 413,
+    "length": 10,
+    "depth": 4,
+    "branches": 6,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "_kill_usage_process",
+    "line": 628,
+    "length": 24,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "mask_email",
+    "line": 51,
+    "length": 13,
+    "depth": 1,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "record_usage",
+    "line": 818,
+    "length": 58,
+    "depth": 1,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_parse_iso_utc",
+    "line": 76,
+    "length": 11,
+    "depth": 2,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_is_non_negative_number",
+    "line": 492,
+    "length": 9,
+    "depth": 1,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "group_for_model",
+    "line": 297,
+    "length": 8,
+    "depth": 1,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_normalize_label",
+    "line": 147,
+    "length": 7,
+    "depth": 1,
+    "branches": 4,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "get",
+    "line": 577,
+    "length": 13,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "parse_auth_line",
+    "line": 66,
+    "length": 8,
+    "depth": 1,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_account_dict",
+    "line": 608,
+    "length": 5,
+    "depth": 0,
+    "branches": 2,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "_unavailable_reading",
+    "line": 615,
+    "length": 11,
+    "depth": 0,
+    "branches": 1,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "_bucket",
+    "line": 99,
+    "length": 7,
+    "depth": 0,
+    "branches": 1,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "put",
+    "line": 591,
+    "length": 7,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "parse_usage_output",
+    "line": 284,
+    "length": 6,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_reset_seconds",
+    "line": 93,
+    "length": 4,
+    "depth": 1,
+    "branches": 1,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "clear",
+    "line": 599,
+    "length": 4,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "append_audit_event",
+    "line": 808,
+    "length": 8,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "__init__",
+    "line": 572,
+    "length": 4,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "clear_usage_cache",
+    "line": 803,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "check_daily_cap",
+    "line": 915,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_format_utc",
+    "line": 89,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/watcher.py",
+  "lines": 859,
+  "code_lines": 715,
+  "comment_lines": 53,
+  "module_doc": true,
+  "top_funcs": 13,
+  "classes": 1,
+  "funcs_total": 21,
+  "funcs_doc": 20,
+  "doc_pct": 95.2,
+  "imports": [
+   "errno",
+   "logging",
+   "os",
+   "stat",
+   "tempfile",
+   "threading",
+   "time",
+   "pathlib",
+   "typing",
+   "agy_mcp.audit",
+   "agy_mcp.gitops",
+   "agy_mcp.jobs",
+   "agy_mcp.models",
+   "agy_mcp.states",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "_process_settled_commit_msg",
+    "line": 555,
+    "length": 226,
+    "depth": 4,
+    "branches": 25,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "tick",
+    "line": 415,
+    "length": 111,
+    "depth": 5,
+    "branches": 24,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "validate_commit_message",
+    "line": 79,
+    "length": 65,
+    "depth": 3,
+    "branches": 16,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_read_commit_message",
+    "line": 170,
+    "length": 58,
+    "depth": 3,
+    "branches": 14,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "repair_overlong_commit_subject",
+    "line": 283,
+    "length": 50,
+    "depth": 2,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "run_safety_net_commit",
+    "line": 805,
+    "length": 27,
+    "depth": 1,
+    "branches": 8,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "final_commit",
+    "line": 833,
+    "length": 27,
+    "depth": 2,
+    "branches": 8,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_validate_message_text",
+    "line": 146,
+    "length": 22,
+    "depth": 2,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "run_checkpoint_commit",
+    "line": 782,
+    "length": 22,
+    "depth": 1,
+    "branches": 7,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_discard_invalid_commit_msg",
+    "line": 527,
+    "length": 27,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_preserve_rejected_message",
+    "line": 335,
+    "length": 28,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_is_real_agy_dir",
+    "line": 44,
+    "length": 17,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_next_invalid_msg_slot",
+    "line": 63,
+    "length": 14,
+    "depth": 3,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_first_line_has_control_char",
+    "line": 241,
+    "length": 3,
+    "depth": 0,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "__init__",
+    "line": 378,
+    "length": 31,
+    "depth": 0,
+    "branches": 2,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_fsync_parent_dir",
+    "line": 256,
+    "length": 12,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_truncate_subject_at_word",
+    "line": 230,
+    "length": 9,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_write_all",
+    "line": 246,
+    "length": 8,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_notify_before_state_transition",
+    "line": 410,
+    "length": 4,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "_atomic_replace_text",
+    "line": 270,
+    "length": 11,
+    "depth": 1,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_actionable_commit_error",
+    "line": 365,
+    "length": 8,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/verify.py",
+  "lines": 808,
+  "code_lines": 681,
+  "comment_lines": 27,
+  "module_doc": true,
+  "top_funcs": 24,
+  "classes": 1,
+  "funcs_total": 27,
+  "funcs_doc": 19,
+  "doc_pct": 70.4,
+  "imports": [
+   "os",
+   "re",
+   "shlex",
+   "signal",
+   "subprocess",
+   "tempfile",
+   "time",
+   "pathlib",
+   "typing",
+   "agy_mcp.models",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "run_verify",
+    "line": 512,
+    "length": 144,
+    "depth": 6,
+    "branches": 16,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_cargo_args",
+    "line": 240,
+    "length": 36,
+    "depth": 6,
+    "branches": 16,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "is_verify_allowed",
+    "line": 354,
+    "length": 59,
+    "depth": 3,
+    "branches": 14,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_is_path_outside",
+    "line": 159,
+    "length": 35,
+    "depth": 3,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "build_verify_excerpt",
+    "line": 698,
+    "length": 42,
+    "depth": 4,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_node_test_args",
+    "line": 313,
+    "length": 26,
+    "depth": 2,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_identify_tool",
+    "line": 141,
+    "length": 16,
+    "depth": 1,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_check_token_path",
+    "line": 196,
+    "length": 16,
+    "depth": 3,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "format_fix_prompt",
+    "line": 759,
+    "length": 50,
+    "depth": 3,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_terminate_process_group",
+    "line": 474,
+    "length": 36,
+    "depth": 4,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_tool_args",
+    "line": 86,
+    "length": 20,
+    "depth": 1,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "accepted_verify_forms",
+    "line": 108,
+    "length": 20,
+    "depth": 3,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "diagnose_verify_output",
+    "line": 658,
+    "length": 26,
+    "depth": 1,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_allowlist_entry_tokens",
+    "line": 64,
+    "length": 10,
+    "depth": 3,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "extract_failing_tests",
+    "line": 742,
+    "length": 15,
+    "depth": 3,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_validate_pytest_args",
+    "line": 214,
+    "length": 11,
+    "depth": 2,
+    "branches": 4,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "_validate_ruff_args",
+    "line": 227,
+    "length": 11,
+    "depth": 2,
+    "branches": 4,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "_validate_go_args",
+    "line": 278,
+    "length": 11,
+    "depth": 2,
+    "branches": 4,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "_validate_other_args",
+    "line": 341,
+    "length": 11,
+    "depth": 2,
+    "branches": 4,
+    "doc": false,
+    "top_level": true
+   },
+   {
+    "name": "verify_tail_lines",
+    "line": 686,
+    "length": 10,
+    "depth": 2,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_is_python_m_pytest",
+    "line": 76,
+    "length": 8,
+    "depth": 0,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_process_group_alive",
+    "line": 462,
+    "length": 10,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "status",
+    "line": 455,
+    "length": 5,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "verify_rejection_message",
+    "line": 130,
+    "length": 9,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "__new__",
+    "line": 431,
+    "length": 22,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_result",
+    "line": 529,
+    "length": 18,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_validate_npm_args",
+    "line": 291,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/cleanup_fixtures.py",
+  "lines": 758,
+  "code_lines": 642,
+  "comment_lines": 12,
+  "module_doc": true,
+  "top_funcs": 19,
+  "classes": 0,
+  "funcs_total": 20,
+  "funcs_doc": 19,
+  "doc_pct": 95.0,
+  "imports": [
+   "__future__",
+   "argparse",
+   "errno",
+   "json",
+   "math",
+   "os",
+   "re",
+   "sys",
+   "tempfile",
+   "datetime",
+   "pathlib",
+   "typing"
+  ],
+  "functions": [
+   {
+    "name": "run_cleanup",
+    "line": 481,
+    "length": 154,
+    "depth": 5,
+    "branches": 36,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "main",
+    "line": 637,
+    "length": 118,
+    "depth": 5,
+    "branches": 31,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_classify_job",
+    "line": 308,
+    "length": 108,
+    "depth": 3,
+    "branches": 26,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_is_pytest_temp_repo",
+    "line": 67,
+    "length": 50,
+    "depth": 2,
+    "branches": 17,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_safe_delete_job_dir",
+    "line": 418,
+    "length": 28,
+    "depth": 3,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_check_pid_status",
+    "line": 177,
+    "length": 30,
+    "depth": 3,
+    "branches": 10,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_check_pgid_status",
+    "line": 209,
+    "length": 30,
+    "depth": 3,
+    "branches": 10,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_extract_strings",
+    "line": 263,
+    "length": 22,
+    "depth": 5,
+    "branches": 8,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_has_symlinks",
+    "line": 137,
+    "length": 25,
+    "depth": 4,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_pytest_basetemp",
+    "line": 119,
+    "length": 16,
+    "depth": 2,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_check_json_depth",
+    "line": 37,
+    "length": 13,
+    "depth": 4,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_parse_iso_ts",
+    "line": 247,
+    "length": 14,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_write_manifest",
+    "line": 287,
+    "length": 19,
+    "depth": 5,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_get_kernel_pid_max",
+    "line": 164,
+    "length": 11,
+    "depth": 3,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_raise_on_duplicate_keys",
+    "line": 27,
+    "length": 8,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_safe_json_loads",
+    "line": 52,
+    "length": 8,
+    "depth": 2,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "parse_args",
+    "line": 448,
+    "length": 31,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_is_pid_alive",
+    "line": 241,
+    "length": 4,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_is_canonical_uuid",
+    "line": 62,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_onerror",
+    "line": 143,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/worktree.py",
+  "lines": 705,
+  "code_lines": 538,
+  "comment_lines": 57,
+  "module_doc": true,
+  "top_funcs": 14,
+  "classes": 1,
+  "funcs_total": 15,
+  "funcs_doc": 14,
+  "doc_pct": 93.3,
+  "imports": [
+   "json",
+   "os",
+   "secrets",
+   "shutil",
+   "stat",
+   "pathlib",
+   "typing",
+   "agy_mcp.config",
+   "agy_mcp.gitops",
+   "agy_mcp.jobs",
+   "agy_mcp.models",
+   "agy_mcp.scratchpad",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "is_dangerous_allow_rule",
+    "line": 486,
+    "length": 69,
+    "depth": 2,
+    "branches": 29,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "validate_repo_path",
+    "line": 53,
+    "length": 103,
+    "depth": 2,
+    "branches": 22,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "inspect_permission_rules",
+    "line": 607,
+    "length": 78,
+    "depth": 4,
+    "branches": 20,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "cleanup_worktree",
+    "line": 426,
+    "length": 58,
+    "depth": 3,
+    "branches": 14,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "ensure_local_exclude",
+    "line": 274,
+    "length": 33,
+    "depth": 2,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_read_permission_config_file",
+    "line": 562,
+    "length": 43,
+    "depth": 3,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "count_unmerged_commits",
+    "line": 383,
+    "length": 41,
+    "depth": 2,
+    "branches": 9,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "create_worktree",
+    "line": 208,
+    "length": 64,
+    "depth": 2,
+    "branches": 8,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "find_drifted_worktrees",
+    "line": 687,
+    "length": 19,
+    "depth": 4,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "remove_worktree",
+    "line": 353,
+    "length": 28,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "allocate_branch_name",
+    "line": 176,
+    "length": 30,
+    "depth": 2,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "provision_metadata_dir",
+    "line": 309,
+    "length": 33,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "preflight",
+    "line": 158,
+    "length": 16,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "provision",
+    "line": 344,
+    "length": 7,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "__init__",
+    "line": 29,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/audit.py",
+  "lines": 653,
+  "code_lines": 527,
+  "comment_lines": 30,
+  "module_doc": true,
+  "top_funcs": 10,
+  "classes": 6,
+  "funcs_total": 16,
+  "funcs_doc": 15,
+  "doc_pct": 93.8,
+  "imports": [
+   "hashlib",
+   "os",
+   "dataclasses",
+   "enum",
+   "pathlib",
+   "typing",
+   "agy_mcp.gitops",
+   "agy_mcp.models",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "audit",
+    "line": 439,
+    "length": 187,
+    "depth": 3,
+    "branches": 30,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "check_host_path_snapshot",
+    "line": 227,
+    "length": 137,
+    "depth": 4,
+    "branches": 20,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "take_snapshot",
+    "line": 383,
+    "length": 54,
+    "depth": 3,
+    "branches": 19,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "classify_host_path",
+    "line": 42,
+    "length": 16,
+    "depth": 2,
+    "branches": 8,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "take_host_path_snapshot",
+    "line": 180,
+    "length": 37,
+    "depth": 4,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_relativize_host_path",
+    "line": 565,
+    "length": 12,
+    "depth": 2,
+    "branches": 4,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "load_snapshot",
+    "line": 142,
+    "length": 22,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_hash_or_missing",
+    "line": 166,
+    "length": 12,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "fatal_reason",
+    "line": 93,
+    "length": 6,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "blocked_files",
+    "line": 101,
+    "length": 3,
+    "depth": 0,
+    "branches": 2,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "run_security_audit",
+    "line": 628,
+    "length": 26,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "has_fatal",
+    "line": 88,
+    "length": 3,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "verify_host_path_snapshot",
+    "line": 366,
+    "length": 15,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "save_snapshot",
+    "line": 123,
+    "length": 14,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "to_dict",
+    "line": 69,
+    "length": 8,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "passed",
+    "line": 106,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/server.py",
+  "lines": 615,
+  "code_lines": 516,
+  "comment_lines": 22,
+  "module_doc": true,
+  "top_funcs": 19,
+  "classes": 0,
+  "funcs_total": 30,
+  "funcs_doc": 19,
+  "doc_pct": 63.3,
+  "imports": [
+   "argparse",
+   "logging",
+   "os",
+   "re",
+   "shutil",
+   "signal",
+   "sys",
+   "pathlib",
+   "typing",
+   "anyio",
+   "mcp.server.fastmcp",
+   "agy_mcp",
+   "agy_mcp.config",
+   "agy_mcp.jobs",
+   "agy_mcp.manager",
+   "agy_mcp.models",
+   "agy_mcp.runner"
+  ],
+  "functions": [
+   {
+    "name": "_format_error",
+    "line": 121,
+    "length": 66,
+    "depth": 5,
+    "branches": 12,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "setup_server",
+    "line": 526,
+    "length": 53,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "resolve_agy_binary",
+    "line": 505,
+    "length": 19,
+    "depth": 2,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "main",
+    "line": 581,
+    "length": 31,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_sanitize_path_leak",
+    "line": 102,
+    "length": 17,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_start",
+    "line": 194,
+    "length": 44,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_cleanup",
+    "line": 417,
+    "length": 29,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_status",
+    "line": 241,
+    "length": 26,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_resume",
+    "line": 365,
+    "length": 24,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_wait",
+    "line": 270,
+    "length": 23,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_result",
+    "line": 296,
+    "length": 22,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_review",
+    "line": 392,
+    "length": 22,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_cancel",
+    "line": 321,
+    "length": 19,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_list",
+    "line": 343,
+    "length": 19,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "agy_usage",
+    "line": 449,
+    "length": 18,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_run",
+    "line": 218,
+    "length": 16,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_run",
+    "line": 432,
+    "length": 12,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_run",
+    "line": 258,
+    "length": 7,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_run",
+    "line": 284,
+    "length": 7,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_run",
+    "line": 309,
+    "length": 7,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_run",
+    "line": 331,
+    "length": 7,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_run",
+    "line": 353,
+    "length": 7,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_run",
+    "line": 380,
+    "length": 7,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "_run",
+    "line": 405,
+    "length": 7,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "get_manager",
+    "line": 38,
+    "length": 6,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_run",
+    "line": 459,
+    "length": 6,
+    "depth": 2,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "make_error_envelope",
+    "line": 52,
+    "length": 48,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "parse_args",
+    "line": 473,
+    "length": 30,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_sigterm_handler",
+    "line": 595,
+    "length": 6,
+    "depth": 1,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "set_manager",
+    "line": 46,
+    "length": 4,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/jobs.py",
+  "lines": 585,
+  "code_lines": 475,
+  "comment_lines": 21,
+  "module_doc": true,
+  "top_funcs": 19,
+  "classes": 0,
+  "funcs_total": 19,
+  "funcs_doc": 19,
+  "doc_pct": 100.0,
+  "imports": [
+   "fcntl",
+   "json",
+   "logging",
+   "os",
+   "tempfile",
+   "uuid",
+   "contextlib",
+   "datetime",
+   "pathlib",
+   "typing",
+   "agy_mcp.models",
+   "agy_mcp.states",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "transition_job_state",
+    "line": 264,
+    "length": 74,
+    "depth": 2,
+    "branches": 17,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "cleanup_retained_jobs",
+    "line": 520,
+    "length": 66,
+    "depth": 6,
+    "branches": 15,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "rebuild_daily_cap_from_audit",
+    "line": 413,
+    "length": 57,
+    "depth": 10,
+    "branches": 14,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "check_and_increment_daily_cap",
+    "line": 369,
+    "length": 42,
+    "depth": 4,
+    "branches": 6,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "list_jobs",
+    "line": 204,
+    "length": 19,
+    "depth": 4,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "count_active_jobs",
+    "line": 249,
+    "length": 13,
+    "depth": 0,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "prune_retained_jobs",
+    "line": 499,
+    "length": 19,
+    "depth": 4,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_job_disk_usage",
+    "line": 472,
+    "length": 13,
+    "depth": 4,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_atomic_write_file",
+    "line": 42,
+    "length": 35,
+    "depth": 3,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_job",
+    "line": 185,
+    "length": 17,
+    "depth": 1,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_daily_date",
+    "line": 357,
+    "length": 10,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_total_state_disk_usage",
+    "line": 487,
+    "length": 10,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "create_job",
+    "line": 111,
+    "length": 59,
+    "depth": 0,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "concurrency_lock",
+    "line": 226,
+    "length": 21,
+    "depth": 3,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_base_state_dir",
+    "line": 28,
+    "length": 7,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "append_audit_event",
+    "line": 79,
+    "length": 30,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "record_job_execution_time",
+    "line": 340,
+    "length": 15,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "save_job",
+    "line": 172,
+    "length": 6,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_job_dir",
+    "line": 37,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/scratchpad.py",
+  "lines": 454,
+  "code_lines": 368,
+  "comment_lines": 7,
+  "module_doc": true,
+  "top_funcs": 17,
+  "classes": 1,
+  "funcs_total": 18,
+  "funcs_doc": 17,
+  "doc_pct": 94.4,
+  "imports": [
+   "errno",
+   "os",
+   "re",
+   "stat",
+   "dataclasses",
+   "pathlib",
+   "typing"
+  ],
+  "functions": [
+   {
+    "name": "read_scratchpad_file",
+    "line": 243,
+    "length": 69,
+    "depth": 4,
+    "branches": 16,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "format_state_block",
+    "line": 380,
+    "length": 75,
+    "depth": 2,
+    "branches": 14,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "report_claims_tests_passed",
+    "line": 107,
+    "length": 16,
+    "depth": 0,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "copy_to_jobdir",
+    "line": 335,
+    "length": 28,
+    "depth": 3,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "parse_plan_text",
+    "line": 195,
+    "length": 20,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_fd_is_inside",
+    "line": 223,
+    "length": 18,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "normalize_checklist",
+    "line": 125,
+    "length": 14,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "build_plan_content",
+    "line": 141,
+    "length": 7,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "seed_scratchpad",
+    "line": 166,
+    "length": 27,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "format_plan_nudge",
+    "line": 365,
+    "length": 13,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "read_plan",
+    "line": 314,
+    "length": 11,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_cap_bytes",
+    "line": 86,
+    "length": 6,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "tail_text_bytes",
+    "line": 99,
+    "length": 6,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "write_metadata_file",
+    "line": 150,
+    "length": 14,
+    "depth": 1,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_no_follow_dir",
+    "line": 217,
+    "length": 4,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_single_line",
+    "line": 81,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "cap_text_bytes",
+    "line": 94,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "ok",
+    "line": 73,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/runner.py",
+  "lines": 361,
+  "code_lines": 283,
+  "comment_lines": 17,
+  "module_doc": true,
+  "top_funcs": 3,
+  "classes": 5,
+  "funcs_total": 15,
+  "funcs_doc": 11,
+  "doc_pct": 73.3,
+  "imports": [
+   "os",
+   "signal",
+   "subprocess",
+   "time",
+   "abc",
+   "dataclasses",
+   "pathlib",
+   "typing",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "build_argv",
+    "line": 96,
+    "length": 77,
+    "depth": 2,
+    "branches": 10,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "kill",
+    "line": 306,
+    "length": 37,
+    "depth": 3,
+    "branches": 9,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "poll",
+    "line": 282,
+    "length": 23,
+    "depth": 3,
+    "branches": 6,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "launch",
+    "line": 215,
+    "length": 66,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "read_proc_stat_field",
+    "line": 61,
+    "length": 28,
+    "depth": 1,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_close_process_files",
+    "line": 354,
+    "length": 8,
+    "depth": 3,
+    "branches": 2,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "cleanup",
+    "line": 344,
+    "length": 9,
+    "depth": 2,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__init__",
+    "line": 210,
+    "length": 4,
+    "depth": 0,
+    "branches": 1,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "launch",
+    "line": 179,
+    "length": 11,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "read_proc_start_time",
+    "line": 91,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "__init__",
+    "line": 37,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   },
+   {
+    "name": "poll",
+    "line": 192,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "kill",
+    "line": 197,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "cleanup",
+    "line": 202,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__init__",
+    "line": 45,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/recovery.py",
+  "lines": 356,
+  "code_lines": 290,
+  "comment_lines": 32,
+  "module_doc": true,
+  "top_funcs": 3,
+  "classes": 0,
+  "funcs_total": 3,
+  "funcs_doc": 3,
+  "doc_pct": 100.0,
+  "imports": [
+   "time",
+   "datetime",
+   "pathlib",
+   "typing",
+   "agy_mcp.audit",
+   "agy_mcp.gitops",
+   "agy_mcp.jobs",
+   "agy_mcp.models",
+   "agy_mcp.parse_result",
+   "agy_mcp.runner",
+   "agy_mcp.states",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "reconcile_on_startup",
+    "line": 100,
+    "length": 257,
+    "depth": 8,
+    "branches": 59,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "get_liveness_summary",
+    "line": 56,
+    "length": 42,
+    "depth": 3,
+    "branches": 10,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "check_process_liveness",
+    "line": 32,
+    "length": 22,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/parse_result.py",
+  "lines": 346,
+  "code_lines": 279,
+  "comment_lines": 26,
+  "module_doc": true,
+  "top_funcs": 6,
+  "classes": 2,
+  "funcs_total": 6,
+  "funcs_doc": 6,
+  "doc_pct": 100.0,
+  "imports": [
+   "json",
+   "re",
+   "dataclasses",
+   "typing",
+   "agy_mcp.cli_log",
+   "agy_mcp.models",
+   "agy_mcp.states",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "parse_agy_output",
+    "line": 152,
+    "length": 195,
+    "depth": 4,
+    "branches": 34,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_extract_last_json_object",
+    "line": 105,
+    "length": 27,
+    "depth": 4,
+    "branches": 11,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_extract_tokens",
+    "line": 70,
+    "length": 15,
+    "depth": 3,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_extract_agy_duration",
+    "line": 94,
+    "length": 9,
+    "depth": 1,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "extract_stdout_payload",
+    "line": 134,
+    "length": 16,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_extract_conversation_id",
+    "line": 87,
+    "length": 5,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/config.py",
+  "lines": 335,
+  "code_lines": 280,
+  "comment_lines": 17,
+  "module_doc": true,
+  "top_funcs": 2,
+  "classes": 2,
+  "funcs_total": 2,
+  "funcs_doc": 2,
+  "doc_pct": 100.0,
+  "imports": [
+   "os",
+   "re",
+   "sys",
+   "dataclasses",
+   "pathlib",
+   "typing"
+  ],
+  "functions": [
+   {
+    "name": "_validate_config_dict",
+    "line": 88,
+    "length": 204,
+    "depth": 17,
+    "branches": 73,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "load_config",
+    "line": 294,
+    "length": 42,
+    "depth": 2,
+    "branches": 8,
+    "doc": true,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/cli_log.py",
+  "lines": 302,
+  "code_lines": 248,
+  "comment_lines": 14,
+  "module_doc": true,
+  "top_funcs": 10,
+  "classes": 1,
+  "funcs_total": 12,
+  "funcs_doc": 11,
+  "doc_pct": 91.7,
+  "imports": [
+   "hashlib",
+   "re",
+   "dataclasses",
+   "pathlib",
+   "typing",
+   "agy_mcp.models",
+   "agy_mcp.util"
+  ],
+  "functions": [
+   {
+    "name": "cli_log_generation_start",
+    "line": 128,
+    "length": 27,
+    "depth": 3,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "extract_conversation_id_from_cli_log",
+    "line": 185,
+    "length": 22,
+    "depth": 3,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "read_cli_log_since",
+    "line": 157,
+    "length": 26,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "capture_cli_log_anchor",
+    "line": 105,
+    "length": 21,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "format_denied_commands",
+    "line": 282,
+    "length": 21,
+    "depth": 3,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "read_cli_log_tail",
+    "line": 72,
+    "length": 14,
+    "depth": 3,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "extract_denials_from_cli_log",
+    "line": 247,
+    "length": 33,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "read_cli_log_head",
+    "line": 88,
+    "length": 15,
+    "depth": 2,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "extract_resuming_conversation_id_from_cli_log",
+    "line": 209,
+    "length": 14,
+    "depth": 3,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "extract_model_resolved",
+    "line": 231,
+    "length": 14,
+    "depth": 3,
+    "branches": 3,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "to_dict",
+    "line": 59,
+    "length": 11,
+    "depth": 1,
+    "branches": 1,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__getitem__",
+    "line": 56,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/util.py",
+  "lines": 297,
+  "code_lines": 234,
+  "comment_lines": 11,
+  "module_doc": true,
+  "top_funcs": 14,
+  "classes": 0,
+  "funcs_total": 14,
+  "funcs_doc": 14,
+  "doc_pct": 100.0,
+  "imports": [
+   "hashlib",
+   "os",
+   "re",
+   "pathlib",
+   "typing"
+  ],
+  "functions": [
+   {
+    "name": "read_file_since",
+    "line": 158,
+    "length": 35,
+    "depth": 3,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "sanitize_absolute_paths",
+    "line": 27,
+    "length": 25,
+    "depth": 2,
+    "branches": 5,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "env_allowlist",
+    "line": 54,
+    "length": 37,
+    "depth": 1,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "format_resume_prompt",
+    "line": 274,
+    "length": 24,
+    "depth": 2,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "read_file_tail",
+    "line": 134,
+    "length": 22,
+    "depth": 3,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "truncate_tail",
+    "line": 93,
+    "length": 20,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "truncate_head",
+    "line": 115,
+    "length": 17,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "strict_uuid",
+    "line": 242,
+    "length": 12,
+    "depth": 1,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "sha256_file",
+    "line": 222,
+    "length": 7,
+    "depth": 2,
+    "branches": 2,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "derive_branch_slug",
+    "line": 17,
+    "length": 8,
+    "depth": 0,
+    "branches": 1,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "redact_log_text",
+    "line": 209,
+    "length": 11,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "load_preamble",
+    "line": 256,
+    "length": 10,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "format_fresh_prompt",
+    "line": 268,
+    "length": 4,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "sha256_bytes",
+    "line": 231,
+    "length": 3,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/transcript.py",
+  "lines": 263,
+  "code_lines": 205,
+  "comment_lines": 14,
+  "module_doc": true,
+  "top_funcs": 4,
+  "classes": 1,
+  "funcs_total": 6,
+  "funcs_doc": 5,
+  "doc_pct": 83.3,
+  "imports": [
+   "json",
+   "re",
+   "dataclasses",
+   "pathlib",
+   "typing",
+   "agy_mcp.jobs",
+   "agy_mcp.models"
+  ],
+  "functions": [
+   {
+    "name": "read_denied_calls",
+    "line": 87,
+    "length": 157,
+    "depth": 7,
+    "branches": 42,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_unquote_once",
+    "line": 72,
+    "length": 13,
+    "depth": 3,
+    "branches": 7,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "_log_unreadable",
+    "line": 246,
+    "length": 18,
+    "depth": 3,
+    "branches": 4,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "cli_step_to_transcript_step",
+    "line": 53,
+    "length": 17,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": true
+   },
+   {
+    "name": "to_dict",
+    "line": 42,
+    "length": 9,
+    "depth": 0,
+    "branches": 0,
+    "doc": true,
+    "top_level": false
+   },
+   {
+    "name": "__getitem__",
+    "line": 39,
+    "length": 2,
+    "depth": 0,
+    "branches": 0,
+    "doc": false,
+    "top_level": false
+   }
+  ]
+ },
+ {
+  "path": "src/agy_mcp/states.py",
+  "lines": 180,
+  "code_lines": 161,
+  "comment_lines": 7,
+  "module_doc": true,
+  "top_funcs": 0,
+  "classes": 2,
+  "funcs_total": 0,
+  "funcs_doc": 0,
+  "doc_pct": 0.0,
+  "imports": [
+   "dataclasses",
+   "enum",
+   "typing"
+  ],
+  "functions": []
+ },
+ {
+  "path": "src/agy_mcp/__main__.py",
+  "lines": 14,
+  "code_lines": 10,
+  "comment_lines": 0,
+  "module_doc": true,
+  "top_funcs": 0,
+  "classes": 0,
+  "funcs_total": 0,
+  "funcs_doc": 0,
+  "doc_pct": 0.0,
+  "imports": [
+   "sys",
+   "agy_mcp.server"
+  ],
+  "functions": []
+ },
+ {
+  "path": "src/agy_mcp/__init__.py",
+  "lines": 9,
+  "code_lines": 7,
+  "comment_lines": 0,
+  "module_doc": true,
+  "top_funcs": 0,
+  "classes": 0,
+  "funcs_total": 0,
+  "funcs_doc": 0,
+  "doc_pct": 0.0,
+  "imports": [],
+  "functions": []
+ }
+]

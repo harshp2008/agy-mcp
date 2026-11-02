@@ -1,0 +1,178 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_________________ test_pre_kill_checkpoint_failure_is_audited __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-810/test_pre_kill_checkpoint_failu0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ff4f68d1f70>
+
+    def test_pre_kill_checkpoint_failure_is_audited(tmp_path: Path, monkeypatch) -> None:
+        """A raising checkpoint commit appends cleanup_error and leaves state unchanged."""
+        job, job_dir, state_dir = _setup_test_worktree(tmp_path)
+        runner = LocalProcessRunner(executable=FAKE_AGY)
+        handle = ProcessHandle(
+            pid=0,
+            pgid=0,
+            start_time=0,
+            job_id=job.job_id,
+            stdout_path=job_dir / "stdout.txt",
+            stderr_path=job_dir / "stderr.txt",
+        )
+        supervisor = JobSupervisor(
+            job=job,
+            handle=handle,
+            runner=runner,
+            job_dir=job_dir,
+            max_minutes=60,
+            home=tmp_path,
+            base_state_dir=state_dir,
+        )
+        (job.worktree_path / "dirty.py").write_text("print('dirty')\n", encoding="utf-8")
+    
+        def boom(*args, **kwargs):
+            raise RuntimeError(f"checkpoint exploded under {tmp_path}")
+    
+        monkeypatch.setattr("agy_mcp.supervisor.checkpoint_commit", boom)
+    
+        before = job.state
+        supervisor._try_pre_kill_checkpoint()
+    
+        assert job.state == before == JobState.RUNNING
+        events = _cleanup_events(job_dir)
+>       assert events
+E       assert []
+
+tests/test_supervisor.py:761: AssertionError
+__________________ test_safety_net_commit_failure_is_audited ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-810/test_safety_net_commit_failure0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ff4f696e630>
+
+    def test_safety_net_commit_failure_is_audited(tmp_path: Path, monkeypatch) -> None:
+        """A raising safety-net commit appends cleanup_error; the job still ends done."""
+        job, job_dir, state_dir = _setup_test_worktree(tmp_path)
+        runner = LocalProcessRunner(executable=FAKE_AGY)
+        stdout_file = job_dir / "stdout.txt"
+        stderr_file = job_dir / "stderr.txt"
+        log_file = job_dir / "cli.log"
+        env = env_allowlist(job_tmp_dir=job_dir / "tmp", home=tmp_path)
+    
+        argv = build_argv(
+            agy_binary=FAKE_AGY,
+            prompt="Run __SCENARIO:success_simple__",
+            model="gemini-3.8-flash-medium",
+            print_timeout_seconds=60,
+            log_file=log_file,
+        )
+        handle = runner.launch(
+            job_id=job.job_id,
+            workdir=job.worktree_path,
+            args=argv,
+            env=env,
+            stdout_path=stdout_file,
+            stderr_path=stderr_file,
+        )
+        (job.worktree_path / "dirty.py").write_text("print('dirty')\n", encoding="utf-8")
+    
+        supervisor = JobSupervisor(
+            job=job,
+            handle=handle,
+            runner=runner,
+            job_dir=job_dir,
+            max_minutes=60,
+            home=tmp_path,
+            base_state_dir=state_dir,
+        )
+    
+        def boom(**kwargs):
+            raise RuntimeError(f"safety net exploded under {tmp_path}")
+    
+        monkeypatch.setattr("agy_mcp.supervisor.safety_net_commit", boom)
+    
+        try:
+            deadline = time.time() + 5.0
+            final_state = None
+            while time.time() < deadline:
+                final_state = supervisor.tick(time.time())
+                if final_state is not None:
+                    break
+                time.sleep(0.05)
+    
+            assert final_state == JobState.DONE
+            events = _cleanup_events(job_dir)
+>           assert events
+E           assert []
+
+tests/test_supervisor.py:818: AssertionError
+_______________ test_run_loop_kill_after_tick_errors_is_audited ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-810/test_run_loop_kill_after_tick_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ff4f696fc50>
+
+    def test_run_loop_kill_after_tick_errors_is_audited(tmp_path: Path, monkeypatch) -> None:
+        """A raising kill after three tick errors appends cleanup_error; state stays failed."""
+        job, job_dir, state_dir = _setup_test_worktree(tmp_path)
+        runner = LocalProcessRunner(executable=FAKE_AGY)
+        stdout_file = job_dir / "stdout.txt"
+        stderr_file = job_dir / "stderr.txt"
+        log_file = job_dir / "cli.log"
+        env = env_allowlist(job_tmp_dir=job_dir / "tmp", home=tmp_path)
+    
+        argv = build_argv(
+            agy_binary=FAKE_AGY,
+            prompt="Hang __SCENARIO:hang__",
+            model="gemini-3.8-flash-medium",
+            print_timeout_seconds=60,
+            log_file=log_file,
+        )
+        handle = runner.launch(
+            job_id=job.job_id,
+            workdir=job.worktree_path,
+            args=argv,
+            env=env,
+            stdout_path=stdout_file,
+            stderr_path=stderr_file,
+        )
+        supervisor = JobSupervisor(
+            job=job,
+            handle=handle,
+            runner=runner,
+            job_dir=job_dir,
+            max_minutes=60,
+            home=tmp_path,
+            base_state_dir=state_dir,
+            poll_interval_seconds=0.05,
+        )
+    
+        def failing_tick(now=None):
+            raise RuntimeError(f"tick exploded under {tmp_path}")
+    
+        state = {"failed": False}
+        orig_kill = runner.kill
+    
+        def fail_once(handle, grace_seconds: float = 3.0):
+            if not state["failed"]:
+                state["failed"] = True
+                raise RuntimeError(f"kill exploded under {tmp_path}")
+            return orig_kill(handle, grace_seconds=grace_seconds)
+    
+        monkeypatch.setattr(supervisor, "tick", failing_tick)
+        monkeypatch.setattr(runner, "kill", fail_once)
+    
+        t = threading.Thread(target=supervisor.run_loop, daemon=True)
+        t.start()
+        t.join(timeout=3.0)
+    
+        try:
+            assert job.state == JobState.FAILED
+            assert job.review_reason == "supervisor_failure"
+            assert runner.poll(handle) is not None
+            events = _cleanup_events(job_dir)
+>           assert events
+E           assert []
+
+tests/test_supervisor.py:884: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_supervisor.py::test_pre_kill_checkpoint_failure_is_audited
+FAILED tests/test_supervisor.py::test_safety_net_commit_failure_is_audited - ...
+FAILED tests/test_supervisor.py::test_run_loop_kill_after_tick_errors_is_audited
+3 failed in 0.59s

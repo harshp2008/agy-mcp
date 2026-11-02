@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 2 items
+
+tests/test_f12.py ..                                                     [100%]
+
+============================== 2 passed in 1.78s ===============================

@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________________ test_auth_line_parsing_and_masking ______________________
+
+    def test_auth_line_parsing_and_masking() -> None:
+        """The real applyAuthResult line is parsed and the email is masked."""
+        raw = AUTH_LINE.read_text(encoding="utf-8")
+        email, method = parse_auth_line(raw)
+        assert email == "REDACTED@example.com"
+        assert method == "consumer"
+        assert mask_email(email) == "RE***@example.com"
+>       assert mask_email("ab@b.com") == "***@b.com"
+E       AssertionError: assert 'ab***@b.com' == '***@b.com'
+E         
+E         - ***@b.com
+E         + ab***@b.com
+E         ? ++
+
+tests/test_usage_parser.py:145: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_usage_parser.py::test_auth_line_parsing_and_masking - Asser...
+1 failed in 0.09s

@@ -1,0 +1,77 @@
+Mon Oct 26 10:26:41 AM IST 2026
+CMD: loop until failure, full output, pytest tests/test_f22.py::test_record_usage_written_on_job_completion -q
+=== run 1 rc=0 ===
+passed
+=== run 2 rc=0 ===
+passed
+=== run 3 rc=0 ===
+passed
+=== run 4 rc=0 ===
+passed
+=== run 5 rc=0 ===
+passed
+=== run 6 rc=0 ===
+passed
+=== run 7 rc=0 ===
+passed
+=== run 8 rc=0 ===
+passed
+=== run 9 rc=0 ===
+passed
+=== run 10 rc=0 ===
+passed
+=== run 11 rc=0 ===
+passed
+=== run 12 rc=0 ===
+passed
+=== run 13 rc=0 ===
+passed
+=== run 14 rc=0 ===
+passed
+=== run 15 rc=0 ===
+passed
+=== run 16 rc=0 ===
+passed
+=== run 17 rc=0 ===
+passed
+=== run 18 rc=0 ===
+passed
+=== run 19 rc=0 ===
+passed
+=== run 20 rc=1 ===
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_record_usage_written_on_job_completion __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1131/test_record_usage_written_on_j0')
+
+    def test_record_usage_written_on_job_completion(tmp_path: Path) -> None:
+        """Completed job must record usage metrics into usage.jsonl without prompt or title."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+        env = manager.start(
+            prompt="__SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Usage Metrics Test Title",
+        )
+        job_id = env.job_id
+    
+        for _ in range(100):
+            j = get_job(job_id, manager.state_dir)
+            if j.state != JobState.RUNNING and j.state != JobState.QUEUED:
+                break
+            time.sleep(0.05)
+    
+        j = get_job(job_id, manager.state_dir)
+        assert j.state == JobState.DONE
+    
+        usage_file = manager.state_dir / "usage.jsonl"
+>       assert usage_file.is_file()
+E       AssertionError: assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('/tmp/pytest-of-<user>/pytest-1131/test_record_usage_written_on_j0/state/usage.jsonl').is_file
+
+tests/test_f22.py:201: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f22.py::test_record_usage_written_on_job_completion - Asser...
+1 failed in 1.35s
+FAILED_ON_RUN=20

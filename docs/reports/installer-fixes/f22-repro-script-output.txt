@@ -1,0 +1,29 @@
+Mon Oct 26 10:29:14 AM IST 2026
+CMD: bash docs/reports/installer-fixes/repro_f22.sh 25
+repro_f22: 25 runs of tests/test_f22.py::test_record_usage_written_on_job_completion in ~/Documents/GITHUB PROJECTS/agy-mcp
+=== run 1: passed ===
+=== run 2: passed ===
+=== run 3: passed ===
+=== run 4: passed ===
+=== run 5: passed ===
+=== run 6: passed ===
+=== run 7: passed ===
+=== run 8: passed ===
+=== run 9: passed ===
+=== run 10: passed ===
+=== run 11: passed ===
+=== run 12: passed ===
+=== run 13: passed ===
+=== run 14: passed ===
+=== run 15: passed ===
+=== run 16: passed ===
+=== run 17: passed ===
+=== run 18: passed ===
+=== run 19: passed ===
+=== run 20: passed ===
+=== run 21: passed ===
+=== run 22: passed ===
+=== run 23: passed ===
+=== run 24: passed ===
+=== run 25: passed ===
+repro_f22: 0 failure(s) in 25 run(s)

@@ -1,0 +1,77 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 3 items
+
+tests/test_f20.py .FF                                                    [100%]
+
+=================================== FAILURES ===================================
+_________________ test_f20_counters_survive_simulated_restart __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-375/test_f20_counters_survive_simu0')
+
+    def test_f20_counters_survive_simulated_restart(tmp_path: Path) -> None:
+        """Auto-fix and denial-resume counters must persist in job.json and survive manager restart."""
+        cfg = Config(auto_fix_attempts=2, auto_resume_on_denial=2)
+        manager1, repo_dir = _setup_manager_and_repo(tmp_path, config=cfg)
+        state_dir = tmp_path / "state"
+    
+        env = manager1.start(
+            prompt="Fix calc __SCENARIO:verify_fail_then_fix__",
+            repo_path=str(repo_dir),
+            title="Auto Fix Counter Job",
+            verify="pytest",
+        )
+    
+        # Wait for the job to complete or perform an auto-fix cycle
+        manager1.wait(env.job_id, seconds=5)
+    
+        j1 = get_job(env.job_id, state_dir)
+>       assert j1.auto_fix_count >= 1, f"Expected auto_fix_count >= 1, got {j1.auto_fix_count}"
+E       AssertionError: Expected auto_fix_count >= 1, got 0
+E       assert 0 >= 1
+E        +  where 0 = Job(job_id='22c84dc6-b2ec-4db0-9326-ca8bba4ad8a7', title='Auto Fix Counter Job', repo_path=PosixPath('/tmp/pytest-of-h...1s =============================\n\n</untrusted_text id="1c33f1e23444921a">'}, auto_fix_count=0, denial_resume_count=0).auto_fix_count
+
+tests/test_f20.py:93: AssertionError
+______________ test_f20_failing_auto_resume_wait_returns_promptly ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-375/test_f20_failing_auto_resume_w0')
+
+    def test_f20_failing_auto_resume_wait_returns_promptly(tmp_path: Path) -> None:
+        """If auto-resume attempt fails, wait() must not stall for 300s and return promptly."""
+        cfg = Config(auto_fix_attempts=2)
+        manager, repo_dir = _setup_manager_and_repo(tmp_path, config=cfg)
+        state_dir = tmp_path / "state"
+    
+        # Patch resume to fail during auto-fix
+        orig_resume = manager.resume
+    
+        def mock_failing_resume(job_id: str, answer: str, is_trusted: bool = False):
+            if "Change code, not tests" in answer or "Verification failed" in answer:
+                raise ManagerError("Simulated resume failure", code="concurrency_limit_exceeded")
+            return orig_resume(job_id, answer, is_trusted=is_trusted)
+    
+        with patch.object(manager, "resume", side_effect=mock_failing_resume):
+            env = manager.start(
+                prompt="Fix calc __SCENARIO:verify_always_fail__",
+                repo_path=str(repo_dir),
+                title="Failing Auto Resume Job",
+                verify="pytest",
+            )
+    
+            t0 = time.time()
+            # Request a long wait; should return promptly when auto-resume fails
+            res = manager.wait(env.job_id, seconds=30)
+            elapsed = time.time() - t0
+    
+>           assert elapsed < 5.0, f"wait() stalled for {elapsed}s on failing auto-resume"
+E           AssertionError: wait() stalled for 30.012514114379883s on failing auto-resume
+E           assert 30.012514114379883 < 5.0
+
+tests/test_f20.py:139: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f20.py::test_f20_counters_survive_simulated_restart - Asser...
+FAILED tests/test_f20.py::test_f20_failing_auto_resume_wait_returns_promptly
+========================= 2 failed, 1 passed in 34.12s =========================

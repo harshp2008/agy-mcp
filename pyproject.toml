@@ -1,0 +1,92 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agy-mcp"
+version = "0.1.0.dev0"
+description = "MCP server orchestrating autonomous Google Antigravity (agy) CLI coding jobs"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [
+    { name = "Harsh Patel" },
+]
+keywords = [
+    "agy",
+    "antigravity",
+    "automation",
+    "mcp",
+    "model-context-protocol",
+    "orchestration",
+    "worktree",
+]
+# Only claim what has actually been run. Linux is the tested platform; see
+# doc/developing/platform-support.md. macOS and Windows are untested.
+classifiers = [
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = [
+    "mcp>=1.2,<2",
+    "tomli; python_version<'3.11'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[project.scripts]
+agy-mcp = "agy_mcp.server:main"
+
+[project.urls]
+Repository = "https://github.com/harshp2008/agy-mcp"
+Documentation = "https://github.com/harshp2008/agy-mcp/tree/main/doc"
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/agy_mcp/preamble.md" = "agy_mcp/preamble.md"
+
+# Publish only what a source install, the tests and live docs need. `docs/` is
+# a 4.4 MB historical evidence archive (reports, superseded prose); no test
+# reads it at runtime, so it stays out of the sdist and only lives in the repo.
+# `doc/` (1.7 MB, the live documentation home) is included.
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/doc",
+    "/scripts",
+    "/installer",
+    "/README.md",
+    "/LICENSE",
+    "/CHANGELOG.md",
+    "/AGENTS.md",
+    "/pyproject.toml",
+]
+# Hatchling also force-includes its own VCS metadata (.gitignore), the generated
+# PKG-INFO, and the declared readme/license files; those are build-system
+# requirements, not repository content.
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "T20"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["T20"]
+# tests/test_cleanup_jobs_fixes6.py is frozen by sha256 (tests/frozen.sha256):
+# five of its lines exceed 100 columns, and rewrapping them would change the
+# frozen digest. The file-specific E501 ignore stays until Harsh unfreezes the
+# file (audit C7); do not widen this to other test files.
+"tests/test_cleanup_jobs_fixes6.py" = ["E501"]
+"scripts/*" = ["T20", "E501", "F401", "I001", "E741"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+python_files = ["test_*.py"]
+addopts = "-p no:launch_testing -p no:ament_flake8 -p no:ament_copyright -p no:launch_ros -p no:ament_xmllint -p no:ament_pep257 -p no:ament_lint"
+

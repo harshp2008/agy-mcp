@@ -1,0 +1,246 @@
+FFF.....F                                                                [100%]
+=================================== FAILURES ===================================
+_________________ test_cleanup_allows_branch_merged_into_head __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1282/test_cleanup_allows_branch_mer0')
+safe_git_env = {'PATH': '~/.npm-global/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin', 'HOME': '/tmp/pytest-of-<user>/pytest-1282/test_cleanup_allows_branch_mer0/home', 'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_NOSYSTEM': '1', ...}
+
+    def test_cleanup_allows_branch_merged_into_head(
+        tmp_path: Path, safe_git_env: dict[str, str]
+    ) -> None:
+        job, repo, _wt = _make_job(tmp_path, "Merged Into Head", safe_git_env)
+        _commit(job.worktree_path, "feature.txt", "feature: add file", safe_git_env)
+        _git(["merge", "--ff-only", job.branch], repo, safe_git_env)
+    
+>       resp = cleanup_worktree(job, remove_worktree_flag=True, delete_branch_flag=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_agymcp_fixes2_a1.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+job = Job(job_id='c45e6849-89d0-4535-a05f-0099888f0c4c', title='Merged Into Head', repo_path=PosixPath('/tmp/pytest-of-<user>...e, plan_summary=None, plan_nudge_count=0, agent_report=None, audit_status=None, audit_reason=None, scratchpad_files=[])
+remove_worktree_flag = True, delete_branch_flag = True, force = False
+kwargs = {}
+
+    def cleanup_worktree(
+        job: Job,
+        remove_worktree_flag: bool = True,
+        delete_branch_flag: bool = False,
+        force: bool = False,
+        **kwargs: Any,
+    ) -> JobCleanupResponse:
+        """Safely cleanup worktree and branch according to tool contracts in SPEC section 8 & 9."""
+        if "remove_worktree" in kwargs:
+            remove_worktree_flag = bool(kwargs["remove_worktree"])
+        if "delete_branch" in kwargs:
+            delete_branch_flag = bool(kwargs["delete_branch"])
+        if not force:
+            # Check dirty worktree
+            if job.worktree_path and job.worktree_path.exists():
+                if is_worktree_dirty(job.worktree_path):
+                    raise RuntimeError(
+                        f"Refusing to cleanup dirty worktree for job '{job.job_id}' without force=True"
+                    )
+    
+            # Check unmerged commits on branch
+            if delete_branch_flag and job.repo_path.exists():
+                log_res = run_git(
+                    ["rev-list", "--count", f"{job.base_commit}..{job.branch}"],
+                    job.repo_path,
+                )
+                if log_res.returncode == 0:
+                    count = int(log_res.stdout.strip() or 0)
+                    if count > 0:
+>                       raise RuntimeError(
+                            f"Refusing to delete branch '{job.branch}' with {count} unmerged commits "
+                            f"without force=True"
+                        )
+E                       RuntimeError: Refusing to delete branch 'agy/merged-into-head-84e16b6f' with 1 unmerged commits without force=True
+
+src/agy_mcp/worktree.py:385: RuntimeError
+___________ test_cleanup_allows_branch_merged_into_other_branch_only ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1282/test_cleanup_allows_branch_mer1')
+safe_git_env = {'PATH': '~/.npm-global/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin', 'HOME': '/tmp/pytest-of-<user>/pytest-1282/test_cleanup_allows_branch_mer1/home', 'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_NOSYSTEM': '1', ...}
+
+    def test_cleanup_allows_branch_merged_into_other_branch_only(
+        tmp_path: Path, safe_git_env: dict[str, str]
+    ) -> None:
+        """Merged into integration while the source repo HEAD is still main."""
+        job, repo, _wt = _make_job(tmp_path, "Merged Into Integration", safe_git_env)
+        _commit(job.worktree_path, "feature.txt", "feature: add file", safe_git_env)
+        _merge_into_integration(job, repo, tmp_path, safe_git_env)
+    
+        head = _git(["rev-parse", "--abbrev-ref", "HEAD"], repo, safe_git_env)
+        assert head.stdout.strip() == "main"
+    
+>       resp = cleanup_worktree(job, remove_worktree_flag=True, delete_branch_flag=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_agymcp_fixes2_a1.py:98: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+job = Job(job_id='8b6dbb29-54ee-40b0-a079-3f85083e2381', title='Merged Into Integration', repo_path=PosixPath('/tmp/pytest-o...e, plan_summary=None, plan_nudge_count=0, agent_report=None, audit_status=None, audit_reason=None, scratchpad_files=[])
+remove_worktree_flag = True, delete_branch_flag = True, force = False
+kwargs = {}
+
+    def cleanup_worktree(
+        job: Job,
+        remove_worktree_flag: bool = True,
+        delete_branch_flag: bool = False,
+        force: bool = False,
+        **kwargs: Any,
+    ) -> JobCleanupResponse:
+        """Safely cleanup worktree and branch according to tool contracts in SPEC section 8 & 9."""
+        if "remove_worktree" in kwargs:
+            remove_worktree_flag = bool(kwargs["remove_worktree"])
+        if "delete_branch" in kwargs:
+            delete_branch_flag = bool(kwargs["delete_branch"])
+        if not force:
+            # Check dirty worktree
+            if job.worktree_path and job.worktree_path.exists():
+                if is_worktree_dirty(job.worktree_path):
+                    raise RuntimeError(
+                        f"Refusing to cleanup dirty worktree for job '{job.job_id}' without force=True"
+                    )
+    
+            # Check unmerged commits on branch
+            if delete_branch_flag and job.repo_path.exists():
+                log_res = run_git(
+                    ["rev-list", "--count", f"{job.base_commit}..{job.branch}"],
+                    job.repo_path,
+                )
+                if log_res.returncode == 0:
+                    count = int(log_res.stdout.strip() or 0)
+                    if count > 0:
+>                       raise RuntimeError(
+                            f"Refusing to delete branch '{job.branch}' with {count} unmerged commits "
+                            f"without force=True"
+                        )
+E                       RuntimeError: Refusing to delete branch 'agy/merged-into-integration-419b0f7e' with 1 unmerged commits without force=True
+
+src/agy_mcp/worktree.py:385: RuntimeError
+___________ test_cleanup_allows_branch_merged_with_noff_merge_commit ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1282/test_cleanup_allows_branch_mer2')
+safe_git_env = {'PATH': '~/.npm-global/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin', 'HOME': '/tmp/pytest-of-<user>/pytest-1282/test_cleanup_allows_branch_mer2/home', 'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_NOSYSTEM': '1', ...}
+
+    def test_cleanup_allows_branch_merged_with_noff_merge_commit(
+        tmp_path: Path, safe_git_env: dict[str, str]
+    ) -> None:
+        job, repo, _wt = _make_job(tmp_path, "No FF Merge", safe_git_env)
+        _commit(job.worktree_path, "feature.txt", "feature: add file", safe_git_env)
+        _merge_into_integration(job, repo, tmp_path, safe_git_env, no_ff=True)
+    
+>       resp = cleanup_worktree(job, remove_worktree_flag=True, delete_branch_flag=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_agymcp_fixes2_a1.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+job = Job(job_id='4ed2c433-949f-4a40-8bff-d9dde7a24a8e', title='No FF Merge', repo_path=PosixPath('/tmp/pytest-of-<user>/pyte...e, plan_summary=None, plan_nudge_count=0, agent_report=None, audit_status=None, audit_reason=None, scratchpad_files=[])
+remove_worktree_flag = True, delete_branch_flag = True, force = False
+kwargs = {}
+
+    def cleanup_worktree(
+        job: Job,
+        remove_worktree_flag: bool = True,
+        delete_branch_flag: bool = False,
+        force: bool = False,
+        **kwargs: Any,
+    ) -> JobCleanupResponse:
+        """Safely cleanup worktree and branch according to tool contracts in SPEC section 8 & 9."""
+        if "remove_worktree" in kwargs:
+            remove_worktree_flag = bool(kwargs["remove_worktree"])
+        if "delete_branch" in kwargs:
+            delete_branch_flag = bool(kwargs["delete_branch"])
+        if not force:
+            # Check dirty worktree
+            if job.worktree_path and job.worktree_path.exists():
+                if is_worktree_dirty(job.worktree_path):
+                    raise RuntimeError(
+                        f"Refusing to cleanup dirty worktree for job '{job.job_id}' without force=True"
+                    )
+    
+            # Check unmerged commits on branch
+            if delete_branch_flag and job.repo_path.exists():
+                log_res = run_git(
+                    ["rev-list", "--count", f"{job.base_commit}..{job.branch}"],
+                    job.repo_path,
+                )
+                if log_res.returncode == 0:
+                    count = int(log_res.stdout.strip() or 0)
+                    if count > 0:
+>                       raise RuntimeError(
+                            f"Refusing to delete branch '{job.branch}' with {count} unmerged commits "
+                            f"without force=True"
+                        )
+E                       RuntimeError: Refusing to delete branch 'agy/no-ff-merge-7b3128e9' with 1 unmerged commits without force=True
+
+src/agy_mcp/worktree.py:385: RuntimeError
+_____________ test_cleanup_allows_merged_branch_from_detached_head _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1282/test_cleanup_allows_merged_bra0')
+safe_git_env = {'PATH': '~/.npm-global/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin', 'HOME': '/tmp/pytest-of-<user>/pytest-1282/test_cleanup_allows_merged_bra0/home', 'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_NOSYSTEM': '1', ...}
+
+    def test_cleanup_allows_merged_branch_from_detached_head(
+        tmp_path: Path, safe_git_env: dict[str, str]
+    ) -> None:
+        """A detached source HEAD must not make the merged-commit check fail."""
+        job, repo, _wt = _make_job(tmp_path, "Detached Head", safe_git_env)
+        _commit(job.worktree_path, "feature.txt", "feature: add file", safe_git_env)
+        _merge_into_integration(job, repo, tmp_path, safe_git_env)
+        _git(["checkout", "--detach", "main"], repo, safe_git_env)
+    
+>       resp = cleanup_worktree(job, remove_worktree_flag=True, delete_branch_flag=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_agymcp_fixes2_a1.py:208: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+job = Job(job_id='2928aaf9-e06e-46a6-bddd-1db754c88791', title='Detached Head', repo_path=PosixPath('/tmp/pytest-of-<user>/py...e, plan_summary=None, plan_nudge_count=0, agent_report=None, audit_status=None, audit_reason=None, scratchpad_files=[])
+remove_worktree_flag = True, delete_branch_flag = True, force = False
+kwargs = {}
+
+    def cleanup_worktree(
+        job: Job,
+        remove_worktree_flag: bool = True,
+        delete_branch_flag: bool = False,
+        force: bool = False,
+        **kwargs: Any,
+    ) -> JobCleanupResponse:
+        """Safely cleanup worktree and branch according to tool contracts in SPEC section 8 & 9."""
+        if "remove_worktree" in kwargs:
+            remove_worktree_flag = bool(kwargs["remove_worktree"])
+        if "delete_branch" in kwargs:
+            delete_branch_flag = bool(kwargs["delete_branch"])
+        if not force:
+            # Check dirty worktree
+            if job.worktree_path and job.worktree_path.exists():
+                if is_worktree_dirty(job.worktree_path):
+                    raise RuntimeError(
+                        f"Refusing to cleanup dirty worktree for job '{job.job_id}' without force=True"
+                    )
+    
+            # Check unmerged commits on branch
+            if delete_branch_flag and job.repo_path.exists():
+                log_res = run_git(
+                    ["rev-list", "--count", f"{job.base_commit}..{job.branch}"],
+                    job.repo_path,
+                )
+                if log_res.returncode == 0:
+                    count = int(log_res.stdout.strip() or 0)
+                    if count > 0:
+>                       raise RuntimeError(
+                            f"Refusing to delete branch '{job.branch}' with {count} unmerged commits "
+                            f"without force=True"
+                        )
+E                       RuntimeError: Refusing to delete branch 'agy/detached-head-c20cac63' with 1 unmerged commits without force=True
+
+src/agy_mcp/worktree.py:385: RuntimeError
+=========================== short test summary info ============================
+FAILED tests/test_agymcp_fixes2_a1.py::test_cleanup_allows_branch_merged_into_head
+FAILED tests/test_agymcp_fixes2_a1.py::test_cleanup_allows_branch_merged_into_other_branch_only
+FAILED tests/test_agymcp_fixes2_a1.py::test_cleanup_allows_branch_merged_with_noff_merge_commit
+FAILED tests/test_agymcp_fixes2_a1.py::test_cleanup_allows_merged_branch_from_detached_head
+4 failed, 5 passed in 0.55s

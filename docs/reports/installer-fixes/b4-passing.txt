@@ -1,0 +1,5 @@
+Mon Oct 26 10:47:04 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q
+................................                                         [100%]
+32 passed in 64.28s (0:01:04)
+rc=0

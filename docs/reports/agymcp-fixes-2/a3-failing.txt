@@ -1,0 +1,71 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_branch_name_is_computed_once_and_agrees_everywhere ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1292/test_branch_name_is_computed_o0')
+safe_git_env = {'PATH': '~/.npm-global/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin', 'HOME': '/tmp/pytest-of-<user>/pytest-1292/test_branch_name_is_computed_o0/home', 'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_NOSYSTEM': '1', ...}
+
+    def test_branch_name_is_computed_once_and_agrees_everywhere(
+        tmp_path: Path, safe_git_env: dict[str, str]
+    ) -> None:
+        manager, repo_dir = _manager(tmp_path)
+        env = manager.start(
+            prompt="Perform task __SCENARIO:success_with_commits__",
+            repo_path=str(repo_dir),
+            title="A3 Branch Name Consistency",
+        )
+        started_branch = env.branch
+        assert started_branch.startswith("agy/")
+    
+        # Persisted before agy_start returns, not patched later by the provisioning
+        # thread: a crash between start and provisioning must not leave a job whose
+        # envelope branch names a ref that was never created.
+        persisted = get_job(env.job_id, manager.state_dir)
+        assert persisted.branch == started_branch
+    
+        waited = manager.wait(env.job_id, seconds=10)
+        assert waited.state == JobState.DONE
+>       assert waited.branch == started_branch
+E       AssertionError: assert 'agy/a3-branc...ency-13108c3f' == 'agy/a3-branc...ency-c3ed1865'
+E         
+E         - agy/a3-branch-name-consistency-c3ed1865
+E         ?                                  ^^^^^^
+E         + agy/a3-branch-name-consistency-13108c3f
+E         ?                                +++++  ^
+
+tests/test_agymcp_fixes2_a3.py:65: AssertionError
+______ test_two_jobs_with_the_same_title_get_distinct_persisted_branches _______
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1292/test_two_jobs_with_the_same_ti0')
+safe_git_env = {'PATH': '~/.npm-global/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin', 'HOME': '/tmp/pytest-of-<user>/pytest-1292/test_two_jobs_with_the_same_ti0/home', 'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_NOSYSTEM': '1', ...}
+
+    def test_two_jobs_with_the_same_title_get_distinct_persisted_branches(
+        tmp_path: Path, safe_git_env: dict[str, str]
+    ) -> None:
+        manager, repo_dir = _manager(tmp_path)
+        first = manager.start(
+            prompt="Perform task __SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Same Title Twice",
+        )
+        second = manager.start(
+            prompt="Perform task __SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Same Title Twice",
+        )
+        assert first.branch != second.branch
+        assert get_job(first.job_id, manager.state_dir).branch == first.branch
+        assert get_job(second.job_id, manager.state_dir).branch == second.branch
+    
+        manager.wait(first.job_id, seconds=10)
+        manager.wait(second.job_id, seconds=10)
+        branches = _git_branches(repo_dir)
+>       assert first.branch in branches
+E       AssertionError: assert 'agy/same-title-twice-4870f590' in ['agy/same-title-twice-344ed2e3', 'agy/same-title-twice-36f7d69d', 'main']
+E        +  where 'agy/same-title-twice-4870f590' = StandardEnvelope(job_id='4870f590-ef44-4a45-8ce1-dbc4b4a6ff6f', state=<JobState.QUEUED: 'queued'>, elapsed_seconds=0.0...quested': False, 'ran': False, 'passed': None, 'rc': None, 'duration_seconds': None, 'attempts': 0, 'last_tail': None}).branch
+
+tests/test_agymcp_fixes2_a3.py:109: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_agymcp_fixes2_a3.py::test_branch_name_is_computed_once_and_agrees_everywhere
+FAILED tests/test_agymcp_fixes2_a3.py::test_two_jobs_with_the_same_title_get_distinct_persisted_branches
+2 failed in 0.85s

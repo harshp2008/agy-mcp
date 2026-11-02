@@ -1,0 +1,13 @@
+$ env PYTHONPATH="$PWD" .venv/bin/python /tmp/c4_crash_window.py   # BEFORE the dedupe fix (C4)
+before recovery: job.json state = running cumulative_minutes = 2.0
+before recovery: usage rows = 1 ['done']
+after recovery:  job.json state = running
+after recovery:  recovered state = needs_review
+after recovery:  usage rows = 2 [('done', 120.0, 2.0), ('needs_review', 120.0, 2.0)]
+
+$ env PYTHONPATH="$PWD" .venv/bin/python /tmp/c4_crash_window.py   # AFTER the dedupe fix (C4)
+before recovery: job.json state = running cumulative_minutes = 2.0
+before recovery: usage rows = 1 ['done']
+after recovery:  job.json state = running
+after recovery:  recovered state = needs_review
+after recovery:  usage rows = 1 [('done', 120.0, 2.0)]

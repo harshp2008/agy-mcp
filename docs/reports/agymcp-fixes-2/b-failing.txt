@@ -1,0 +1,31 @@
+.....FF.F                                                                [100%]
+=================================== FAILURES ===================================
+_____________ test_agents_block_states_the_integration_branch_rule _____________
+
+    def test_agents_block_states_the_integration_branch_rule() -> None:
+        text = AGENTS_MD.read_text(encoding="utf-8")
+>       assert "dedicated integration branch" in text
+E       assert 'dedicated integration branch' in "# Coding jobs with agy (mcp__agy__ tools)\nYou can hand self-contained coding work to Google's agy through the mcp__a...HUMAN items remain. Never loop on a failing job. If something is unclear, make the safe choice, log it and continue.\n"
+
+tests/test_installer_chapter.py:779: AssertionError
+__________________ test_agents_block_never_uses_force_cleanup __________________
+
+    def test_agents_block_never_uses_force_cleanup() -> None:
+        text = AGENTS_MD.read_text(encoding="utf-8")
+>       assert "Never pass force=true to agy_cleanup" in text
+E       assert 'Never pass force=true to agy_cleanup' in "# Coding jobs with agy (mcp__agy__ tools)\nYou can hand self-contained coding work to Google's agy through the mcp__a...HUMAN items remain. Never loop on a failing job. If something is unclear, make the safe choice, log it and continue.\n"
+
+tests/test_installer_chapter.py:788: AssertionError
+_______________ test_agents_block_uses_the_server_default_model ________________
+
+    def test_agents_block_uses_the_server_default_model() -> None:
+        text = AGENTS_MD.read_text(encoding="utf-8")
+>       assert "Do not pass the model parameter unless the human named one" in text
+E       assert 'Do not pass the model parameter unless the human named one' in "# Coding jobs with agy (mcp__agy__ tools)\nYou can hand self-contained coding work to Google's agy through the mcp__a...HUMAN items remain. Never loop on a failing job. If something is unclear, make the safe choice, log it and continue.\n"
+
+tests/test_installer_chapter.py:805: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_agents_block_states_the_integration_branch_rule
+FAILED tests/test_installer_chapter.py::test_agents_block_never_uses_force_cleanup
+FAILED tests/test_installer_chapter.py::test_agents_block_uses_the_server_default_model
+3 failed, 6 passed, 27 deselected in 5.46s

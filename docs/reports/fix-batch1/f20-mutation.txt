@@ -1,0 +1,33 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 3 items
+
+tests/test_f20.py F..                                                    [100%]
+
+=================================== FAILURES ===================================
+_______________________ test_f20_prompt_text_exact_check _______________________
+
+    def test_f20_prompt_text_exact_check() -> None:
+        """Auto-fix prompt must have guidance outside untrusted block, tail inside, and no escaped tags."""
+        preamble = load_preamble()
+        tail = "FAILED tests/test_calc.py::test_add - assert 1 == 2\nTraceback error in calc.py"
+    
+        fix_body = format_fix_prompt(tail, include_preamble=False)
+        full_prompt = format_resume_prompt(fix_body, is_trusted=True)
+    
+        # 1. Preamble appears exactly once
+        assert full_prompt.count(preamble) == 1, (
+            f"Preamble appeared {full_prompt.count(preamble)} times, expected exactly 1"
+        )
+    
+        # 2. Guidance heading is trusted
+>       assert "## Wrapper Guidance" in full_prompt
+E       assert '## Wrapper Guidance' in 'You are an autonomous coding assistant executing a task in this repository worktree.\nRules you must strictly follow:...yze the error, fix the issues, and write a commit message to .agy/COMMIT_MSG.\n</untrusted_text id="6b043af92673d7ec">'
+
+tests/test_f20.py:55: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f20.py::test_f20_prompt_text_exact_check - assert '## Wrapp...
+========================= 1 failed, 2 passed in 5.23s ==========================

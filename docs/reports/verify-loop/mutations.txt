@@ -1,0 +1,70 @@
+PART C - BREAK-IT-ON-PURPOSE MUTATIONS REPORT
+
+Mutation 1: known_hosts classified strict again
+- File modified: src/agy_mcp/audit.py
+- Diff:
+@@ -33,3 +33,3 @@
+-    HostPathClass.APPEND_TOLERANT: {"~/.ssh/known_hosts", "~/.ssh/known_hosts.old"},
++    HostPathClass.APPEND_TOLERANT: set(),
+- Test command: PYTHONPATH="" ~/agy-mcp-venv/bin/pytest tests/test_audit.py -k "known_hosts"
+- Raw failing lines:
+FAILED tests/test_audit.py::test_audit_known_hosts_pure_append - assert True is False
+FAILED tests/test_audit.py::test_audit_known_hosts_new_file - assert True is False
+FAILED tests/test_audit.py::test_scenario_known_hosts_append - AssertionError: assert <JobState.NEEDS_REVIEW: 'needs_review'> == <JobState.DONE: 'done'>
+- Restored cleanly: git diff --stat is empty.
+
+Mutation 2: append check compares sizes only, not the hash of the first bytes
+- File modified: src/agy_mcp/audit.py
+- Diff:
+@@ -311,2 +311,2 @@
+-        if first_sha != old_sha:
++        if False:  # Mutated: compares sizes only, not hash
+- Test command: PYTHONPATH="" ~/agy-mcp-venv/bin/pytest tests/test_audit.py -k "test_audit_known_hosts_rewritten_earlier_bytes_fatal"
+- Raw failing line:
+FAILED tests/test_audit.py::test_audit_known_hosts_rewritten_earlier_bytes_fatal - AssertionError: assert False is True
+- Restored cleanly: git diff --stat is empty.
+
+Mutation 3: removed file treated as benign
+- File modified: src/agy_mcp/audit.py
+- Diff:
+@@ -237,2 +237,2 @@
+-        if curr_val == "missing" or not p.is_file():
+-            result.fatal_paths.append(k)
++        if curr_val == "missing" or not p.is_file():
++            result.benign_changes.append({"path": str(p), "added_bytes": 0, "new_lines_count": 0})
+- Test command: PYTHONPATH="" ~/agy-mcp-venv/bin/pytest tests/test_audit.py -k "test_audit_known_hosts_deleted_fatal"
+- Raw failing line:
+FAILED tests/test_audit.py::test_audit_known_hosts_deleted_fatal - AssertionError: assert False is True
+- Restored cleanly: git diff --stat is empty.
+
+Mutation 4: auto-fix attempt counter removed
+- File modified: src/agy_mcp/manager.py
+- Diff:
+@@ -395,1 +395,1 @@
+-            self._auto_fix_counts[job.job_id] = attempts + 1
++            # self._auto_fix_counts[job.job_id] = attempts + 1  # Mutated: counter removed
+- Test command: PYTHONPATH="" ~/agy-mcp-venv/bin/pytest tests/test_manager.py -k "test_manager_auto_fix_fails_twice_verify_failed_with_tail"
+- Raw failing line:
+FAILED tests/test_manager.py::test_manager_auto_fix_fails_twice_verify_failed_with_tail - AssertionError: assert <JobState.RUNNING: 'running'> == <JobState.NEEDS_REVIEW: 'needs_review'>
+- Restored cleanly: git diff --stat is empty.
+
+Mutation 5: verify failure tail not wrapped as untrusted
+- File modified: src/agy_mcp/verify.py
+- Diff:
+@@ -200,1 +200,1 @@
+-    wrapped_tail = wrap_untrusted_text(tail_2000)
++    wrapped_tail = tail_2000  # Mutated: failure tail not wrapped as untrusted
+- Test command: PYTHONPATH="" ~/agy-mcp-venv/bin/pytest tests/test_verify.py -k "test_format_fix_prompt_failing_tests_and_guidance"
+- Raw failing line:
+FAILED tests/test_verify.py::test_format_fix_prompt_failing_tests_and_guidance - AssertionError: assert '<untrusted_text' in 'You are an autonomous coding assistant executing a task in this repository worktree.\nRules you must strictly follow:...y so in the commit message).\nPlease analyze the error, fix the issues, and write a commit message to .agy/COMMIT_MSG.'
+- Restored cleanly: git diff --stat is empty.
+
+Mutation 6: preamble rule 6 text dropped
+- File modified: src/agy_mcp/preamble.md
+- Diff:
+@@ -7,2 +7,0 @@
+-6. The wrapper runs verification tests and handles git commits; agy must NOT run tests; the wrapper runs the verify command after your work and will send you the results; fix what fails. Do not attempt git or test suite operations directly.
+- Test command: PYTHONPATH="" ~/agy-mcp-venv/bin/pytest tests/test_verify.py -k "test_prompt_guidance_exact_text"
+- Raw failing line:
+FAILED tests/test_verify.py::test_prompt_guidance_exact_text - AssertionError: assert 'agy must NOT run tests;' in 'You are an autonomous coding assistant executing a task in this repository worktree.\nRules you must strictly follow:...re and will end your run. Do the work yourself with your file tools, and only read files inside the current directory.'
+- Restored cleanly: git diff --stat is empty.

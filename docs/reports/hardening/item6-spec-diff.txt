@@ -1,0 +1,111 @@
+diff --git a/SPEC.md b/SPEC.md
+index 9f2309a..85a0fd4 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -175,6 +175,8 @@ All tools communicate over standard FastMCP JSON RPC. All responses share a cons
+   "files_modified": ["src/auth/jwt.py", "tests/test_jwt.py"],
+   "skipped_files": [],
+   "denials": [],
++  "denied_commands": [],
++  "denied_tools": [],
+   "warnings": [],
+   "tokens": {
+     "input_tokens": 14200,
+@@ -184,7 +186,16 @@ All tools communicate over standard FastMCP JSON RPC. All responses share a cons
+   "next_actions": ["Wait for completion with agy_wait", "Check status with agy_status"],
+   "error": null,
+   "usage_cost": null,
+-  "resume_after": null
++  "resume_after": null,
++  "verify": {
++    "requested": false,
++    "ran": false,
++    "passed": null,
++    "rc": null,
++    "duration_seconds": null,
++    "attempts": 0,
++    "last_tail": null
++  }
+ }
+ ```
+ 
+@@ -254,6 +265,7 @@ All tools communicate over standard FastMCP JSON RPC. All responses share a cons
+   - `base_moved`: `bool`
+   - `audit_findings`: `List[Dict[str, Any]]`
+   - `untrusted_diff`: `str` (Max 32 KB)
++- *Fail-closed review:* If the audit or the git queries used to build the review raise, `audit_findings` includes a fatal `audit_unavailable` finding (detail is the short code only, never exception text or host paths) and `next_actions` starts with a statement that a human must review the job before merging.
+ 
+ #### 9. `agy_cleanup`
+ - **Parameters:**
+@@ -361,12 +373,15 @@ The wrapper runs an asynchronous supervisor loop:
+ 4. **Tick-Error Audit Fail-Closed (D57):** If an unhandled supervisor tick exception occurs while a baseline snapshot exists, an immediate audit check is performed. If `audit()` itself raises during this handler, the exception is not swallowed: the supervisor appends audit event `audit_error_during_tick_error` (with exception class and redacted message), sends SIGTERM/SIGKILL to terminate the process group, and transitions to terminal `needs_review(reason=audit_unavailable)`. It never ends in `done` and never leaves `agy` running.
+ 
+ ### Lock Hierarchy & Concurrency Control
+-The wrapper strictly coordinates execution and concurrency via a four-tier lock hierarchy. Locks must always be acquired in outer-to-inner order to prevent deadlocks:
+-1. **Concurrency flock (Inter-process):** An exclusive `flock` on `<state_dir>/concurrency.lock` serializes active job count verification (`queued`, `starting`, `running`) against `max_concurrent_jobs` during `start` and `resume`. Never held while awaiting in-memory locks.
+-2. **Job lock (Per-job lifecycle):** In-memory lock (`_job_locks[job_id]`) serializing lifecycle state transitions (`cancel`, `resume`) on a single job.
++The wrapper coordinates execution with four locks. When more than one is held, the real acquisition order is:
++
++1. **Job lock (Per-job lifecycle):** In-memory lock (`_job_locks[job_id]`) serializing lifecycle state transitions (`cancel`, `resume`) on a single job.
++2. **Concurrency flock (Inter-process):** An exclusive `flock` on `<state_dir>/concurrency.lock` serializes active job count verification (`queued`, `running`) against `max_concurrent_jobs` during `start` and `resume`. It is never held while waiting for an in-memory lock. `start` takes it with no job lock held (the job does not exist yet); `resume` takes it while already holding the job lock.
+ 3. **Manager lock (In-memory manager state):** In-memory `RLock` (`JobManager._lock`) protecting manager collection mappings (`_supervisors`, `_threads`, `_resuming_jobs`, `_job_locks`, `_job_commit_locks`). Implemented as `RLock` to eliminate internal re-entrancy deadlocks during crash recovery reconciliation (`reconcile`). Held only for immediate dictionary updates, never across long operations.
+ 4. **Commit lock (Per-job worktree):** In-memory lock (`_job_commit_locks[job_id]`) shared between `JobSupervisor` and `CommitWatcher` to strictly serialize git staging and commits (`watcher.tick`, `checkpoint_commit`, `safety_net_commit`, `_try_pre_kill_checkpoint`).
+ 
++*Lock-order note (documentation-only, no automated test):* `resume` is the only path that holds both the job lock and the concurrency flock, and it takes the job lock first. No path today acquires them in the reverse order, so the documented order matches the code and no deadlock is reachable through these two locks.
++
+ ---
+ 
+ ## 11. Watcher & Commit Pipeline
+@@ -374,9 +389,9 @@ The wrapper strictly coordinates execution and concurrency via a four-tier lock
+ ### Automated Commit Protocol
+ `agy` never runs modifying git commands (`git add`, `git commit`). All commits are created by the wrapper:
+ 1. `agy` writes a commit message to `.agy/COMMIT_MSG` (first line <= 72 characters, blank line, body).
+-2. The wrapper watcher polls `<jobdir>/work/.agy/COMMIT_MSG` synchronously on every supervisor loop tick (every 5 seconds).
+-3. **Settle Window:** The watcher acts only when `(sha256, size, mtime_ns)` has remained identical across two consecutive 5-second polling ticks (>= 5s stability).
+-4. **Validation:** The message must be non-empty, valid UTF-8, and have a first line <= 72 chars. If invalid, the watcher logs a warning and retries once; on second failure, it sets `needs_review(reason=invalid_commit_message)`.
++2. The wrapper watcher polls `<jobdir>/work/.agy/COMMIT_MSG` synchronously on every supervisor loop tick (`poll_interval_seconds`, default 1 second).
++3. **Settle Window:** The watcher acts only when `(sha256, size, mtime_ns)` has remained unchanged for at least the 5 s settle window since it was first observed.
++4. **Validation:** The message must be non-empty, valid UTF-8, and have a first line <= 72 chars. If invalid, the watcher discards it without logging and retries once; on second failure, it sets `needs_review(reason=invalid_commit_message)`.
+ 5. **Consume Step:** The wrapper atomically renames `.agy/COMMIT_MSG` to `.agy/COMMIT_MSG.seen.<n>`.
+ 6. **Pre-commit Audit:** Runs the security audit. If audit fails, the commit is aborted, the process group is killed, and state becomes `needs_review`.
+ 7. **Staging:** The wrapper stages changes using git pathspec exclusions:
+@@ -552,23 +567,25 @@ Because `agy` in `--output-format json` emits no stdout until completion:
+ ## 17. Security Event Log & Caps
+ 
+ ### Append-Only Event Log (`audit.jsonl`)
+-Every state transition, audit check, commit, and kill event is appended atomically with `fsync` to `<jobdir>/audit.jsonl`:
++Every state transition, violation, commit, kill and swallowed cleanup failure is appended atomically with `fsync` to `<jobdir>/audit.jsonl`:
+ ```json
+-{"ts": "2026-10-24T22:50:00.123Z", "event": "audit_pass", "detail": {"checkpoint": "pre_launch"}}
++{"ts": "2026-10-24T22:50:00.123Z", "event": "job_created", "detail": {"title": "Add JWT auth", "model": "gemini-3.8-flash-medium", "max_minutes": 240, "verify": null}}
+ {"ts": "2026-10-24T22:50:05.456Z", "event": "commit", "detail": {"sha": "a1b2c3d", "subject": "Add jwt middleware"}}
+ {"ts": "2026-10-24T22:51:12.789Z", "event": "audit_violation", "detail": {"path": ".agents/hooks.json", "action": "created"}}
++{"ts": "2026-10-24T22:51:13.000Z", "event": "cleanup_error", "detail": {"code": "safety_net_commit_failed"}}
+ ```
++Successful audit passes are not individually logged; only violations, state changes and the events above are recorded. `cleanup_error` details carry a short code only (no exception text or host paths).
+ 
+ ### Resource Caps & Budgeting
+-- **Cumulative Job Budget:** `job_budget_minutes` tracks cumulative wall-clock execution across resumes (default 240m, hard cap `max_minutes_cap` 360m).
++- **Cumulative Job Budget:** The job's `max_minutes` (default 240m, stored as `Job.max_minutes`, hard-capped by `max_minutes_cap` 360m) bounds cumulative wall-clock execution across resumes; elapsed time accumulates in `cumulative_minutes`.
+ - **Daily Job Limit:** `daily_jobs_cap` (default 20) counts job starts per local calendar date (calculated in configured `timezone`, defaulting to local system time), tracked under a state-directory file lock. Quota is consumed only after prompt, model, verify, and repository validation succeeds. Exceeding limits returns `error.code=cap_exceeded`.
+ - **Disk Budget & Retention:** `min_free_gb` (minimum free space on state filesystem) and `max_state_disk_gb` (maximum total bytes in state directory) are checked prior to job launch. Inactive job directories older than `job_retention_days` in terminal states are moved to `<state_dir>/trash/<job_id>_<ts>` (never deleting running jobs or branches holding unmerged commits).
+ - **Usage Metrics:** `~/.local/state/agy-mcp/usage.jsonl` records job completion metrics (`job_id`, `state`, `model`, `duration_seconds`, `tokens`) strictly excluding prompts, titles, and repository code.
+ 
+ ### Usage & Quota Awareness (D59)
+ - **Parsing (`usage.py`):** `/usage` structured data at `command.data.groups[].buckets[]` is primary; the tab-separated `response` lines (group, "Weekly Limit Remaining"/"Five Hour Limit Remaining", percent, reset UTC) are a cross-check/fallback. Unexpected payloads fail soft to `{available: false, reason: "unrecognized_format"}` and never raise. Buckets include `window`, `remaining_fraction`, `reset_time_utc`, and `resets_in_seconds`.
+-- **Reading:** `get_usage` runs `agy --log-file <tmp>/usage.log --output-format json -p "/usage"` from a fresh empty temp directory with the sanitized environment and process-group kill handling (30s timeout). It parses `applyAuthResult: email=..., authMethod=...` from the temp log, masks the email as first 2 characters + `***@` + domain, removes the temp directory, and caches the reading in memory for 60s. The account email is never persisted.
+-- **Start/Resume Guard:** `usage_guard` = `off|warn|block` (default `warn`). Models map to groups by name (`gemini*` -> "Gemini Models"; `claude*`/`gpt*` -> "Claude and GPT models"). Below-threshold usage adds warning `low_quota` (warn) or refuses with `error.code=low_quota` including reset times (block). If usage is unavailable, the wrapper only adds warning `usage_unavailable` and **never blocks**; this also covers an expired login.
++- **Reading:** `get_usage` runs `agy --log-file <tmp>/usage.log --output-format json -p "/usage"` from a fresh empty temp directory with the sanitized environment and process-group kill handling (30s timeout; after SIGTERM the whole group is always SIGKILLed). stdout, stderr and the temp log read are capped at 1 MB each; an oversize stream yields `{available: false, reason: "output_too_large"}`. It parses `applyAuthResult: email=..., authMethod=...` from the temp log, masks the email (a local part longer than two characters becomes its first two characters + `***@` + domain; a one- or two-character local part becomes `***@` + domain), removes the temp directory, and caches only `available=true` readings in memory for 60s. The account email is never persisted.
++- **Start/Resume Guard:** `usage_guard` = `off|warn|block` (default `warn`). Models map to groups by name (`gemini*` -> "Gemini Models"; `claude*`/`gpt*` -> "Claude and GPT models"). Below-threshold usage adds warning `low_quota` (warn) or refuses with `error.code=low_quota` including reset times (block). If usage is unavailable, the wrapper only adds warning `usage_unavailable` and **never blocks**; this also covers an expired login. If the reading is available but the model's group cannot be determined, the wrapper adds warning `usage_unmeasurable` and **never blocks** in every mode except `off`.
+ - **Per-Job Cost:** fresh readings at launch and finalization record `usage_cost {five_hour_pct_points, weekly_pct_points, measured, concurrent_jobs, note}` in `job.json`, `usage.jsonl`, and the envelope. With more than one concurrent job the numbers are approximate because quota is shared; `note` says so. Unavailable readings set `measured=false` and are never an error.
+ - **Interruption Diagnosis:** after a failed, timeout, or empty-response job, a fresh reading with a relevant bucket at 0% marks `needs_review(reason=quota_exhausted)` (resumable, `resume_after` = latest exhausted bucket reset, next_actions says to wait until then). `quota_error_patterns` are also matched against stderr and the cli.log tail. `auth_error_patterns` are matched against stderr, cli.log tail, and the `/usage` output; a match marks `needs_review(reason=auth_required)` and next_actions says to ask the human to log in to agy again, then resume.
+ - **Caveat:** The quota/auth pattern list is UNVERIFIED against real agy; the `/usage` reading is the reliable signal.
+@@ -579,7 +596,7 @@ Every state transition, audit check, commit, and kill event is appended atomical
+ 
+ | Configuration Key | Type | Default | Description |
+ |---|---|---|---|
+-| `max_concurrent_jobs` | `int` | `2` | Maximum concurrent active jobs (queued, starting, or running) across all repositories. Checked and created under flock. |
++| `max_concurrent_jobs` | `int` | `2` | Maximum concurrent active jobs (queued or running) across all repositories. Checked and created under flock. |
+ | `max_minutes_cap` | `int` | `360` | Absolute hard ceiling on cumulative job minutes. |
+ | `daily_jobs_cap` | `int` | `20` | Maximum job starts allowed per calendar day. |
+ | `allowed_workdir_roots`| `List[str]` | `[]` | Explicit directory allowlist for repositories (defaults to `$HOME`). |

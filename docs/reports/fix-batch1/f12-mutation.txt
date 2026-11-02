@@ -1,0 +1,64 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 2 items
+
+tests/test_f12.py F.                                                     [100%]
+
+=================================== FAILURES ===================================
+___________________ test_f12_cancel_queued_job_aborts_launch ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-355/test_f12_cancel_queued_job_abo0')
+
+    def test_f12_cancel_queued_job_aborts_launch(tmp_path: Path) -> None:
+        """agy_cancel on a queued job transitions to cancelled and aborts process launch."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        # First verify queued -> cancelled transition is legal
+        job = get_job(
+            manager.start("Test task", str(repo_dir), "Queued Job").job_id,
+            manager.state_dir,
+        )
+        job.state = JobState.QUEUED
+    
+        # This transition must be legal per SPEC section 7
+>       updated = transition_job_state(
+            job,
+            JobState.CANCELLED,
+            event_trigger="Explicit call to agy_cancel",
+            base_state_dir=manager.state_dir,
+        )
+
+tests/test_f12.py:61: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+job = Job(job_id='9a6f3195-53af-44df-a374-a197ae45e71b', title='Queued Job', repo_path=PosixPath('/tmp/pytest-of-<user>/pytes... warnings=[], tokens=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0), schema_version=1, verify_status=None)
+target_state = <JobState.CANCELLED: 'cancelled'>
+event_trigger = 'Explicit call to agy_cancel', detail = None
+base_state_dir = PosixPath('/tmp/pytest-of-<user>/pytest-355/test_f12_cancel_queued_job_abo0/state')
+
+    def transition_job_state(
+        job: Job,
+        target_state: JobState,
+        event_trigger: str,
+        detail: Optional[dict[str, Any]] = None,
+        base_state_dir: Optional[Path] = None,
+    ) -> Job:
+        """Validate and execute a state transition per TRANSITION_TABLE and SPEC section 7."""
+        valid_transitions = [
+            t for t in TRANSITION_TABLE
+            if t.current_state == job.state and t.target_state == target_state
+        ]
+    
+        if not valid_transitions:
+>           raise ValueError(
+                f"Illegal state transition from {job.state.value} to {target_state.value}"
+            )
+E           ValueError: Illegal state transition from queued to cancelled
+
+src/agy_mcp/jobs.py:215: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_f12.py::test_f12_cancel_queued_job_aborts_launch - ValueErr...
+========================= 1 failed, 1 passed in 1.19s ==========================

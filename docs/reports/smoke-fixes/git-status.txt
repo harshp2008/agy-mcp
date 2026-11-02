@@ -1,0 +1,23 @@
+On branch main
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	docs/reports/smoke-fixes/git-log.txt
+	docs/reports/smoke-fixes/git-status.txt
+	docs/reports/smoke-fixes/h1-audit.jsonl
+	docs/reports/smoke-fixes/h1-cli.log
+	docs/reports/smoke-fixes/h1-git-log.txt
+	docs/reports/smoke-fixes/h1-result.json
+	docs/reports/smoke-fixes/h1-status.json
+	docs/reports/smoke-fixes/h2-audit.jsonl
+	docs/reports/smoke-fixes/h2-cli.log
+	docs/reports/smoke-fixes/h2-git-log.txt
+	docs/reports/smoke-fixes/h2-result.json
+	docs/reports/smoke-fixes/h2-status.json
+	docs/reports/smoke-fixes/pgrep-after.txt
+	docs/reports/smoke-fixes/pytest.txt
+	docs/reports/smoke-fixes/ruff.txt
+	docs/reports/smoke-fixes/settings-hash-after.txt
+	docs/reports/smoke-fixes/settings-hash-before.txt
+	scripts/smoke_fixes_real.py
+
+nothing added to commit but untracked files present (use "git add" to track)

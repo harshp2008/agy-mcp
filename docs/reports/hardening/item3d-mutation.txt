@@ -1,0 +1,79 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+______________ test_get_usage_oversize_stream_is_rejected[stdout] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-805/test_get_usage_oversize_stream0')
+stream = 'stdout'
+
+    @pytest.mark.parametrize("stream", ["stdout", "stderr", "log"])
+    def test_get_usage_oversize_stream_is_rejected(tmp_path: Path, stream: str) -> None:
+        """stdout, stderr and the temp log are each capped at 1 MB with output_too_large."""
+        binary = _make_oversize_usage_binary(tmp_path)
+        reading = get_usage(
+            binary,
+            home=tmp_path,
+            cache=UsageCache(),
+            now_monotonic=1000.0,
+            env_overrides={"FAKE_USAGE_OVERSIZE": stream},
+        )
+        assert reading["available"] is False
+>       assert reading["reason"] == "output_too_large"
+E       AssertionError: assert 'unrecognized_format' == 'output_too_large'
+E         
+E         - output_too_large
+E         + unrecognized_format
+
+tests/test_usage_read.py:276: AssertionError
+______________ test_get_usage_oversize_stream_is_rejected[stderr] ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-805/test_get_usage_oversize_stream1')
+stream = 'stderr'
+
+    @pytest.mark.parametrize("stream", ["stdout", "stderr", "log"])
+    def test_get_usage_oversize_stream_is_rejected(tmp_path: Path, stream: str) -> None:
+        """stdout, stderr and the temp log are each capped at 1 MB with output_too_large."""
+        binary = _make_oversize_usage_binary(tmp_path)
+        reading = get_usage(
+            binary,
+            home=tmp_path,
+            cache=UsageCache(),
+            now_monotonic=1000.0,
+            env_overrides={"FAKE_USAGE_OVERSIZE": stream},
+        )
+        assert reading["available"] is False
+>       assert reading["reason"] == "output_too_large"
+E       AssertionError: assert 'unrecognized_format' == 'output_too_large'
+E         
+E         - output_too_large
+E         + unrecognized_format
+
+tests/test_usage_read.py:276: AssertionError
+_______________ test_get_usage_oversize_stream_is_rejected[log] ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-805/test_get_usage_oversize_stream2')
+stream = 'log'
+
+    @pytest.mark.parametrize("stream", ["stdout", "stderr", "log"])
+    def test_get_usage_oversize_stream_is_rejected(tmp_path: Path, stream: str) -> None:
+        """stdout, stderr and the temp log are each capped at 1 MB with output_too_large."""
+        binary = _make_oversize_usage_binary(tmp_path)
+        reading = get_usage(
+            binary,
+            home=tmp_path,
+            cache=UsageCache(),
+            now_monotonic=1000.0,
+            env_overrides={"FAKE_USAGE_OVERSIZE": stream},
+        )
+        assert reading["available"] is False
+>       assert reading["reason"] == "output_too_large"
+E       AssertionError: assert 'unrecognized_format' == 'output_too_large'
+E         
+E         - output_too_large
+E         + unrecognized_format
+
+tests/test_usage_read.py:276: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_usage_read.py::test_get_usage_oversize_stream_is_rejected[stdout]
+FAILED tests/test_usage_read.py::test_get_usage_oversize_stream_is_rejected[stderr]
+FAILED tests/test_usage_read.py::test_get_usage_oversize_stream_is_rejected[log]
+3 failed in 0.25s

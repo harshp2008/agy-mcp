@@ -1,0 +1,51 @@
+==============================================================================
+{
+  "case": "quick",
+  "state": "done",
+  "review_reason": null,
+  "commits_count": 1,
+  "verify": {
+    "requested": true,
+    "ran": true,
+    "passed": true,
+    "rc": 0,
+    "status": "passed",
+    "timed_out": false,
+    "killed_by_timeout": false,
+    "command": "python3 verify_step.py",
+    "timeout_seconds": 10
+  },
+  "last_tail": "<untrusted_text id=\"aa4f0ffa0ae53630\">\n[wrapper] verify command: python3 verify_step.py\n[wrapper] timeout: 10s\n[wrapper] result: command exited on its own with rc=0\n[wrapper] last 40 lines:\nall checks passed\n</untrusted_text id=\"aa4f0ffa0ae53630\">",
+  "error": null,
+  "next_action": "Inspect result with agy_result"
+}
+==============================================================================
+{
+  "case": "hang",
+  "state": "needs_review",
+  "review_reason": "verify_timeout",
+  "commits_count": 0,
+  "verify": {
+    "requested": true,
+    "ran": true,
+    "passed": false,
+    "rc": 124,
+    "status": "timeout",
+    "timed_out": true,
+    "killed_by_timeout": true,
+    "command": "python3 verify_step.py",
+    "timeout_seconds": 2
+  },
+  "last_tail": "<untrusted_text id=\"fd2314d784528f62\">\n[wrapper] verify command: python3 verify_step.py\n[wrapper] timeout: 2s\n[wrapper] result: timed out (wrapper deadline); killed by timeout=yes\n[wrapper] last 40 lines:\nverify started, hanging with child 3716636\n\nVerification command timed out after 2s\n[wrapper] command: python3 verify_step.py\n[wrapper] process group 3716635 killed (SIGTERM/SIGKILL)\n</untrusted_text id=\"fd2314d784528f62\">",
+  "error": {
+    "code": "verify_timeout",
+    "message": "Cause: verify command timed out after 2s (process group killed=True): python3 verify_step.py Next: inspect the last 40 lines for the hang; fix it or raise verify_timeout_seconds for this job, then resume with agy_resume",
+    "cause": "verify command timed out after 2s (process group killed=True): python3 verify_step.py",
+    "next_action": "inspect the last 40 lines for the hang; fix it or raise verify_timeout_seconds for this job, then resume with agy_resume"
+  },
+  "next_action": "Verification tests timed out after 2s; python3 verify_step.py was killed by the wrapper (process group killed). Inspect the last 40 lines with agy_result, fix the hang or raise verify_timeout_seconds, then resume with agy_resume or cancel with agy_cancel",
+  "child_pid_file": "/tmp/agy-smoke-hang-child-3716455.pid",
+  "grandchild_pid": 3716636,
+  "grandchild_alive_after_verify": false
+}
+SMOKE OK: quick job done/passed; hanging verify timed out and its process group was killed

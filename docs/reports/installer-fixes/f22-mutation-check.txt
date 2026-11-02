@@ -1,0 +1,62 @@
+Mon Oct 26 10:31:49 AM IST 2026
+CMD (mutation: transition_job_state moved before record_usage): env -u PYTHONPATH .venv/bin/python -m pytest tests/test_f22.py::test_usage_record_is_written_before_done_is_observable -q
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_usage_record_is_written_before_done_is_observable ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1161/test_usage_record_is_written_b0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f23be171d60>
+
+    def test_usage_record_is_written_before_done_is_observable(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """D68: seeing state==done in job.json must imply usage.jsonl already exists.
+    
+        The supervisor finalizes on a background thread. With the old ordering the
+        terminal state was persisted first and ``record_usage`` appended afterwards,
+        so a reader could observe ``done`` for several milliseconds while
+        ``usage.jsonl`` was still missing (that is why the F22 test flaked). The
+        500 ms delay injected here makes that window deterministic instead of
+        timing-dependent.
+        """
+        from agy_mcp import usage as usage_module
+    
+        real_record_usage = usage_module.record_usage
+    
+        def slow_record_usage(*args: object, **kwargs: object) -> None:
+            time.sleep(0.5)
+            real_record_usage(*args, **kwargs)
+    
+        monkeypatch.setattr(usage_module, "record_usage", slow_record_usage)
+    
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+        env = manager.start(
+            prompt="__SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Usage Ordering Test Title",
+        )
+        job_id = env.job_id
+    
+        deadline = time.time() + 30.0
+        while time.time() < deadline:
+            job = get_job(job_id, manager.state_dir)
+            if job.state not in (JobState.RUNNING, JobState.QUEUED):
+                break
+            time.sleep(0.01)
+    
+        job = get_job(job_id, manager.state_dir)
+        assert job.state == JobState.DONE
+>       assert (manager.state_dir / "usage.jsonl").is_file(), (
+            "state==done was observable before usage.jsonl was appended"
+        )
+E       AssertionError: state==done was observable before usage.jsonl was appended
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = (PosixPath('/tmp/pytest-of-<user>/pytest-1161/test_usage_record_is_written_b0/state') / 'usage.jsonl').is_file
+E        +      where PosixPath('/tmp/pytest-of-<user>/pytest-1161/test_usage_record_is_written_b0/state') = <agy_mcp.manager.JobManager object at 0x7f23be171d90>.state_dir
+
+tests/test_f22.py:252: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f22.py::test_usage_record_is_written_before_done_is_observable
+1 failed in 1.48s
+rc=1

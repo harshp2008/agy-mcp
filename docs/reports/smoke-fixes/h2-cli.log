@@ -1,0 +1,474 @@
+I1025 13:12:47.148501       1 resolver.go:85] Model ID gemini-3.8-flash-medium not in local config, defaulting to CCPA
+I1025 13:12:47.148548       1 resolver.go:111] Model resolved via default
+I1025 13:12:47.148657      12 server.go:1771] Starting language server process with pid 3453379
+I1025 13:12:47.148954      12 server.go:1827] Language server version: 1.4.7
+I1025 13:12:47.148961      12 server.go:716] Language server will attempt to listen on host localhost
+I1025 13:12:47.149239      12 server.go:731] Language server listening on random port at 44645 for HTTPS (gRPC)
+I1025 13:12:47.149272      12 server.go:739] Language server listening on random port at 38197 for HTTP
+W1025 13:12:47.470599     102 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.470652     102 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.471038     102 errorreport.go:224] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.471071     102 model_configs.go:346] Auth mode is unspecified, skipping fetchAvailableModels and returning empty response
+W1025 13:12:47.471948      69 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.471973      69 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.472031      69 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.472043      69 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.472617     108 store_client.go:714] summary store: starting background reconciliation (trigger=startup)
+W1025 13:12:47.472933      12 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.472965      12 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.473069      12 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.473083      12 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.473703      12 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.473730      12 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.473809      12 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.473821      12 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.473934      12 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.473952      12 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.474040      12 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.474051      12 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.474539      12 auth_store.go:199] Using file-based secret storage at ~/.config/antigravity/plugin-secrets.json
+I1025 13:12:47.474563      12 auth_store.go:199] Using file-based secret storage at ~/.config/antigravity/plugin-secrets.json
+W1025 13:12:47.474739     134 cache.go:135] Cache(peopleInfo): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.474878     134 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.475090     146 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.475124     146 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.475180     146 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.475194     146 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.475349     147 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.475369     147 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.475441     147 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.475455     147 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.475557      12 defaults.go:732] failed to get cs path: cs path /usr/bin/cs invalid
+I1025 13:12:47.475617      12 manager.go:119] Creating trajectory store manager with proto store and SQLite store
+W1025 13:12:47.476767      12 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.476807      12 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.476895      12 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.476911      12 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.477995     197 manager.go:91] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] is enabled
+I1025 13:12:47.478180     197 manager.go:100] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 13:12:47.478192     197 manager.go:91] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] is enabled
+I1025 13:12:47.478300     197 manager.go:100] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 13:12:47.478307     197 manager.go:91] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] is enabled
+I1025 13:12:47.478411     197 manager.go:100] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 13:12:47.478422     197 manager.go:88] Migration [MIGRATION_ID_LIN_BUILTIN_TO_MARKETPLACE] is disabled, skipping entirely
+I1025 13:12:47.478430     197 manager.go:88] Migration [MIGRATION_ID_ADOPT_BWG_INSTALLS] is disabled, skipping entirely
+I1025 13:12:47.478448     197 manager.go:88] Migration [MIGRATION_ID_GDRIVE_BUILTIN_PLUGIN] is disabled, skipping entirely
+I1025 13:12:47.480190     108 store_client.go:764] summary store: reconciliation complete, synced 128 records
+W1025 13:12:47.480318     108 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.480335     108 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.480414     108 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.480426     108 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.504447      12 server.go:3370] Auth succeeded, refreshing features and managers
+W1025 13:12:47.504543      12 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.504567      12 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.504648      12 errorreport.go:224] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.504697      12 server.go:3380] State refresh took 0ms
+I1025 13:12:47.504702      12 server.go:3390] [RemoteControl] Subscription callback triggered.
+I1025 13:12:47.504829      12 server.go:3393] [RemoteControl] RemoteControlEnabled value: true
+I1025 13:12:47.504833      12 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected
+I1025 13:12:47.504837      12 server.go:3872] [RemoteControl] Resolved proxyServerURL: ""
+I1025 13:12:47.504914      12 profiler.go:231] Continuous pprof profiling is disabled.
+I1025 13:12:47.505205     210 reconcile_summaries.go:94] [Summaries] reconcile checked 128 conversations, restored 0, cached 128, skipped 0, dropped 0, cancelled false in 0ms (resident: 0 -> 0)
+I1025 13:12:47.505179      12 server.go:2906] initialized server successfully in 356.431207ms
+W1025 13:12:47.505353      46 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.505372      46 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.505350      44 cache.go:135] Cache(peopleInfo): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.505414      44 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.505251     228 manager.go:91] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] is enabled
+W1025 13:12:47.505445      46 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.505452      46 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.505479      44 rpcs_plugin_auth.go:106] Not reloading plugin MCP servers: cannot get the signed-in user: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.505602     231 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.505623     231 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.505650       1 auto_updater.go:281] Last check was less than 15 minutes ago, skipping update (fast path)
+W1025 13:12:47.505693     231 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.505697       1 common.go:167] Launching CLI mode
+E1025 13:12:47.505701     231 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.505702     228 manager.go:100] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 13:12:47.505715     228 manager.go:91] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] is enabled
+E1025 13:12:47.505717       1 launchsteps.go:95] Failed to resolve GeminiDir ".gemini": .gemini must be an absolute path: path is not absolute, falling back to default
+I1025 13:12:47.505735       1 common.go:188] CLI app data directory: ~/.gemini/antigravity-cli
+I1025 13:12:47.505771       1 server.go:305] Creating CLI server backend: product=antigravity workspaceDirs=[~/agy-smoke/state/jobs/018f2d19-924e-46e6-b961-8718b65938b4/work] appDataDir=~/.gemini/antigravity-cli languageServer=true codeAssist=true
+I1025 13:12:47.505813     228 manager.go:100] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 13:12:47.505819     228 manager.go:91] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] is enabled
+I1025 13:12:47.505893     228 manager.go:100] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 13:12:47.505901     228 manager.go:88] Migration [MIGRATION_ID_LIN_BUILTIN_TO_MARKETPLACE] is disabled, skipping entirely
+I1025 13:12:47.505908     228 manager.go:88] Migration [MIGRATION_ID_ADOPT_BWG_INSTALLS] is disabled, skipping entirely
+I1025 13:12:47.505926     228 manager.go:88] Migration [MIGRATION_ID_GDRIVE_BUILTIN_PLUGIN] is disabled, skipping entirely
+I1025 13:12:47.505936       1 auth_provider.go:954] [AuthProvider] SetEnableBusinessLogin called with enable: true
+I1025 13:12:47.506795       1 server.go:2222] Backend project ID updated dynamically to: default-cli-project
+I1025 13:12:47.506815       1 analytics.go:249] CLI startup completed (took 359.347672ms, phases [main_entered=0ms ls_start=1ms ls_ready=357ms launch_cli=358ms backend_created=359ms project_resolved=359ms])
+I1025 13:12:47.506838       1 printmode.go:202] Print mode: starting (promptLength=1646, model="gemini-3.8-flash-medium", conversationID="")
+I1025 13:12:47.506846       1 manager.go:492] Initializing CLI store manager for workspace ~/agy-smoke/state/jobs/018f2d19-924e-46e6-b961-8718b65938b4/work
+W1025 13:12:47.507053     210 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507070     210 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.507077       1 cli_setting_manager.go:153] applyUserSettings: stored shared config permissions: allow=31 deny=0 ask=0 from ~/.gemini/config/config.json
+W1025 13:12:47.507121     210 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507128     210 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507146       1 store.go:31] Terminal sandbox unavailable: AppArmor restricts unprivileged user namespaces (kernel.apparmor_restrict_unprivileged_userns = 1)
+I1025 13:12:47.507162       1 cli_setting_manager.go:92] CLI settings initialized: permissions=<nil>, toolPermission=request-review
+W1025 13:12:47.507223     165 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507233     165 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507271     165 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507277     165 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507331     165 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507341     165 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507374     165 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507379     165 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507444     165 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507453     165 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507490     165 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507498     165 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.507514       1 hooks_manager.go:53] loaded 0 named hooks from 0 hooks.json file(s)
+I1025 13:12:47.507524       1 manager.go:680] CLI store manager initialized successfully
+W1025 13:12:47.507568     183 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507576     183 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507603     183 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507608     183 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507748     189 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507760     189 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.507786     189 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.507791     189 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.508849     273 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.508872     273 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.508944     273 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.508947     278 manager.go:1498] Reloading system slash commands and skills
+I1025 13:12:47.508957     278 manager.go:1455] Reloading system slash commands
+I1025 13:12:47.508968     278 manager.go:1463] Slash commands unchanged, skipping update
+E1025 13:12:47.508953     273 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.509198     234 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.509208     234 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 13:12:47.509241     234 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 13:12:47.509247     234 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 13:12:47.509275       1 hooks_manager.go:53] loaded 0 named hooks from 0 hooks.json file(s)
+I1025 13:12:47.509287       1 printmode.go:857] Print mode: applying agent mode accept-edits
+I1025 13:12:47.509304       1 manager.go:1550] SetCycleMode called: accept-edits
+I1025 13:12:47.509323       1 printmode.go:403] Print mode: not authenticated, trying silent auth
+I1025 13:12:47.512638     257 keyring.go:64] keyringAuth: loaded token, expiry=2026-10-25 13:32:45.015056278 +0530 IST expired=false
+I1025 13:12:47.512672       1 auth.go:157] ChainedAuth: authenticated via keyring (effective: keyring)
+I1025 13:12:47.512681       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+I1025 13:12:47.512687       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+I1025 13:12:47.512694       1 server_oauth.go:235] b.codeAssistClient.AuthProvider (0x46e5bc963c0) is same as b.cliAuth (0x46e5bc963c0)
+W1025 13:12:47.512745     342 cache.go:163] Failed to refresh cache in background: admin controls not applicable
+W1025 13:12:47.512756     332 cache.go:163] Failed to refresh cache in background: admin controls not applicable
+I1025 13:12:49.338216     338 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xf81ae512dd213a4f
+I1025 13:12:50.562211     338 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels Trace: 0x9bbacf7f144d10d4
+I1025 13:12:50.585546       1 model_resolver.go:107] Resolving model gemini-3.8-flash-medium
+I1025 13:12:50.585603       1 model_config_manager.go:340] Propagating selected model override to backend: label="Gemini 3.8 Flash (Medium)"
+I1025 13:12:50.585630       1 printmode.go:405] Print mode: silent auth succeeded
+I1025 13:12:50.585659     176 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+I1025 13:12:50.586481     177 experiment_manager.go:66] Starting experiment refresh after login
+I1025 13:12:50.924432     177 remote_agent.go:167] Remote agent fastpush pin gate changed: false -> true
+I1025 13:12:50.924778     177 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected
+I1025 13:12:50.924793     177 server.go:3872] [RemoteControl] Resolved proxyServerURL: ""
+I1025 13:12:50.924799     177 experiment_manager.go:70] Experiments refreshed after login
+I1025 13:12:50.924913     397 manager.go:1455] Reloading system slash commands
+E1025 13:12:50.928343     397 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 13:12:50.928363     397 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+I1025 13:12:52.401822     418 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xab14eaace10a0c18
+I1025 13:12:54.033101     418 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xacc138475dfac399
+I1025 13:12:54.223249     418 model_resolver.go:107] Resolving model gemini-3.8-flash-medium
+I1025 13:12:54.223293     418 model_config_manager.go:340] Propagating selected model override to backend: label="Gemini 3.8 Flash (Medium)"
+I1025 13:12:54.223322     176 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+I1025 13:12:54.223378     177 experiment_manager.go:66] Starting experiment refresh after login
+I1025 13:12:54.223468     460 model_resolver.go:107] Resolving model gemini-3.8-flash-medium
+I1025 13:12:54.223486     460 model_config_manager.go:340] Propagating selected model override to backend: label="Gemini 3.8 Flash (Medium)"
+I1025 13:12:54.236252       1 model_resolver.go:107] Resolving model gemini-3.8-flash-medium
+I1025 13:12:54.236291       1 conversation_manager.go:668] Starting new conversation (agent=false)
+I1025 13:12:54.236301       1 server.go:1182] Creating new cascade trajectory (agentScript=false)
+I1025 13:12:54.236319       1 server.go:1208] Conversation using project ID: default-cli-project
+I1025 13:12:54.256523       1 server.go:1225] Created conversation df6a0385-f2fe-453c-b1d9-61161e5100b8 (backend=BACKEND_TYPE_UNSPECIFIED)
+I1025 13:12:54.257002       1 server.go:3273] GetConversationDetail: found conversation df6a0385-f2fe-453c-b1d9-61161e5100b8 (active=true)
+I1025 13:12:54.257209       1 server.go:3273] GetConversationDetail: found conversation df6a0385-f2fe-453c-b1d9-61161e5100b8 (active=true)
+I1025 13:12:54.257223       1 conversation_manager.go:725] project: switching to conversation belonging to project ID: default-cli-project
+I1025 13:12:54.257268       1 server.go:2222] Backend project ID updated dynamically to: default-cli-project
+I1025 13:12:54.257287       1 cli_setting_manager.go:218] ApplyProjectPermissionGrants: no grants for project "CLI Project", cleared project permissions
+I1025 13:12:54.257297       1 conversation_manager.go:771] project: synced active project to "CLI Project" (id=default-cli-project) from conversation switch
+I1025 13:12:54.257308       1 conversation_manager.go:1079] Streaming conversation df6a0385-f2fe-453c-b1d9-61161e5100b8
+I1025 13:12:54.257385     535 manager.go:1498] Reloading system slash commands and skills
+I1025 13:12:54.257412     535 manager.go:1455] Reloading system slash commands
+I1025 13:12:54.257487       1 server.go:3273] GetConversationDetail: found conversation df6a0385-f2fe-453c-b1d9-61161e5100b8 (active=true)
+I1025 13:12:54.257614       1 server.go:1243] Starting conversation update stream for df6a0385-f2fe-453c-b1d9-61161e5100b8
+I1025 13:12:54.257661       1 session.go:194] Print mode: conversation=df6a0385-f2fe-453c-b1d9-61161e5100b8, sending message
+I1025 13:12:54.257668       1 manager.go:1455] Reloading system slash commands
+E1025 13:12:54.259301     535 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 13:12:54.259323     535 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 13:12:54.260369       1 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 13:12:54.260403       1 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+I1025 13:12:54.260817     535 manager.go:1463] Slash commands unchanged, skipping update
+I1025 13:12:54.262511       1 manager.go:1463] Slash commands unchanged, skipping update
+I1025 13:12:54.262729       1 conversation_manager.go:889] Forwarding user message to conversation df6a0385-f2fe-453c-b1d9-61161e5100b8 (items=1, media=0)
+I1025 13:12:54.262739       1 server.go:1833] Sending user message to conversation df6a0385-f2fe-453c-b1d9-61161e5100b8 (items=1, media=0)
+I1025 13:12:54.263885       1 latency_breakdown.go:170] SEND_USER_CASCADE_MESSAGE_LATENCY latency breakdown: map[active_user_state_latency_ms:0 blocking:false cascade_id:df6a0385-f2fe-453c-b1d9-61161e5100b8 cascade_send_latency_ms:0 hydrate_slash_commands_latency_ms:0 load_trajectory_latency_ms:0 media_count:0 media_summaries_latency_ms:0 message_origin:AGENT_MESSAGE_ORIGIN_UNSPECIFIED resolve_agent_config_latency_ms:0 save_media_latency_ms:0 saved_media_count:0 status:OK total_latency_ms:0 trajectory_id:c6fe5ca6-1cca-4a19-b487-cc4074039436]
+W1025 13:12:54.276366     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport gi\nfrom gi.repository import Gio\nr = Gio.Resource.load('/usr/lib/gnome-shell/libshell-14.so')\nfor name in r.enumerate_children('/org/gnome/shell/ui', Gio.ResourceLookupFlags.NONE):\n    if name.endswith('.js'):\n        data = r.lookup_data('/org/gnome/shell/ui/' + name, Gio.ResourceLookupFlags.NONE).get_data().decode('utf-8')\n        if 'osdWindowManager' in data:\n            print(f'=== {name} ===')\n            for line in data.splitlines():\n                if 'osdWindowManager' in line:\n                    print('  ', line.strip())\n\")": invalid grant string: "command(python3 -c \"\nimport gi\nfrom gi.repository import Gio\nr = Gio.Resource.load('/usr/lib/gnome-shell/libshell-14.so')\nfor name in r.enumerate_children('/org/gnome/shell/ui', Gio.ResourceLookupFlags.NONE):\n    if name.endswith('.js'):\n        data = r.lookup_data('/org/gnome/shell/ui/' + name, Gio.ResourceLookupFlags.NONE).get_data().decode('utf-8')\n        if 'osdWindowManager' in data:\n            print(f'=== {name} ===')\n            for line in data.splitlines():\n                if 'osdWindowManager' in line:\n                    print('  ', line.strip())\n\")"
+W1025 13:12:54.276440     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'loadExtension' in line or 'reloadExtension' in line or 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'loadExtension' in line or 'reloadExtension' in line or 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n        break\n\")"
+W1025 13:12:54.276490     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n\")"
+W1025 13:12:54.276525     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport gi\ngi.require_version('Gtk', '3.0')\nfrom gi.repository import Gtk\ntheme = Gtk.IconTheme.get_default()\nfor name in ['sidebar-show-symbolic', 'sidebar-hide-symbolic', 'view-reveal-symbolic', 'view-conceal-symbolic', 'user-desktop-symbolic', 'view-paged-symbolic']:\n    print(name, theme.has_icon(name))\n\")": invalid grant string: "command(python3 -c \"\nimport gi\ngi.require_version('Gtk', '3.0')\nfrom gi.repository import Gtk\ntheme = Gtk.IconTheme.get_default()\nfor name in ['sidebar-show-symbolic', 'sidebar-hide-symbolic', 'view-reveal-symbolic', 'view-conceal-symbolic', 'user-desktop-symbolic', 'view-paged-symbolic']:\n    print(name, theme.has_icon(name))\n\")"
+W1025 13:12:54.276555     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nfor line in out.splitlines():\n    if '_senderChecker' in line:\n        print(line)\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nfor line in out.splitlines():\n    if '_senderChecker' in line:\n        print(line)\n\")"
+W1025 13:12:54.276610     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'DBusSenderChecker' in line:\n        for j in range(i, min(len(lines), i+15)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'DBusSenderChecker' in line:\n        for j in range(i, min(len(lines), i+15)):\n            print(lines[j])\n        break\n\")"
+W1025 13:12:54.276634     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'enableExtension(' in line:\n        for j in range(i, min(len(lines), i+30)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'enableExtension(' in line:\n        for j in range(i, min(len(lines), i+30)):\n            print(lines[j])\n        break\n\")"
+W1025 13:12:54.276668     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line or '_onEnabledExtensionsChanged' in line:\n        for j in range(max(0, i-5), min(len(lines), i+25)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line or '_onEnabledExtensionsChanged' in line:\n        for j in range(max(0, i-5), min(len(lines), i+25)):\n            print(lines[j])\n        break\n\")"
+W1025 13:12:54.276700     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line:\n        for j in range(i+20, min(len(lines), i+40)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line:\n        for j in range(i+20, min(len(lines), i+40)):\n            print(lines[j])\n        break\n\")"
+W1025 13:12:54.276753     368 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\ntry:\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\n    import time\n    time.sleep(2)\n    proc.terminate()\n    print('Prefs launched successfully')\nexcept Exception as e:\n    print('Error:', e)\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\ntry:\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\n    import time\n    time.sleep(2)\n    proc.terminate()\n    print('Prefs launched successfully')\nexcept Exception as e:\n    print('Error:', e)\n\")"
+I1025 13:12:54.278371     368 monitor_config_manager_external.go:53] externalMonitorConfigManager: initialized with embedded config (3 monitors)
+I1025 13:12:54.278420     368 monitoring.go:401] [Sonar] Resolved active tags: [policy_guardian sonar_skip_tags] (detected surface: "")
+I1025 13:12:54.278443     368 monitoring.go:401] [Sonar] Resolved active tags: [policy_guardian sonar_skip_tags] (detected surface: "")
+I1025 13:12:54.802343     176 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+I1025 13:12:55.081609     177 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected
+I1025 13:12:55.081640     177 server.go:3872] [RemoteControl] Resolved proxyServerURL: ""
+I1025 13:12:55.081647     177 experiment_manager.go:70] Experiments refreshed after login
+I1025 13:12:55.081718     177 experiment_manager.go:66] Starting experiment refresh after login
+I1025 13:12:55.081794     978 manager.go:1455] Reloading system slash commands
+E1025 13:12:55.085637     978 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 13:12:55.085669     978 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+I1025 13:12:55.087390     978 manager.go:1463] Slash commands unchanged, skipping update
+I1025 13:12:55.227820     177 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected
+I1025 13:12:55.227843     177 server.go:3872] [RemoteControl] Resolved proxyServerURL: ""
+I1025 13:12:55.227848     177 experiment_manager.go:70] Experiments refreshed after login
+I1025 13:12:55.227884    1046 manager.go:1455] Reloading system slash commands
+E1025 13:12:55.229971    1046 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 13:12:55.229996    1046 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+I1025 13:12:55.243521    1046 manager.go:1463] Slash commands unchanged, skipping update
+I1025 13:12:56.013114     592 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x40f54e458b7b3cc2 ResponseID: _7Ldav6vLrPY4-EPltSGuAI
+I1025 13:12:56.028619     459 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x91fb3c70e0674f5f
+I1025 13:13:00.041726     964 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x2e53ec5da98747ad ResponseID: _7LdaoC-Bbnwz7sP74_t4Qw
+I1025 13:13:09.703463    1245 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd233e800b6c65499 ResponseID: CrPdaqmzMf7xz7sPh5u2wQw
+I1025 13:13:13.160886    1280 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xbebc6241b46a2d10 ResponseID: DrPdapfzIavLqfkPj4G08QY
+I1025 13:13:16.713783    1330 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x5a6a2d6e9f418913 ResponseID: ErPdavneB-KK4-EP5qL3uAU
+I1025 13:13:22.190886    1380 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xce4b523c78645ba0 ResponseID: FbPdaqTPJK_UqfkPo_Lw6QM
+I1025 13:13:25.451130    1426 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x54735ce054c3ac33 ResponseID: G7PdavSPEaz3z7sPzN2qEA
+I1025 13:13:29.669881    1490 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe45a6bf8e1e107c2 ResponseID: HrPdavjcCdWE4t4PhrWp0Qw
+I1025 13:13:32.012723    1523 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x8a3823e0c4787035 ResponseID: IrPdapOVIKrAjuMPpYbfsAU
+I1025 13:13:34.811030    1560 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x2167e4953ef4b564 ResponseID: JLPdapf0NZTkg8UPn7edwQU
+I1025 13:13:40.543218    1594 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x944bf7b546f266bb ResponseID: KLPdas7YGJe34-EP-MnrwQY
+W1025 13:13:40.705870    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport gi\nfrom gi.repository import Gio\nr = Gio.Resource.load('/usr/lib/gnome-shell/libshell-14.so')\nfor name in r.enumerate_children('/org/gnome/shell/ui', Gio.ResourceLookupFlags.NONE):\n    if name.endswith('.js'):\n        data = r.lookup_data('/org/gnome/shell/ui/' + name, Gio.ResourceLookupFlags.NONE).get_data().decode('utf-8')\n        if 'osdWindowManager' in data:\n            print(f'=== {name} ===')\n            for line in data.splitlines():\n                if 'osdWindowManager' in line:\n                    print('  ', line.strip())\n\")": invalid grant string: "command(python3 -c \"\nimport gi\nfrom gi.repository import Gio\nr = Gio.Resource.load('/usr/lib/gnome-shell/libshell-14.so')\nfor name in r.enumerate_children('/org/gnome/shell/ui', Gio.ResourceLookupFlags.NONE):\n    if name.endswith('.js'):\n        data = r.lookup_data('/org/gnome/shell/ui/' + name, Gio.ResourceLookupFlags.NONE).get_data().decode('utf-8')\n        if 'osdWindowManager' in data:\n            print(f'=== {name} ===')\n            for line in data.splitlines():\n                if 'osdWindowManager' in line:\n                    print('  ', line.strip())\n\")"
+W1025 13:13:40.705916    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'loadExtension' in line or 'reloadExtension' in line or 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'loadExtension' in line or 'reloadExtension' in line or 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n        break\n\")"
+W1025 13:13:40.705939    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n\")"
+W1025 13:13:40.705963    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport gi\ngi.require_version('Gtk', '3.0')\nfrom gi.repository import Gtk\ntheme = Gtk.IconTheme.get_default()\nfor name in ['sidebar-show-symbolic', 'sidebar-hide-symbolic', 'view-reveal-symbolic', 'view-conceal-symbolic', 'user-desktop-symbolic', 'view-paged-symbolic']:\n    print(name, theme.has_icon(name))\n\")": invalid grant string: "command(python3 -c \"\nimport gi\ngi.require_version('Gtk', '3.0')\nfrom gi.repository import Gtk\ntheme = Gtk.IconTheme.get_default()\nfor name in ['sidebar-show-symbolic', 'sidebar-hide-symbolic', 'view-reveal-symbolic', 'view-conceal-symbolic', 'user-desktop-symbolic', 'view-paged-symbolic']:\n    print(name, theme.has_icon(name))\n\")"
+W1025 13:13:40.705984    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nfor line in out.splitlines():\n    if '_senderChecker' in line:\n        print(line)\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nfor line in out.splitlines():\n    if '_senderChecker' in line:\n        print(line)\n\")"
+W1025 13:13:40.706004    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'DBusSenderChecker' in line:\n        for j in range(i, min(len(lines), i+15)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'DBusSenderChecker' in line:\n        for j in range(i, min(len(lines), i+15)):\n            print(lines[j])\n        break\n\")"
+W1025 13:13:40.706021    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'enableExtension(' in line:\n        for j in range(i, min(len(lines), i+30)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'enableExtension(' in line:\n        for j in range(i, min(len(lines), i+30)):\n            print(lines[j])\n        break\n\")"
+W1025 13:13:40.706037    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line or '_onEnabledExtensionsChanged' in line:\n        for j in range(max(0, i-5), min(len(lines), i+25)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line or '_onEnabledExtensionsChanged' in line:\n        for j in range(max(0, i-5), min(len(lines), i+25)):\n            print(lines[j])\n        break\n\")"
+W1025 13:13:40.706054    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line:\n        for j in range(i+20, min(len(lines), i+40)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line:\n        for j in range(i+20, min(len(lines), i+40)):\n            print(lines[j])\n        break\n\")"
+W1025 13:13:40.706066    1627 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\ntry:\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\n    import time\n    time.sleep(2)\n    proc.terminate()\n    print('Prefs launched successfully')\nexcept Exception as e:\n    print('Error:', e)\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\ntry:\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\n    import time\n    time.sleep(2)\n    proc.terminate()\n    print('Prefs launched successfully')\nexcept Exception as e:\n    print('Error:', e)\n\")"
+I1025 13:13:40.706834    1627 monitoring.go:401] [Sonar] Resolved active tags: [policy_guardian sonar_skip_tags] (detected surface: "")
+I1025 13:13:40.706849    1627 monitoring.go:401] [Sonar] Resolved active tags: [policy_guardian sonar_skip_tags] (detected surface: "")
+I1025 13:13:45.627086    1892 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x92499542bbd84a30 ResponseID: LbPdap7pHpTkg8UPn7edwQU
+I1025 13:13:46.165968    1664 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x28c90baa83c9d959 ResponseID: LbPdapyjJOy9mNMP9-2HoAg
+I1025 13:13:49.310442    1989 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x77d1d34c34f5651a ResponseID: M7PdaqrSFZrYz7sPk-WB6Aw
+I1025 13:13:51.809430    2035 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x3edc9cc2c73f226b ResponseID: NrPdapnQCJHnz7sP1vW22Qw
+I1025 13:13:52.601777    1964 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x3d99eb91630acf36 ResponseID: MrPdasnbKLCNz7sPtriywQw
+I1025 13:14:01.109629    2137 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x1c77ac8fc62bb542 ResponseID: PbPdauK0K8ewmNMPvKSmoQg
+I1025 13:14:05.202827    2191 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe989a950e3c830c9 ResponseID: QbPdaoOIKv3y4-EPpuKzqQY
+W1025 13:14:05.276403    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport gi\nfrom gi.repository import Gio\nr = Gio.Resource.load('/usr/lib/gnome-shell/libshell-14.so')\nfor name in r.enumerate_children('/org/gnome/shell/ui', Gio.ResourceLookupFlags.NONE):\n    if name.endswith('.js'):\n        data = r.lookup_data('/org/gnome/shell/ui/' + name, Gio.ResourceLookupFlags.NONE).get_data().decode('utf-8')\n        if 'osdWindowManager' in data:\n            print(f'=== {name} ===')\n            for line in data.splitlines():\n                if 'osdWindowManager' in line:\n                    print('  ', line.strip())\n\")": invalid grant string: "command(python3 -c \"\nimport gi\nfrom gi.repository import Gio\nr = Gio.Resource.load('/usr/lib/gnome-shell/libshell-14.so')\nfor name in r.enumerate_children('/org/gnome/shell/ui', Gio.ResourceLookupFlags.NONE):\n    if name.endswith('.js'):\n        data = r.lookup_data('/org/gnome/shell/ui/' + name, Gio.ResourceLookupFlags.NONE).get_data().decode('utf-8')\n        if 'osdWindowManager' in data:\n            print(f'=== {name} ===')\n            for line in data.splitlines():\n                if 'osdWindowManager' in line:\n                    print('  ', line.strip())\n\")"
+W1025 13:14:05.276453    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'loadExtension' in line or 'reloadExtension' in line or 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'loadExtension' in line or 'reloadExtension' in line or 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n        break\n\")"
+W1025 13:14:05.276490    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n\")"
+W1025 13:14:05.276513    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport gi\ngi.require_version('Gtk', '3.0')\nfrom gi.repository import Gtk\ntheme = Gtk.IconTheme.get_default()\nfor name in ['sidebar-show-symbolic', 'sidebar-hide-symbolic', 'view-reveal-symbolic', 'view-conceal-symbolic', 'user-desktop-symbolic', 'view-paged-symbolic']:\n    print(name, theme.has_icon(name))\n\")": invalid grant string: "command(python3 -c \"\nimport gi\ngi.require_version('Gtk', '3.0')\nfrom gi.repository import Gtk\ntheme = Gtk.IconTheme.get_default()\nfor name in ['sidebar-show-symbolic', 'sidebar-hide-symbolic', 'view-reveal-symbolic', 'view-conceal-symbolic', 'user-desktop-symbolic', 'view-paged-symbolic']:\n    print(name, theme.has_icon(name))\n\")"
+W1025 13:14:05.276529    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nfor line in out.splitlines():\n    if '_senderChecker' in line:\n        print(line)\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nfor line in out.splitlines():\n    if '_senderChecker' in line:\n        print(line)\n\")"
+W1025 13:14:05.276550    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'DBusSenderChecker' in line:\n        for j in range(i, min(len(lines), i+15)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'DBusSenderChecker' in line:\n        for j in range(i, min(len(lines), i+15)):\n            print(lines[j])\n        break\n\")"
+W1025 13:14:05.276568    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'enableExtension(' in line:\n        for j in range(i, min(len(lines), i+30)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'enableExtension(' in line:\n        for j in range(i, min(len(lines), i+30)):\n            print(lines[j])\n        break\n\")"
+W1025 13:14:05.276589    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line or '_onEnabledExtensionsChanged' in line:\n        for j in range(max(0, i-5), min(len(lines), i+25)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line or '_onEnabledExtensionsChanged' in line:\n        for j in range(max(0, i-5), min(len(lines), i+25)):\n            print(lines[j])\n        break\n\")"
+W1025 13:14:05.276615    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line:\n        for j in range(i+20, min(len(lines), i+40)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line:\n        for j in range(i+20, min(len(lines), i+40)):\n            print(lines[j])\n        break\n\")"
+W1025 13:14:05.276645    2229 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\ntry:\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\n    import time\n    time.sleep(2)\n    proc.terminate()\n    print('Prefs launched successfully')\nexcept Exception as e:\n    print('Error:', e)\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\ntry:\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\n    import time\n    time.sleep(2)\n    proc.terminate()\n    print('Prefs launched successfully')\nexcept Exception as e:\n    print('Error:', e)\n\")"
+I1025 13:14:05.277886     536 subagent_manager.go:670] addFromDiff: print mode, soft-denying: 55c62dde-8307-484a-bc8a-4e954192ba01 step 8
+I1025 13:14:05.277901     536 server.go:2646] Tool confirmation for conversation 55c62dde-8307-484a-bc8a-4e954192ba01 step 8 (type=*gemini_coder_go_proto.Step_Generic approved=false)
+I1025 13:14:05.302682       1 manager.go:857] CLI store manager shutting down
+I1025 13:14:05.303171       1 conversation_manager.go:1034] Stopping conversation stream
+I1025 13:14:05.303252     537 server.go:1300] Stream goroutine exited for df6a0385-f2fe-453c-b1d9-61161e5100b8, sending completion signal
+E1025 13:14:05.303301    2168 telemetry.go:81] error recording trajectory segment analytics: Post "https://daily-cloudcode-pa.googleapis.com/v1internal:recordTrajectoryAnalytics": context canceled
+I1025 13:14:05.321230    2263 server.go:3219] Language server shutting down
+I1025 13:14:05.321243    2263 server.go:3224] Waiting for migrations to complete to prevent partial migration state...
+E1025 13:14:05.327310     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327338     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327341     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327342     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327344     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327345     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327347     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327348     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327349     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327350     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327354     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327355     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327357     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327358     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327359     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327361     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327362     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327363     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327365     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327366     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327368     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327369     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327370     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327372     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327373     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327374     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327376     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327377     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327378     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327379     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327381     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327382     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327383     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327384     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327389     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327391     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327393     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327394     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327395     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327397     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327398     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327399     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327400     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327402     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327403     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327404     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327406     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327407     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327408     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327409     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327411     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327412     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327413     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327415     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327416     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327417     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327418     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327420     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327421     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327422     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327423     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327425     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327426     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327428     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327429     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327430     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327431     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327433     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327434     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327436     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327437     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327438     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327440     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327441     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327442     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327444     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327445     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327446     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327448     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327449     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327450     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327452     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327453     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327454     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327456     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327458     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327459     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327460     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327462     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327463     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327464     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327465     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327467     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327468     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327469     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327476     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327478     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327480     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327481     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327482     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327483     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327485     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327486     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327487     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327488     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327490     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327491     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327492     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327493     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327495     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327497     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327498     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327500     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327501     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327503     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327504     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327506     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327507     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327508     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327510     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327511     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327512     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327513     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327516     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327517     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327519     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327520     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327521     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327522     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327523     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327525     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327526     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327527     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327528     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327530     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327532     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327533     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327534     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327536     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327537     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327538     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327539     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327541     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327542     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327543     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327545     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327546     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327547     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327548     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327549     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327551     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327552     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327553     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327554     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327555     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327557     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327558     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327559     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327560     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327561     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327563     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327564     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327565     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327566     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327568     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327569     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327570     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327571     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327572     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327574     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327575     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327576     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327577     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327579     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327580     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327582     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327583     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327585     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327586     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327587     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327588     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327589     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327591     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327592     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327593     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327596     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327597     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327598     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327599     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327600     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327602     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327603     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327604     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 13:14:05.327607     178 file_watcher.go:194] skipping empty or temp file: 

@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "~/agy-smoke-repo",
+    "log",
+    "--oneline",
+    "agy/slug-docs-2bf72c13"
+  ],
+  "returncode": 0,
+  "stdout": "33fda9e Add usage examples to README\n10f87be Add descriptive docstring to slugify function\ne4ed764 initial: slug package skeleton\n",
+  "stderr": ""
+}

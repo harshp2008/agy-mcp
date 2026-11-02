@@ -1,0 +1,60 @@
+Mon Oct 26 10:41:58 AM IST 2026
+CMD (mutation: 'if agy_mcp_upgrade' replaced by 'if false'): env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q -k upgrade
+.FF                                                                      [100%]
+=================================== FAILURES ===================================
+_______________ test_upgrade_reinstalls_the_package_from_source ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1212/test_upgrade_reinstalls_the_pa0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1212/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_upgrade_reinstalls_the_package_from_source(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """--upgrade must really replace the installed package with AGY_MCP_SRC."""
+        home = tmp_path / "home"
+        home.mkdir()
+        first = _run_installer(home, tmp_path, fake_wheel)
+        assert first.returncode == 0, _output(first)
+        assert _installed_agy_mcp_version(home) == "0.0.0"
+    
+        newer = tmp_path / "agy_mcp-0.0.1-py3-none-any.whl"
+        _build_fake_wheel(newer, version="0.0.1")
+        proc = _run_installer(
+            home,
+            tmp_path,
+            newer,
+            "--upgrade",
+            extra={"AGY_MCP_SRC": str(newer)},
+        )
+        assert proc.returncode == 0, _output(proc)
+>       assert "reinstalling agy-mcp from" in _output(proc)
+E       AssertionError: assert 'reinstalling agy-mcp from' in 'install: agy-mcp core install\n  - agy found: /tmp/pytest-of-<user>/pytest-1212/test_upgrade_reinstalls_the_pa0/bin/ag...t the client tool-call timeout to at least 360000 ms: agy_wait blocks for up to 300 s and the client needs headroom.\n'
+E        +  where 'install: agy-mcp core install\n  - agy found: /tmp/pytest-of-<user>/pytest-1212/test_upgrade_reinstalls_the_pa0/bin/ag...t the client tool-call timeout to at least 360000 ms: agy_wait blocks for up to 300 s and the client needs headroom.\n' = _output(CompletedProcess(args=['~/Documents/GITHUB PROJECTS/agy-mcp/installer/install.sh', '--upgrade'], returncode=... tool-call timeout to at least 360000 ms: agy_wait blocks for up to 300 s and the client needs headroom.\n', stderr=''))
+
+tests/test_installer_chapter.py:678: AssertionError
+________________ test_upgrade_is_documented_in_help_and_dry_run ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1212/test_upgrade_is_documented_in_0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1212/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_upgrade_is_documented_in_help_and_dry_run(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        home = tmp_path / "home"
+        home.mkdir()
+        help_proc = _run_installer(home, tmp_path, fake_wheel, "--help")
+        assert help_proc.returncode == 0, _output(help_proc)
+        assert "--upgrade" in help_proc.stdout
+    
+        dry = _run_installer(home, tmp_path, fake_wheel, "--upgrade", "--dry-run")
+        assert dry.returncode == 0, _output(dry)
+        output = _output(dry)
+>       assert "--upgrade" in output
+E       AssertionError: assert '--upgrade' in 'install: agy-mcp core install\n  - agy found: /tmp/pytest-of-<user>/pytest-1212/test_upgrade_is_documented_in_0/bin/ag...t the client tool-call timeout to at least 360000 ms: agy_wait blocks for up to 300 s and the client needs headroom.\n'
+
+tests/test_installer_chapter.py:694: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_upgrade_reinstalls_the_package_from_source
+FAILED tests/test_installer_chapter.py::test_upgrade_is_documented_in_help_and_dry_run
+2 failed, 1 passed, 23 deselected in 6.67s
+rc=1

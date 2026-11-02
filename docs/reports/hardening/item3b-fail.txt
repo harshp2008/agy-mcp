@@ -1,0 +1,20 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_get_usage_does_not_cache_unavailable_reading _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-795/test_get_usage_does_not_cache_0')
+
+    def test_get_usage_does_not_cache_unavailable_reading(tmp_path: Path) -> None:
+        """An unavailable reading is never cached; the next call runs /usage again."""
+        cache = UsageCache()
+        first = _read(tmp_path, "usage_garbled", cache=cache, now_monotonic=1000.0)
+        assert first["available"] is False
+    
+        second = _read(tmp_path, "usage_real", cache=cache, now_monotonic=1001.0)
+>       assert second["available"] is True
+E       assert False is True
+
+tests/test_usage_read.py:232: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_usage_read.py::test_get_usage_does_not_cache_unavailable_reading
+1 failed in 0.14s

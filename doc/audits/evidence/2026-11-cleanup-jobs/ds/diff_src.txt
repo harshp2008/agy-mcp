@@ -1,0 +1,1058 @@
+diff --git a/src/agy_mcp/cleanup_fixtures.py b/src/agy_mcp/cleanup_fixtures.py
+index 07333d8..ca55894 100644
+--- a/src/agy_mcp/cleanup_fixtures.py
++++ b/src/agy_mcp/cleanup_fixtures.py
+@@ -21,6 +21,42 @@ from pathlib import Path
+ from typing import Any, Callable, Optional
+ 
+ _UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
++MAX_JSON_DEPTH: int = 128
++
++
++def _raise_on_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
++    """Dict constructor for json.loads that raises ValueError on duplicate keys (SPEC §23, R4)."""
++    d: dict[str, Any] = {}
++    for k, v in pairs:
++        if k in d:
++            raise ValueError(f"duplicate key in JSON object: {k!r}")
++        d[k] = v
++    return d
++
++
++def _check_json_depth(obj: Any, max_depth: int = MAX_JSON_DEPTH) -> None:
++    """Iteratively verify that JSON structure does not exceed max_depth."""
++    stack: list[tuple[Any, int]] = [(obj, 0)]
++    while stack:
++        curr, depth = stack.pop()
++        if depth > max_depth:
++            raise ValueError(f"JSON nesting depth exceeds limit ({max_depth})")
++        if isinstance(curr, dict):
++            for v in curr.values():
++                stack.append((v, depth + 1))
++        elif isinstance(curr, list):
++            for item in curr:
++                stack.append((item, depth + 1))
++
++
++def _safe_json_loads(content: str, max_depth: int = MAX_JSON_DEPTH) -> Any:
++    """Parse JSON string, raising ValueError or JSONDecodeError on duplicate keys or depth."""
++    try:
++        data = json.loads(content, object_pairs_hook=_raise_on_duplicate_keys)
++    except RecursionError as exc:
++        raise ValueError(f"JSON nesting depth exceeds recursion limit: {exc}") from exc
++    _check_json_depth(data, max_depth=max_depth)
++    return data
+ 
+ 
+ def _is_canonical_uuid(val: str) -> bool:
+@@ -170,6 +206,38 @@ def _check_pid_status(pid: Any) -> tuple[bool, Optional[str]]:
+         return True, f"ambiguous pid {pid}: os.kill failed with {exc}"
+ 
+ 
++def _check_pgid_status(pgid: Any) -> tuple[bool, Optional[str]]:
++    """Check a pgid value mirroring _check_pid_status rules.
++
++    Returns:
++        (keep, reason)
++        If keep is True, the row must be kept for the returned reason.
++        If keep is False, the process group is confirmed dead and not ambiguous.
++    """
++    if pgid is None:
++        return False, None
++    if isinstance(pgid, bool) or not isinstance(pgid, int) or pgid <= 0:
++        return True, f"invalid or non-positive pgid value: {pgid!r}"
++
++    pid_max = _get_kernel_pid_max()
++    if pgid > pid_max:
++        return True, f"pgid {pgid} exceeds kernel pid_max ({pid_max})"
++
++    try:
++        os.killpg(pgid, 0)
++        return True, f"process group {pgid} is still alive"
++    except PermissionError:
++        return True, f"process group {pgid} is still alive (permission denied)"
++    except ProcessLookupError:
++        return False, None
++    except (OverflowError, ValueError) as exc:
++        return True, f"ambiguous pgid {pgid}: {exc}"
++    except OSError as exc:
++        if exc.errno == errno.ESRCH:
++            return False, None
++        return True, f"ambiguous pgid {pgid}: os.killpg failed with {exc}"
++
++
+ def _is_pid_alive(pid: int) -> bool:
+     """Return True if the PID represents a live process, treating PermissionError as alive."""
+     keep, _ = _check_pid_status(pid)
+@@ -192,19 +260,27 @@ def _parse_iso_ts(ts_str: Any) -> Optional[datetime]:
+         return None
+ 
+ 
+-def _extract_strings(obj: Any) -> list[str]:
+-    """Recursively collect all dict keys and string values from a JSON structure."""
++def _extract_strings(obj: Any, max_depth: int = MAX_JSON_DEPTH) -> list[str]:
++    """Iteratively collect all dict keys and string values from a JSON structure up to max_depth.
++
++    Raises ValueError if nesting depth exceeds max_depth.
++    """
+     strings: list[str] = []
+-    if isinstance(obj, str):
+-        strings.append(obj)
+-    elif isinstance(obj, dict):
+-        for k, v in obj.items():
+-            if isinstance(k, str):
+-                strings.append(k)
+-            strings.extend(_extract_strings(v))
+-    elif isinstance(obj, list):
+-        for item in obj:
+-            strings.extend(_extract_strings(item))
++    stack: list[tuple[Any, int]] = [(obj, 0)]
++    while stack:
++        curr, depth = stack.pop()
++        if depth > max_depth:
++            raise ValueError(f"JSON nesting depth exceeds limit ({max_depth})")
++        if isinstance(curr, str):
++            strings.append(curr)
++        elif isinstance(curr, dict):
++            for k, v in curr.items():
++                if isinstance(k, str):
++                    strings.append(k)
++                stack.append((v, depth + 1))
++        elif isinstance(curr, list):
++            for item in curr:
++                stack.append((item, depth + 1))
+     return strings
+ 
+ 
+@@ -262,7 +338,7 @@ def _classify_job(
+             return False, ["job.json exceeds 1 MiB limit"], None
+ 
+         content = job_file.read_text(encoding="utf-8")
+-        data = json.loads(content)
++        data = _safe_json_loads(content)
+         if not isinstance(data, dict):
+             return False, ["job.json root is not an object"], None
+ 
+@@ -292,6 +368,12 @@ def _classify_job(
+             if should_keep:
+                 return False, [pid_reason or f"ambiguous pid: {pid!r}"], None
+ 
++        pgid = data.get("pgid")
++        if pgid is not None:
++            should_keep, pgid_reason = _check_pgid_status(pgid)
++            if should_keep:
++                return False, [pgid_reason or f"ambiguous pgid: {pgid!r}"], None
++
+         updated_raw = data.get("updated_at")
+         if updated_raw is not None:
+             ts = _parse_iso_ts(updated_raw)
+@@ -327,8 +409,8 @@ def _classify_job(
+         return True, cand_info["reasons"], cand_info
+     except OSError as exc:
+         return False, [f"job directory or job.json unreadable: {exc}"], None
+-    except json.JSONDecodeError:
+-        return False, ["job.json is not valid JSON"], None
++    except (json.JSONDecodeError, ValueError) as exc:
++        return False, [f"job.json is not valid JSON: {exc}"], None
+     except Exception as exc:
+         return False, [f"unhandled error classifying job: {exc}"], None
+ 
+@@ -444,7 +526,7 @@ def run_cleanup(
+             if k_file.stat().st_size > 1024 * 1024:
+                 unverified_kept.append(kid)
+                 continue
+-            k_data = json.loads(k_file.read_text(encoding="utf-8"))
++            k_data = _safe_json_loads(k_file.read_text(encoding="utf-8"))
+             if not isinstance(k_data, dict):
+                 unverified_kept.append(kid)
+                 continue
+@@ -478,7 +560,7 @@ def run_cleanup(
+             c_file = store_jobs / cid / "job.json"
+             if c_file.is_file() and not c_file.is_symlink():
+                 try:
+-                    c_data = json.loads(c_file.read_text(encoding="utf-8"))
++                    c_data = _safe_json_loads(c_file.read_text(encoding="utf-8"))
+                     if isinstance(c_data, dict):
+                         new_strings.extend(_extract_strings(c_data))
+                 except Exception:
+@@ -564,6 +646,9 @@ def main(argv: Optional[list[str]] = None) -> int:
+         return 2
+ 
+     store_path = args.store
++    if not str(store_path).strip():
++        sys.stderr.write("Error: --store path cannot be empty or whitespace\n")
++        return 2
+     try:
+         abs_store = Path(os.path.abspath(store_path))
+ 
+@@ -595,6 +680,12 @@ def main(argv: Optional[list[str]] = None) -> int:
+             sys.stderr.write(f"Error: store/jobs is missing or not a directory: {store_jobs}\n")
+             return 2
+ 
++        try:
++            next(store_jobs.iterdir(), None)
++        except OSError as exc:
++            sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
++            return 2
++
+         home_env = os.environ.get("HOME")
+         if not home_env:
+             sys.stderr.write("Error: HOME environment variable is not set\n")
+@@ -618,6 +709,9 @@ def main(argv: Optional[list[str]] = None) -> int:
+             dry_run=not args.yes,
+             min_age_days=args.min_age_days,
+         )
++    except OSError as exc:
++        sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
++        return 2
+     except Exception as exc:
+         sys.stderr.write(f"Unexpected internal error: {exc}\n")
+         return 1
+diff --git a/src/agy_mcp/cleanup_jobs.py b/src/agy_mcp/cleanup_jobs.py
+index 2555e3f..2ac771c 100644
+--- a/src/agy_mcp/cleanup_jobs.py
++++ b/src/agy_mcp/cleanup_jobs.py
+@@ -11,18 +11,22 @@ import argparse
+ import json
+ import math
+ import os
++import re
++import stat
+ import unicodedata
+ from datetime import datetime, timezone
+ from pathlib import Path
+ from typing import Any, Callable, Optional
+ 
+ from agy_mcp.cleanup_fixtures import (
++    _check_pgid_status,
+     _check_pid_status,
+     _extract_strings,
+     _has_symlinks,
+     _is_canonical_uuid,
+     _parse_iso_ts,
+     _safe_delete_job_dir,
++    _safe_json_loads,
+     _write_manifest,
+ )
+ 
+@@ -35,25 +39,18 @@ def normalize_repo_path(path_val: str | Path) -> str:
+     trailing slashes, and preserves case.
+     """
+     path_str = str(path_val)
++    if not path_str.strip():
++        raise ValueError("repository path cannot be empty or whitespace")
+     if "\x00" in path_str:
+         raise ValueError("embedded null byte in repository path")
+     expanded = os.path.expanduser(path_str)
+     return str(Path(expanded).resolve(strict=False))
+ 
+ 
+-def _raise_on_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+-    """Dict constructor for json.loads that raises ValueError on duplicate keys (SPEC §23, R4)."""
+-    d: dict[str, Any] = {}
+-    for k, v in pairs:
+-        if k in d:
+-            raise ValueError(f"duplicate key in JSON object: {k!r}")
+-        d[k] = v
+-    return d
+-
+-
+-def _safe_json_loads(content: str) -> Any:
+-    """Parse JSON string, raising ValueError or JSONDecodeError on duplicate keys or syntax."""
+-    return json.loads(content, object_pairs_hook=_raise_on_duplicate_keys)
++MAX_GIT_METADATA_SIZE: int = 1024 * 1024  # 1 MiB limit for git metadata files
++_HEX_SHA_RE = re.compile(r"^[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?$")
++_CONFIG_SECTION_RE = re.compile(r"^\[([a-zA-Z0-9_\-\.]+)(?:\s+\"([^\"]*)\")?\]$")
++_CONFIG_VAR_RE = re.compile(r"^([a-zA-Z0-9_\-]+)\s*(?:=\s*(.*))?$")
+ 
+ 
+ def _read_git_metadata_file(
+@@ -61,25 +58,50 @@ def _read_git_metadata_file(
+     file_label: str,
+     *,
+     allow_empty: bool = False,
++    multiline: bool = False,
++    max_size: int = MAX_GIT_METADATA_SIZE,
+ ) -> tuple[Optional[str], Optional[str]]:
+-    """Read and validate a git metadata single-line text file per SPEC §23 (R2, R5).
++    """Read and validate a git metadata text file per SPEC §23 (R2, R5, R10).
+ 
+-    Returns (stripped_content, None) on success, or (None, failure_reason) on failure.
++    Returns (content, None) on success, or (None, failure_reason) on failure.
+     Validates:
+-    - Must be a regular file or symlink resolving to a regular file (R5).
++    - Must be a regular file or symlink resolving to a regular file (R5, R10).
++    - Checks stat() before opening so FIFOs, sockets, and device files can never block (R10, R11).
+     - Dangling symlinks or non-regular files return a failure reason.
+-    - Decodes with strict UTF-8 (no silent BOM stripping via utf-8-sig) (R2).
+-    - Must not contain UTF-8 BOM (U+FEFF) (R2).
+-    - Must not contain NUL byte (\\x00) (R2).
+-    - At most one trailing LF or CRLF is stripped; no other control characters allowed (R2).
+-    - If allow_empty is False, empty file or empty content returns a failure reason.
++    - File size is capped to max_size (default 1 MiB) to prevent OOM/hang (R10, R11).
++    - If allow_empty is False, empty file returns a failure reason.
++    - Decodes with strict UTF-8 (no silent BOM stripping via utf-8-sig) (R2, R10).
++    - Must not contain UTF-8 BOM (\\xef\\xbb\\xbf or \\ufeff) (R2, R10).
++    - Must not contain NUL byte (\\x00) (R2, R10).
++    - For single-line files (multiline=False): at most one trailing LF or CRLF is stripped;
++      no other control characters allowed in the body (R2, R10).
++    - For multi-line files (multiline=True): returns text stripped of trailing whitespace,
++      with no NUL or BOM, strict UTF-8 (R10).
+     """
+     try:
++        # Check stat() before opening to guarantee we never block on FIFOs, sockets, or devices
+         if file_path.is_symlink() and not file_path.exists():
+             return None, f"{file_label} is invalid: dangling symlink: {file_path}"
+-        if not file_path.is_file():
++        try:
++            st = file_path.stat()
++        except OSError as exc:
++            return None, f"{file_label} is invalid ({exc}): {file_path}"
++
++        if not stat.S_ISREG(st.st_mode):
+             return None, f"{file_label} is invalid: not a regular file: {file_path}"
+ 
++        if st.st_size > max_size:
++            return (
++                None,
++                f"{file_label} is invalid: exceeds size limit ({st.st_size} > {max_size}): "
++                f"{file_path}",
++            )
++
++        if st.st_size == 0:
++            if allow_empty:
++                return "", None
++            return None, f"{file_label} is invalid: empty file: {file_path}"
++
+         raw_bytes = file_path.read_bytes()
+     except (OSError, UnicodeDecodeError) as exc:
+         return None, f"{file_label} unreadable ({exc}): {file_path}"
+@@ -97,6 +119,9 @@ def _read_git_metadata_file(
+     if "\ufeff" in text:
+         return None, f"{file_label} is invalid: contains UTF-8 BOM: {file_path}"
+ 
++    if multiline:
++        return text, None
++
+     if text.endswith("\r\n"):
+         body = text[:-2]
+     elif text.endswith("\n"):
+@@ -113,11 +138,254 @@ def _read_git_metadata_file(
+                 f"{file_label} is invalid: contains control character (code {code}): {file_path}",
+             )
+ 
+-    stripped = body.strip()
+-    if not allow_empty and not stripped:
++    if body != body.strip():
++        return (
++            None,
++            f"{file_label} is invalid: unstripped whitespace in single-line file: {file_path}",
++        )
++
++    if not allow_empty and not body:
+         return None, f"{file_label} is invalid: empty path: {file_path}"
+ 
+-    return stripped, None
++    return body, None
++
++
++def _validate_git_head_file(head_path: Path, label: str) -> tuple[bool, Optional[str]]:
++    """Validate git HEAD file per SPEC §23 (R10).
++
++    HEAD must be a regular file, strict UTF-8, no BOM, no NUL, no control chars,
++    and must match 'ref: refs/<name>' or a 40/64-char hex object id.
++    """
++    raw_content, err = _read_git_metadata_file(
++        head_path, label, allow_empty=False, multiline=False
++    )
++    if err is not None:
++        return False, err
++
++    # Validate HEAD format: symbolic ref or detached hex object id
++    if raw_content.startswith("ref: refs/"):
++        ref_part = raw_content[len("ref: refs/") :].strip()
++        if not ref_part or any(c.isspace() for c in ref_part):
++            return (
++                False,
++                f"{label} is invalid: malformed symbolic ref: {head_path}",
++            )
++        return True, None
++
++    if _HEX_SHA_RE.match(raw_content):
++        return True, None
++
++    return (
++        False,
++        f"{label} is invalid: neither a symbolic ref ('ref: refs/...') nor a valid hex object id: "
++        f"{head_path}",
++    )
++
++
++def _validate_git_config_file(config_path: Path, label: str) -> tuple[bool, Optional[str]]:
++    """Validate git config file per SPEC §23 (R10).
++
++    Must be regular file, strict UTF-8, no BOM, no NUL, and syntax parseable by git.
++    Empty config is valid (git defaults applied).
++    """
++    text, err = _read_git_metadata_file(
++        config_path, label, allow_empty=True, multiline=True
++    )
++    if err is not None:
++        return False, err
++
++    in_section = False
++    for line_num, raw_line in enumerate(text.splitlines(), start=1):
++        line = raw_line.strip()
++        if not line or line.startswith(("#", ";")):
++            continue
++
++        if line.startswith("["):
++            m = _CONFIG_SECTION_RE.match(line)
++            if not m:
++                return (
++                    False,
++                    f"{label} is invalid: malformed section header on line {line_num}: "
++                    f"{config_path}",
++                )
++            in_section = True
++            continue
++
++        # Variables outside of a section cause git error: 'key does not contain a section'
++        # or 'fatal: bad config line N'
++        if not in_section:
++            return (
++                False,
++                f"{label} is invalid: variable outside section on line {line_num}: {config_path}",
++            )
++
++        m = _CONFIG_VAR_RE.match(line)
++        if not m:
++            return (
++                False,
++                f"{label} is invalid: bad config line {line_num}: {config_path}",
++            )
++
++        var_key = m.group(1).lower()
++        var_val = m.group(2)
++        if var_key == "repositoryformatversion":
++            if var_val is None or not var_val.strip().isdigit():
++                return (
++                    False,
++                    f"{label} is invalid: bad numeric value for repositoryformatversion on "
++                    f"line {line_num}: {config_path}",
++                )
++        if var_key in (
++            "bare",
++            "filemode",
++            "logallrefupdates",
++            "ignorecase",
++            "precomposeunicode",
++        ):
++            if var_val is not None and not var_val.strip():
++                return (
++                    False,
++                    f"{label} is invalid: empty boolean value for {var_key} on "
++                    f"line {line_num}: {config_path}",
++                )
++
++    return True, None
++
++
++def _validate_git_packed_refs_file(
++    packed_refs_path: Path, label: str
++) -> tuple[bool, Optional[str]]:
++    """Validate git packed-refs file per SPEC §23 (R10).
++
++    Must be regular file, strict UTF-8, no BOM, no NUL.
++    Empty file is valid.
++    Non-empty file must start with '# pack-refs with:', followed by comments,
++    refs ('<sha> refs/...'), or peeled refs ('^<sha>').
++    """
++    text, err = _read_git_metadata_file(
++        packed_refs_path, label, allow_empty=True, multiline=True
++    )
++    if err is not None:
++        return False, err
++
++    if text and not (text.endswith("\n") or text.endswith("\r\n")):
++        return (
++            False,
++            f"{label} is invalid: unterminated line: {packed_refs_path}",
++        )
++
++    lines = [line.strip() for line in text.splitlines() if line.strip()]
++    if not lines:
++        return True, None
++
++    if not lines[0].startswith("# pack-refs with:"):
++        return (
++            False,
++            f"{label} is invalid: missing '# pack-refs with:' header: {packed_refs_path}",
++        )
++
++    for line_num, line in enumerate(lines[1:], start=2):
++        if line.startswith("#"):
++            continue
++        if line.startswith("^"):
++            if not _HEX_SHA_RE.match(line[1:]):
++                return (
++                    False,
++                    f"{label} is invalid: bad peeled ref on line {line_num}: {packed_refs_path}",
++                )
++            continue
++        parts = line.split(" ", 1)
++        if len(parts) != 2:
++            return (
++                False,
++                f"{label} is invalid: unexpected line {line_num}: {packed_refs_path}",
++            )
++        sha, ref = parts
++        if not _HEX_SHA_RE.match(sha) or not ref.startswith("refs/"):
++            return (
++                False,
++                f"{label} is invalid: malformed ref line {line_num}: {packed_refs_path}",
++            )
++
++    return True, None
++
++
++_GIT_DIR_MARKERS: tuple[str, ...] = (
++    "worktrees",
++    "objects",
++    "refs",
++    "config",
++    "packed-refs",
++    "commondir",
++)
++
++
++def _has_git_dir_markers(path: Path) -> bool:
++    """Return True if path contains any git directory markers (file, dir, or symlink)."""
++    for marker in _GIT_DIR_MARKERS:
++        target = path / marker
++        try:
++            if target.is_symlink() or target.exists():
++                return True
++        except OSError:
++            return True
++    return False
++
++
++def _validate_git_dir(dir_path: Path, dir_label: str) -> tuple[bool, Optional[str]]:
++    """Validate that dir_path exists, is a directory, and is readable (R7)."""
++    try:
++        if dir_path.is_symlink() and not dir_path.exists():
++            return False, f"{dir_label} is invalid: dangling symlink: {dir_path}"
++        if not dir_path.is_dir():
++            return False, f"{dir_label} is invalid: not a directory: {dir_path}"
++        _ = list(dir_path.iterdir())
++        return True, None
++    except (OSError, UnicodeDecodeError) as exc:
++        return False, f"{dir_label} unreadable ({exc}): {dir_path}"
++
++
++def _validate_full_git_dir(gitdir: Path, label: str) -> tuple[bool, Optional[str]]:
++    """Validate that gitdir has required files and dirs for a working repository (R7, R10).
++
++    Required:
++    - HEAD: regular file, valid ref or hex sha (R1, R7, R10)
++    - objects: directory, readable (R7)
++    - refs: directory, readable (R7)
++    - config: regular file, valid syntax (R7, R10)
++    Optional:
++    - packed-refs: if present, must be valid syntax (R10)
++    """
++    ok, err = _validate_git_dir(gitdir, label)
++    if not ok:
++        return False, err
++
++    ok, err = _validate_git_head_file(gitdir / "HEAD", f"{label} HEAD")
++    if not ok:
++        return False, err
++
++    ok, err = _validate_git_dir(gitdir / "objects", f"{label} objects")
++    if not ok:
++        return False, err
++
++    ok, err = _validate_git_dir(gitdir / "refs", f"{label} refs")
++    if not ok:
++        return False, err
++
++    config_path = gitdir / "config"
++    if not (config_path.exists() or config_path.is_symlink()):
++        return False, f"{label} is not a git directory: missing config file: {config_path}"
++    ok, err = _validate_git_config_file(config_path, f"{label} config")
++    if not ok:
++        return False, err
++
++    packed_refs = gitdir / "packed-refs"
++    if packed_refs.exists() or packed_refs.is_symlink():
++        ok, err = _validate_git_packed_refs_file(packed_refs, f"{label} packed-refs")
++        if not ok:
++            return False, err
++
++    return True, None
+ 
+ 
+ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, Optional[str]]:
+@@ -127,8 +395,10 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
+     1. Local work/ directory contains a .git file or directory.
+     2. Explicit worktree_path/.git exists.
+     3. Target repository .git directory or file (linked worktree commondir, submodule)
+-       lists job_dir or work_dir in its worktrees registrations.
+-    4. If worktree registrations directory exists but cannot be read (e.g. PermissionError),
++       lists job_dir, work_dir, or worktree_path in its worktrees registrations (R8).
++    4. Validates repository files and dirs for working repo (HEAD, objects, refs,
++       config, commondir, gitdir) and fails closed if corrupted or missing (R7).
++    5. If worktree registrations directory exists but cannot be read (e.g. PermissionError),
+        fails closed: returns (True, "worktree registrations directory unreadable (...)").
+     """
+     work_dir = job_dir / "work"
+@@ -146,19 +416,49 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
+         )
+ 
+     worktree_path_val = data.get("worktree_path")
+-    if worktree_path_val:
++    if worktree_path_val is not None:
++        if not isinstance(worktree_path_val, (str, Path)):
++            return (
++                True,
++                (
++                    "worktree registrations unreadable "
++                    f"(invalid worktree_path type: {type(worktree_path_val).__name__})"
++                ),
++            )
++        wt_str = str(worktree_path_val).strip()
++        if "\x00" in wt_str:
++            return (
++                True,
++                "worktree registrations unreadable (null byte in worktree_path)",
++            )
+         try:
+-            wt_git = Path(worktree_path_val) / ".git"
++            wt_git = Path(os.path.expanduser(wt_str)) / ".git"
+             if wt_git.exists() or wt_git.is_file() or wt_git.is_dir():
+                 return (
+                     True,
+                     "worktree registered (run 'git worktree prune' in repository to unregister)",
+                 )
+-        except OSError:
++        except (OSError, ValueError):
+             return (
+                 True,
+                 "worktree registered (run 'git worktree prune' in repository to unregister)",
+             )
++        if not os.path.isabs(os.path.expanduser(wt_str)):
++            try:
++                wt_rel_git = (job_dir / os.path.expanduser(wt_str)) / ".git"
++                if wt_rel_git.exists() or wt_rel_git.is_file() or wt_rel_git.is_dir():
++                    return (
++                        True,
++                        (
++                            "worktree registered (run 'git worktree prune' "
++                            "in repository to unregister)"
++                        ),
++                    )
++            except (OSError, ValueError):
++                return (
++                    True,
++                    "worktree registered (run 'git worktree prune' in repository to unregister)",
++                )
+ 
+     repo_path_val = data.get("repo_path")
+     if isinstance(repo_path_val, str) and repo_path_val.strip():
+@@ -173,11 +473,9 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
+             candidate_wt_roots: list[Path] = []
+             try:
+                 git_dir = repo_path / ".git"
+-                if not git_dir.exists() and not git_dir.is_symlink():
+-                    # Absent: fine (not git repo), but check if repo_path itself is a bare git dir
+-                    if (repo_path / "HEAD").is_file():
+-                        candidate_wt_roots.append(repo_path / "worktrees")
+-                elif git_dir.is_symlink() and not git_dir.exists():
++
++                # 1. Inspect repo_path/.git if present (pointer file, directory, or invalid)
++                if git_dir.is_symlink() and not git_dir.exists():
+                     # Dangling symlink (R3, R5)
+                     return (
+                         True,
+@@ -230,19 +528,33 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
+                                 f"(.git file target is not a directory: {actual_gitdir})"
+                             ),
+                         )
+-                    # R1: Must contain regular file named HEAD
+-                    if not (actual_gitdir / "HEAD").is_file():
+-                        return (
+-                            True,
+-                            (
+-                                "worktree registrations unreadable "
+-                                f"(.git file target is not a git directory: {actual_gitdir})"
+-                            ),
+-                        )
+-                    candidate_wt_roots.append(actual_gitdir / "worktrees")
+ 
+                     commondir_file = actual_gitdir / "commondir"
+-                    try:
++                    if commondir_file.exists() or commondir_file.is_symlink():
++                        # Linked worktree private dir: requires HEAD, gitdir, commondir (R7, R10)
++                        ok, err = _validate_git_head_file(
++                            actual_gitdir / "HEAD", ".git file target HEAD"
++                        )
++                        if not ok:
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(.git file target is not a git directory: {actual_gitdir})"
++                                ),
++                            )
++                        _, err = _read_git_metadata_file(
++                            actual_gitdir / "gitdir", ".git file target gitdir"
++                        )
++                        if err is not None:
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(.git file target is not a git directory: {actual_gitdir})"
++                                ),
++                            )
++
+                         if commondir_file.is_symlink() and not commondir_file.exists():
+                             return (
+                                 True,
+@@ -252,55 +564,68 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
+                                     f"{commondir_file})"
+                                 ),
+                             )
+-                        if commondir_file.exists():
+-                            raw_commondir, err = _read_git_metadata_file(
+-                                commondir_file, "commondir file"
++                        raw_commondir, err = _read_git_metadata_file(
++                            commondir_file, "commondir file"
++                        )
++                        if err is not None:
++                            return True, f"worktree registrations unreadable ({err})"
++
++                        if os.path.isabs(raw_commondir):
++                            common_gitdir = Path(raw_commondir).resolve(strict=False)
++                        else:
++                            common_gitdir = (actual_gitdir / raw_commondir).resolve(strict=False)
++
++                        if not common_gitdir.exists():
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(commondir file is invalid: target missing: "
++                                    f"{common_gitdir})"
++                                ),
++                            )
++                        if not common_gitdir.is_dir():
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(commondir file is invalid: target is not a directory: "
++                                    f"{common_gitdir})"
++                                ),
++                            )
++                        ok, err = _validate_full_git_dir(common_gitdir, "commondir target")
++                        if not ok:
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(commondir target is not a git directory: "
++                                    f"{common_gitdir})"
++                                ),
+                             )
+-                            if err is not None:
+-                                return True, f"worktree registrations unreadable ({err})"
+-
+-                            if os.path.isabs(raw_commondir):
+-                                common_gitdir = Path(raw_commondir).resolve(strict=False)
+-                            else:
+-                                common_gitdir = (actual_gitdir / raw_commondir).resolve(
+-                                    strict=False
+-                                )
+-                            if not common_gitdir.exists():
+-                                return (
+-                                    True,
+-                                    (
+-                                        "worktree registrations unreadable "
+-                                        f"(commondir file is invalid: target missing: "
+-                                        f"{common_gitdir})"
+-                                    ),
+-                                )
+-                            if not common_gitdir.is_dir():
+-                                return (
+-                                    True,
+-                                    (
+-                                        "worktree registrations unreadable "
+-                                        f"(commondir file is invalid: target is not a directory: "
+-                                        f"{common_gitdir})"
+-                                    ),
+-                                )
+-                            # R1: Must contain regular file named HEAD
+-                            if not (common_gitdir / "HEAD").is_file():
+-                                return (
+-                                    True,
+-                                    (
+-                                        "worktree registrations unreadable "
+-                                        f"(commondir target is not a git directory: "
+-                                        f"{common_gitdir})"
+-                                    ),
+-                                )
++                        if (common_gitdir / "worktrees") not in candidate_wt_roots:
+                             candidate_wt_roots.append(common_gitdir / "worktrees")
+-                    except (OSError, UnicodeDecodeError) as exc:
+-                        return (
+-                            True,
+-                            f"worktree registrations unreadable (commondir file: {exc})",
++                        if (actual_gitdir / "worktrees") not in candidate_wt_roots:
++                            candidate_wt_roots.append(actual_gitdir / "worktrees")
++                    else:
++                        # commondir missing: must be a standalone git directory / submodule (R7)
++                        is_full, _ = _validate_full_git_dir(
++                            actual_gitdir, ".git file target"
+                         )
++                        if is_full:
++                            if (actual_gitdir / "worktrees") not in candidate_wt_roots:
++                                candidate_wt_roots.append(actual_gitdir / "worktrees")
++                        else:
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(.git file target is not a git directory: {actual_gitdir})"
++                                ),
++                            )
++
+                 elif git_dir.is_dir():
+-                    # Normal git repository: must contain regular file named HEAD (R1, R3)
++                    # Normal git repository or bare repo containing .git
+                     if not (git_dir / "HEAD").is_file():
+                         return (
+                             True,
+@@ -309,8 +634,24 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
+                                 f"(.git is not a git directory: {git_dir})"
+                             ),
+                         )
+-                    candidate_wt_roots.append(git_dir / "worktrees")
+-                else:
++                    has_bare_internals = any(
++                        (repo_path / m).is_dir() or (repo_path / m).is_symlink()
++                        for m in ("worktrees", "objects", "refs")
++                    )
++                    if not has_bare_internals:
++                        # Normal git repository: validate full git directory structure (R7)
++                        ok, err = _validate_full_git_dir(git_dir, ".git directory")
++                        if not ok:
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(.git is not a git directory: {git_dir})"
++                                ),
++                            )
++                        if (git_dir / "worktrees") not in candidate_wt_roots:
++                            candidate_wt_roots.append(git_dir / "worktrees")
++                elif git_dir.exists():
+                     return (
+                         True,
+                         (
+@@ -318,17 +659,90 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
+                             f"(.git is invalid: not a regular file or directory: {git_dir})"
+                         ),
+                     )
++
++                # 2. R6 (a, b), R7: Bare-repo detection and union.
++                # Never let one branch shadow the other.
++                if not git_dir.exists() and not git_dir.is_symlink():
++                    # When .git is absent or not a pointer/dir:
++                    # Check if repo_path has ANY git directory markers.
++                    if _has_git_dir_markers(repo_path):
++                        ok, err = _validate_full_git_dir(repo_path, "bare repository")
++                        if not ok:
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(repo_path is not a git directory: {repo_path})"
++                                ),
++                            )
++                        if (repo_path / "worktrees") not in candidate_wt_roots:
++                            candidate_wt_roots.append(repo_path / "worktrees")
++                else:
++                    # When .git is a pointer or directory: repo_path may ALSO be a bare repo
++                    # (e.g. F2: bare repo containing a .git directory inside it).
++                    has_bare_internals = any(
++                        (repo_path / m).is_dir() or (repo_path / m).is_symlink()
++                        for m in ("worktrees", "objects", "refs")
++                    )
++                    if (repo_path / "HEAD").is_file() and _has_git_dir_markers(repo_path):
++                        ok, err = _validate_full_git_dir(repo_path, "bare repository")
++                        if ok:
++                            if (repo_path / "worktrees") not in candidate_wt_roots:
++                                candidate_wt_roots.append(repo_path / "worktrees")
++                        else:
++                            return (
++                                True,
++                                (
++                                    "worktree registrations unreadable "
++                                    f"(repo_path is not a git directory: {repo_path})"
++                                ),
++                            )
++                    elif (has_bare_internals or _has_git_dir_markers(repo_path)) and not (
++                        repo_path / "HEAD"
++                    ).is_file():
++                        return (
++                            True,
++                            (
++                                "worktree registrations unreadable "
++                                f"(repo_path is not a git directory: {repo_path})"
++                            ),
++                        )
+             except (OSError, UnicodeDecodeError) as exc:
+                 return True, f"worktree registrations directory unreadable ({exc})"
+             except Exception as exc:
+                 return True, f"worktree registrations unreadable ({exc})"
+ 
++            job_dir_res = job_dir.resolve(strict=False)
++            work_dir_res = (job_dir / "work").resolve(strict=False)
++
++            owned_paths: list[Path] = [
++                job_dir_res,
++                work_dir_res,
++                work_dir_res / ".git",
++            ]
++
++            if isinstance(worktree_path_val, (str, Path)) and str(worktree_path_val).strip():
++                wt_str = str(worktree_path_val).strip()
++                if "\x00" in wt_str:
++                    return (
++                        True,
++                        "worktree registrations unreadable (null byte in worktree_path)",
++                    )
++                try:
++                    wt_norm = Path(normalize_repo_path(wt_str))
++                    owned_paths.append(wt_norm)
++                    owned_paths.append(wt_norm / ".git")
++                    if not os.path.isabs(os.path.expanduser(wt_str)):
++                        wt_rel_job = (job_dir / os.path.expanduser(wt_str)).resolve(strict=False)
++                        owned_paths.append(wt_rel_job)
++                        owned_paths.append(wt_rel_job / ".git")
++                except (ValueError, OSError) as exc:
++                    return True, f"worktree registrations unreadable ({exc})"
++
+             for wt_root in candidate_wt_roots:
+                 try:
+                     if not wt_root.exists() or not wt_root.is_dir():
+                         continue
+-                    job_dir_res = job_dir.resolve(strict=False)
+-                    work_dir_res = (job_dir / "work").resolve(strict=False)
+                     try:
+                         entries = list(wt_root.iterdir())
+                     except (OSError, UnicodeDecodeError) as exc:
+@@ -361,12 +775,22 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
+                                             target_path = Path(target).resolve(strict=False)
+                                         else:
+                                             target_path = (entry / target).resolve(strict=False)
+-                                        if (
+-                                            target_path == job_dir_res
+-                                            or job_dir_res in target_path.parents
+-                                            or target_path == work_dir_res
+-                                            or work_dir_res in target_path.parents
+-                                        ):
++
++                                        target_parent = (
++                                            target_path.parent
++                                            if target_path.name == ".git"
++                                            else None
++                                        )
++                                        is_match = False
++                                        for p in owned_paths:
++                                            if target_path == p or p in target_path.parents:
++                                                is_match = True
++                                                break
++                                            if target_parent is not None and target_parent == p:
++                                                is_match = True
++                                                break
++
++                                        if is_match:
+                                             return (
+                                                 True,
+                                                 (
+@@ -516,6 +940,12 @@ def _classify_job_for_cleanup(
+             if should_keep:
+                 return False, [pid_reason or f"ambiguous pid: {pid!r}"], None, None
+ 
++        pgid = data.get("pgid")
++        if pgid is not None:
++            should_keep, pgid_reason = _check_pgid_status(pgid)
++            if should_keep:
++                return False, [pgid_reason or f"ambiguous pgid: {pgid!r}"], None, None
++
+         age_days = 0.0
+         ts = None
+         updated_raw = data.get("updated_at")
+@@ -686,6 +1116,10 @@ def run_cleanup(
+                 continue
+ 
+             try:
++                st = job_file.stat()
++                if not stat.S_ISREG(st.st_mode) or st.st_size > 1024 * 1024:
++                    kept[child.name] = ["job.json invalid or exceeds 1 MiB limit"]
++                    continue
+                 data = _safe_json_loads(job_file.read_text(encoding="utf-8"))
+                 if not isinstance(data, dict):
+                     kept[child.name] = ["job.json root is not an object"]
+@@ -834,6 +1268,13 @@ def run_cleanup(
+             if mode == "project":
+                 c_file = c_dir / "job.json"
+                 try:
++                    st = c_file.stat()
++                    if not stat.S_ISREG(st.st_mode) or st.st_size > 1024 * 1024:
++                        failed_ids.append(cid)
++                        skipped.append(
++                            {"job_id": cid, "reasons": ["job.json invalid or exceeds 1 MiB limit"]}
++                        )
++                        continue
+                     c_data = _safe_json_loads(c_file.read_text(encoding="utf-8"))
+                     c_repo = c_data.get("repo_path")
+                     if (
+@@ -1120,6 +1561,12 @@ def main(argv: Optional[list[str]] = None) -> int:
+         )
+         return 2
+ 
++    if args.project is not None and not args.project.strip():
++        import sys
++
++        sys.stderr.write("Error: --project path cannot be empty or whitespace\n")
++        return 2
++
+     try:
+         val = float(args.older_than_days)
+         if not math.isfinite(val) or val < 0:
+@@ -1134,6 +1581,11 @@ def main(argv: Optional[list[str]] = None) -> int:
+         return 2
+ 
+     store_path = args.store
++    if not str(store_path).strip():
++        import sys
++
++        sys.stderr.write("Error: --store path cannot be empty or whitespace\n")
++        return 2
+     try:
+         abs_store = Path(os.path.abspath(store_path))
+ 
+@@ -1250,7 +1702,7 @@ def main(argv: Optional[list[str]] = None) -> int:
+     if args.jobs:
+         args.jobs = list(dict.fromkeys(args.jobs))
+         for jid in args.jobs:
+-            if not _is_canonical_uuid(jid):
++            if not jid.strip() or not _is_canonical_uuid(jid):
+                 sys.stderr.write(f"Error: malformed UUID: {jid}\n")
+                 return 2
+             try:

@@ -1,0 +1,107 @@
+{
+  "job_name": "job2-slug-docs",
+  "job_id": "97c5139e-ba79-49eb-b050-7a6b70de09d1",
+  "title": "slug docs",
+  "started_at": "2026-10-26T03:13:03+0530",
+  "summary_written_at": "2026-10-26T03:17:41+0530",
+  "duration_seconds": 271.48,
+  "timed_out_and_cancelled": false,
+  "state": "done",
+  "review_reason": null,
+  "worktree_path": "/tmp/agy-real-smoke-state-yupwl5i1/jobs/97c5139e-ba79-49eb-b050-7a6b70de09d1/work",
+  "branch": "agy/slug-docs-2bf72c13",
+  "base_commit": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "head_commit": "33fda9e20e144b93b0d2e3d945a7da717a350e75",
+  "commits_count": 2,
+  "files_modified": [
+    "README.md",
+    "slug/__init__.py"
+  ],
+  "plan_summary": {
+    "total": 3,
+    "done": 3,
+    "remaining": []
+  },
+  "plan_nudge_count": 0,
+  "auto_fix_count": 0,
+  "denial_resume_count": 0,
+  "warnings": [],
+  "plan_envelope": {
+    "total": 3,
+    "done": 3,
+    "remaining": []
+  },
+  "facts": {
+    "commits_count": 2,
+    "files_modified_count": 2,
+    "verify": {
+      "requested": false,
+      "ran": false,
+      "passed": null,
+      "rc": null,
+      "attempts": 0
+    },
+    "audit": {
+      "status": "passed"
+    },
+    "plan": {
+      "total": 3,
+      "done": 3,
+      "remaining": 0
+    },
+    "denials": {
+      "count": 0,
+      "commands": 0,
+      "tools": 0
+    }
+  },
+  "agent_report": "<untrusted_text id=\"35851cd1c14fa757\">\n# REPORT\n\n## Done\n- Added a short docstring to `slugify` in `slug/__init__.py` describing its behavior (converting text to a slug by lowercasing and replacing spaces with hyphens).\n- Added a `Usage` section to `README.md` featuring two usage examples with input and output.\n\n## Not done / skipped\nnone\n\n## Open issues\nnone\n\n## Files changed\n- `slug/__init__.py`\n- `README.md`\n- `.agy/PLAN.md`\n- `.agy/NOTES.md`\n- `.agy/COMMIT_MSG`\n- `.agy/REPORT.md`\n\n## How verified\n- Read back `slug/__init__.py` to confirm the docstring accurately describes the behavior.\n- Read back `README.md` to confirm the section format and the presence of two distinct examples.\n- Did not run automated test suites directly as tests are handled by the wrapper verification environment.\n\n</untrusted_text id=\"35851cd1c14fa757\">",
+  "verify": {
+    "requested": false,
+    "ran": false,
+    "passed": null,
+    "rc": null,
+    "duration_seconds": null,
+    "attempts": 0,
+    "last_tail": null
+  },
+  "usage_cost_envelope": {
+    "five_hour_pct_points": 1.35,
+    "weekly_pct_points": 0.39,
+    "measured": true,
+    "concurrent_jobs": 1,
+    "note": "single active job; quota points attributed to this job"
+  },
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "scratchpad_files_retained": [
+    "LOG.md",
+    "NOTES.md",
+    "PLAN.md",
+    "REPORT.md"
+  ],
+  "budget": {
+    "weekly_pct_before": 25.252613425254822,
+    "weekly_pct_after": 24.865861237049103,
+    "weekly_points_spent_this_job": 0.3868,
+    "five_hour_pct_before": 98.85119795799255,
+    "five_hour_pct_after": 97.49756455421448,
+    "five_hour_points_spent_this_job": 1.3536,
+    "prior_weekly_spend": 0.3282,
+    "total_weekly_spend": 0.715,
+    "hard_stop_total_weekly_points": 8.0
+  },
+  "audit_event_counts": {
+    "job_created": 1,
+    "state_transition": 2,
+    "commit": 2,
+    "commit_skipped_no_changes": 1
+  },
+  "audit_event_total": 6,
+  "gather_errors": {
+    "status": null,
+    "result": null,
+    "review": null
+  }
+}

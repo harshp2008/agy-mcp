@@ -1,0 +1,65 @@
+{
+  "job_id": "042e655b-96c0-4b25-a99b-6d1d515c230e",
+  "state": "needs_review",
+  "elapsed_seconds": 28.1,
+  "title": "s1-mathutil",
+  "branch": "agy/s1-mathutil-fac9e9b7",
+  "base_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+  "head_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+  "commits_count": 0,
+  "files_modified": [],
+  "skipped_files": [],
+  "denials": [
+    {
+      "action": "command",
+      "display_name": "RunCommand"
+    }
+  ],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 32134,
+    "output_tokens": 927,
+    "total_tokens": 33061
+  },
+  "next_actions": [
+    "Inspect changes with agy_review",
+    "Resume job with advice using agy_resume",
+    "Cancel job with agy_cancel"
+  ],
+  "error": null,
+  "response": "<untrusted_text id=\"dc0dac43362e9553\">\n\n</untrusted_text id=\"dc0dac43362e9553\">",
+  "diff_stat": "",
+  "commits": [],
+  "audit_events_tail": [
+    {
+      "ts": "2026-10-25T06:32:25.628636+00:00",
+      "event": "job_created",
+      "detail": {
+        "title": "s1-mathutil",
+        "model": "gemini-3.8-flash-medium",
+        "max_minutes": 10,
+        "verify": null
+      }
+    },
+    {
+      "ts": "2026-10-25T06:32:25.650773+00:00",
+      "event": "state_transition",
+      "detail": {
+        "from": "queued",
+        "to": "running",
+        "trigger": "Worktree ready, process spawned & PID confirmed"
+      }
+    },
+    {
+      "ts": "2026-10-25T06:32:53.683848+00:00",
+      "event": "state_transition",
+      "detail": {
+        "from": "running",
+        "to": "needs_review",
+        "trigger": "Process terminated with rc 0",
+        "return_code": 0,
+        "review_reason": "blocked_by_permission"
+      }
+    }
+  ]
+}

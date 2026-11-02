@@ -1,0 +1,53 @@
+Mon Oct 26 10:50:28 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python scripts/gen_codemap_index.py --write
+updated docs/CODEMAP.md
+--- AST save ---
+4f8ea1a7a6f37c9694574e876c80c69c189f37836af4beb4384a4b5cd37c4877  src/agy_mcp/__init__.py
+89f84c615be0940809a6e90fed3f05aa0e30b44d736ced0260c7264e36471685  src/agy_mcp/__main__.py
+60fd7ef023124df42c2652f9c404acd0a413dd8afe16d4a905e3055bb9c570f4  src/agy_mcp/audit.py
+e61cd7d439b41d967d9b525f6df75bcdb455f8d46b703f045811ba87a466bd20  src/agy_mcp/cli_log.py
+603d57ab44e6de51bb4c014ab69c922213e656e98a7310b1260a40a7f2f23ea7  src/agy_mcp/config.py
+8f4794b1270f46d44d735731b0c6bd2de312c5a4bbde6a8eab1ebbf3ed7ed828  src/agy_mcp/gitops.py
+39fe355bb3bdeb64d9d9c4dc62fe12794ba1815255b48fb205d987d4d1dfe17a  src/agy_mcp/jobs.py
+2c13c4e81a99fc8a02a75a574af8090ba3595954e008d449c7348073a3d998af  src/agy_mcp/manager.py
+e462f711f1d52a67cf05784c352a41cd4fa0176d721db38497d1f9719471d8d4  src/agy_mcp/models.py
+e6a17d78d804d1699448dad9f066641e8082a7ceb78e7605d0e388ea2c78219e  src/agy_mcp/parse_result.py
+8fa44db16bce600a0e41598fc131d4f7d79e3a39414a38d49002ef44a71b6c0b  src/agy_mcp/recovery.py
+e40ca478691e7410683a5ff9d4258e0afc295ce44fe45a81f7c4805b9213c760  src/agy_mcp/runner.py
+d2f1ba6365b504c12e8c493cc9be722770e399d17fd12b8b254cbc5dafcc86fd  src/agy_mcp/scratchpad.py
+dbb59097e6bb6aacfdf3f032390923607e895ff7a397fffcf9164cfef21df391  src/agy_mcp/server.py
+97aed50102a000486f90d71ee6b0a1da31a3f59d2beff8e11f46c1fd8d6164fc  src/agy_mcp/states.py
+1a5e8005e3d029c52000c2498f6faa04cf054866db8b48b6d554b7d2774fe014  src/agy_mcp/supervisor.py
+464cae125af7598f33adf4dd49b360ad36b391406eaff9f245d5babd51c496bf  src/agy_mcp/transcript.py
+66468906c03a551fd1c820195a8391d3813d9866b30b4bbf75eef4dd641f5239  src/agy_mcp/usage.py
+09ea4700d74e2513247f8a2a40bbe6a9d4107bee58bbff090e7a334e463262ea  src/agy_mcp/util.py
+1a45f922203d2bcdae71d47c360936c8b3abb771697db84b8fe9b39fb4d4ec39  src/agy_mcp/verify.py
+734e6f211e6e777877b6894ce938a2ffce7dce8bc02fc772998e64e2b453a0e1  src/agy_mcp/watcher.py
+9bb0c421adb2dab682bfa26452085c96f5e0aeff86b402c2c6342f2fe97ad51e  src/agy_mcp/worktree.py
+
+saved 22 hashes to docs/reports/docs-codemap/ast-baseline.json
+--- AST compare ---
+same    src/agy_mcp/__init__.py
+same    src/agy_mcp/__main__.py
+same    src/agy_mcp/audit.py
+same    src/agy_mcp/cli_log.py
+same    src/agy_mcp/config.py
+same    src/agy_mcp/gitops.py
+same    src/agy_mcp/jobs.py
+same    src/agy_mcp/manager.py
+same    src/agy_mcp/models.py
+same    src/agy_mcp/parse_result.py
+same    src/agy_mcp/recovery.py
+same    src/agy_mcp/runner.py
+same    src/agy_mcp/scratchpad.py
+same    src/agy_mcp/server.py
+same    src/agy_mcp/states.py
+same    src/agy_mcp/supervisor.py
+same    src/agy_mcp/transcript.py
+same    src/agy_mcp/usage.py
+same    src/agy_mcp/util.py
+same    src/agy_mcp/verify.py
+same    src/agy_mcp/watcher.py
+same    src/agy_mcp/worktree.py
+
+OK: 22 files match the AST baseline (no behavior change)

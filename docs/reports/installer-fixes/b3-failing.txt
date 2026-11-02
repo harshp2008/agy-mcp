@@ -1,0 +1,105 @@
+Mon Oct 26 10:45:19 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q -k 'comment_with_brackets or installer_block_do_not_block or still_refuses'
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+______________ test_comment_with_brackets_does_not_block_install _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1220/test_comment_with_brackets_doe0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1220/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_comment_with_brackets_does_not_block_install(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """A '#' comment containing [x] is not flow style and must not stop the install."""
+        home = tmp_path / "home"
+        patch = _patch_path(home)
+        patch.parent.mkdir(parents=True)
+        comment = "# keep this list [x] intact; it is a comment, not YAML flow style\n"
+        patch.write_text(comment + "user_patch: keep-me\n", encoding="utf-8")
+    
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+>       assert proc.returncode == 0, _output(proc)
+E       AssertionError: # >>> ai-stack agymcp >>>
+E         - insert:
+E             - id: mcp-agy
+E               name: '@deepseek-ai/dsh-mcp-client'
+E               config:
+E                 serverName: agy
+E                 transport: stdio
+E                 command: /tmp/pytest-of-<user>/pytest-1220/test_comment_with_brackets_doe0/home/.config/ai-stack/agymcp/run.sh
+E                 toolCallTimeoutMs: 360000
+E         # <<< ai-stack agymcp <<<
+E         install: error: refusing to edit /tmp/pytest-of-<user>/pytest-1220/test_comment_with_brackets_doe0/home/.dsh/profiles/web/cordis.patch.yml: it uses flow style ([...]); add the block printed above manually, then rerun. The file was not changed.
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['~/Documents/GITHUB PROJECTS/agy-mcp/installer/install.sh', '--client', 'dsh'], retur....patch.yml: it uses flow style ([...]); add the block printed above manually, then rerun. The file was not changed.\n').returncode
+
+tests/test_installer_chapter.py:784: AssertionError
+________ test_brackets_inside_the_installer_block_do_not_block_a_rerun _________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1220/test_brackets_inside_the_insta0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1220/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_brackets_inside_the_installer_block_do_not_block_a_rerun(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """The installer's own marker block is ignored by the flow-style guard."""
+        home = tmp_path / "home"
+        patch = _patch_path(home)
+        patch.parent.mkdir(parents=True)
+        patch.write_text(
+            "- insert:\n"
+            "    - id: mcp-search\n"
+            f"{PATCH_BEGIN}\n"
+            "- insert: [{id: mcp-agy, serverName: agy}]\n"
+            f"{PATCH_END}\n",
+            encoding="utf-8",
+        )
+    
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+>       assert proc.returncode == 0, _output(proc)
+E       AssertionError: # >>> ai-stack agymcp >>>
+E         - insert:
+E             - id: mcp-agy
+E               name: '@deepseek-ai/dsh-mcp-client'
+E               config:
+E                 serverName: agy
+E                 transport: stdio
+E                 command: /tmp/pytest-of-<user>/pytest-1220/test_brackets_inside_the_insta0/home/.config/ai-stack/agymcp/run.sh
+E                 toolCallTimeoutMs: 360000
+E         # <<< ai-stack agymcp <<<
+E         install: error: refusing to edit /tmp/pytest-of-<user>/pytest-1220/test_brackets_inside_the_insta0/home/.dsh/profiles/web/cordis.patch.yml: it uses flow style ([...]); add the block printed above manually, then rerun. The file was not changed.
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['~/Documents/GITHUB PROJECTS/agy-mcp/installer/install.sh', '--client', 'dsh'], retur....patch.yml: it uses flow style ([...]); add the block printed above manually, then rerun. The file was not changed.\n').returncode
+
+tests/test_installer_chapter.py:808: AssertionError
+___________ test_real_flow_style_still_refuses_and_reports_the_line ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1220/test_real_flow_style_still_ref0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1220/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_real_flow_style_still_refuses_and_reports_the_line(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """A real 'key: [a, b]' line must still be refused and named in the error."""
+        home = tmp_path / "home"
+        patch = _patch_path(home)
+        patch.parent.mkdir(parents=True)
+        original = "# a comment [ok]\nuser_patch: [one, two]\n"
+        patch.write_text(original, encoding="utf-8")
+    
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+        assert proc.returncode != 0
+        output = _output(proc)
+        assert "flow style" in output
+>       assert "user_patch: [one, two]" in output
+E       assert 'user_patch: [one, two]' in "# >>> ai-stack agymcp >>>\n- insert:\n    - id: mcp-agy\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n  ...s.patch.yml: it uses flow style ([...]); add the block printed above manually, then rerun. The file was not changed.\n"
+
+tests/test_installer_chapter.py:829: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_comment_with_brackets_does_not_block_install
+FAILED tests/test_installer_chapter.py::test_brackets_inside_the_installer_block_do_not_block_a_rerun
+FAILED tests/test_installer_chapter.py::test_real_flow_style_still_refuses_and_reports_the_line
+3 failed, 29 deselected in 0.34s
+rc=1

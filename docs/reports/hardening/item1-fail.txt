@@ -1,0 +1,18 @@
+.F.                                                                      [100%]
+=================================== FAILURES ===================================
+______________ test_checkpoint_minutes_one_reaches_watcher_as_60 _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-782/test_checkpoint_minutes_one_re0')
+
+    def test_checkpoint_minutes_one_reaches_watcher_as_60(tmp_path: Path) -> None:
+        """Setting checkpoint_commit_minutes=1 changes the watcher interval to 60 s."""
+        manager, job_id = _start_hanging_job(tmp_path, Config(checkpoint_commit_minutes=1))
+        try:
+>           assert _watch_interval(manager, job_id) == 60
+E           AssertionError: assert 600 == 60
+E            +  where 600 = _watch_interval(<agy_mcp.manager.JobManager object at 0x74f0286d3e00>, '52816b5b-b86e-48c9-bfdb-ef354c4d0b5a')
+
+tests/test_checkpoint_interval.py:69: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_checkpoint_interval.py::test_checkpoint_minutes_one_reaches_watcher_as_60
+1 failed, 2 passed in 1.23s

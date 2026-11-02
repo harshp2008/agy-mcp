@@ -1,0 +1,3 @@
+2cf642b (agy/verify-loop-d1-calc-bugfix-7bb9ed27) agy: Verify Loop D1 Calc Bugfix
+c80d49c fix(calc): correct multiplication implementation in mul function
+d9c8ef5 (HEAD -> main) Initial commit with calc and tests (mul buggy)

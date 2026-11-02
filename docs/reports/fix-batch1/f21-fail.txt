@@ -1,0 +1,85 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 1 item
+
+tests/test_f21.py F                                                      [100%]
+
+=================================== FAILURES ===================================
+_____ test_f21_cancel_pre_kill_checkpoint_races_watcher_commit_serialized ______
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-383/test_f21_cancel_pre_kill_check0')
+
+    def test_f21_cancel_pre_kill_checkpoint_races_watcher_commit_serialized(tmp_path: Path) -> None:
+        """Watcher commit and cancel pre-kill checkpoint must serialize on per-job commit_lock without failure."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+        state_dir = tmp_path / "state"
+    
+        env = manager.start(
+            prompt="Commit sequence __SCENARIO:hang_after_partial_commit__",
+            repo_path=str(repo_dir),
+            title="Concurrent Commit Job",
+        )
+    
+        # Wait until supervisor is active and running
+        for _ in range(100):
+            j = get_job(env.job_id, state_dir)
+            if env.job_id in manager._supervisors and j.state == JobState.RUNNING:
+                break
+            threading.Event().wait(0.05)
+    
+        wt = j.worktree_path
+        assert wt is not None and wt.is_dir()
+    
+        # Create changes and a COMMIT_MSG for watcher
+        (wt / "change.txt").write_text("content\n")
+        agy_dir = wt / ".agy"
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        (agy_dir / "COMMIT_MSG").write_text("feat: valid commit message\n")
+    
+        b_inside_commit = threading.Barrier(2)
+        orig_commit_with_retry = gitops.commit_with_retry
+        cancel_thread_started = threading.Event()
+    
+        def wrapped_commit_with_retry(worktree_path: Path, msg_file: Path | None = None, **kwargs):
+            # We are inside watcher's commit under commit_lock
+            b_inside_commit.wait()
+            cancel_thread_started.wait()
+            return orig_commit_with_retry(worktree_path, msg_file=msg_file, **kwargs)
+    
+        cancel_envelope = []
+    
+        def _cancel_worker():
+            cancel_thread_started.set()
+            # Cancel will try to acquire commit_lock for pre-kill checkpoint
+            res = manager.cancel(env.job_id)
+            cancel_envelope.append(res)
+    
+        with patch("agy_mcp.watcher.commit_with_retry", side_effect=wrapped_commit_with_retry):
+            # Trigger watcher tick
+            supervisor = manager._supervisors.get(env.job_id)
+            assert supervisor is not None
+    
+            def _watcher_worker():
+                supervisor.watcher.tick()
+    
+            w_thread = threading.Thread(target=_watcher_worker)
+            w_thread.start()
+    
+            # Wait until watcher enters commit_with_retry
+            b_inside_commit.wait()
+    
+            # commit_lock must be held by the watcher thread
+>           assert supervisor.commit_lock.locked(), "commit_lock must be held during watcher commit"
+E           AssertionError: commit_lock must be held during watcher commit
+E           assert False
+E            +  where False = <built-in method locked of _thread.lock object at 0x7a72caf6d540>()
+E            +    where <built-in method locked of _thread.lock object at 0x7a72caf6d540> = <unlocked _thread.lock object at 0x7a72caf6d540>.locked
+E            +      where <unlocked _thread.lock object at 0x7a72caf6d540> = <agy_mcp.supervisor.JobSupervisor object at 0x7a72cafb32f0>.commit_lock
+
+tests/test_f21.py:100: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f21.py::test_f21_cancel_pre_kill_checkpoint_races_watcher_commit_serialized
+============================== 1 failed in 1.14s ===============================

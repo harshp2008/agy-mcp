@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/tmp/agy-real-smoke-state-3yxa_r_u/jobs/8f3c843a-7c71-484c-acba-ddd535755749/work",
+    "status",
+    "--porcelain=v1",
+    "-b"
+  ],
+  "returncode": 0,
+  "stdout": "## agy/slugify-punctuation-90226ef0\n",
+  "stderr": ""
+}

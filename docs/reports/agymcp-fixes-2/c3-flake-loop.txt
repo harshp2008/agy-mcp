@@ -1,0 +1,121 @@
+RUN 1 rc=0 1 passed in 1.54s
+RUN 2 rc=0 1 passed in 1.38s
+RUN 3 rc=0 1 passed in 0.94s
+RUN 4 rc=0 1 passed in 1.22s
+RUN 5 rc=0 1 passed in 0.93s
+RUN 6 rc=0 1 passed in 0.88s
+RUN 7 rc=0 1 passed in 0.80s
+RUN 8 rc=0 1 passed in 0.81s
+RUN 9 rc=0 1 passed in 0.53s
+RUN 10 rc=0 1 passed in 0.61s
+RUN 11 rc=0 1 passed in 1.19s
+RUN 12 rc=0 1 passed in 1.20s
+RUN 13 rc=0 1 passed in 1.30s
+RUN 14 rc=0 1 passed in 0.81s
+RUN 15 rc=0 1 passed in 1.15s
+RUN 16 rc=0 1 passed in 1.20s
+RUN 17 rc=0 1 passed in 1.28s
+RUN 18 rc=0 1 passed in 0.94s
+RUN 19 rc=0 1 passed in 0.87s
+RUN 20 rc=0 1 passed in 1.14s
+RUN 21 rc=0 1 passed in 1.21s
+RUN 22 rc=0 1 passed in 0.94s
+RUN 23 rc=0 1 passed in 0.48s
+RUN 24 rc=0 1 passed in 0.81s
+RUN 25 rc=0 1 passed in 0.83s
+RUN 26 rc=0 1 passed in 1.20s
+RUN 27 rc=0 1 passed in 1.16s
+RUN 28 rc=0 1 passed in 1.49s
+RUN 29 rc=0 1 passed in 0.92s
+RUN 30 rc=0 1 passed in 0.88s
+RUN 31 rc=0 1 passed in 1.15s
+RUN 32 rc=0 1 passed in 1.13s
+RUN 33 rc=0 1 passed in 1.15s
+RUN 34 rc=0 1 passed in 1.09s
+RUN 35 rc=0 1 passed in 1.33s
+RUN 36 rc=0 1 passed in 0.86s
+RUN 37 rc=0 1 passed in 1.14s
+RUN 38 rc=0 1 passed in 1.17s
+RUN 39 rc=0 1 passed in 0.78s
+RUN 40 rc=0 1 passed in 0.87s
+RUN 41 rc=0 1 passed in 0.82s
+RUN 42 rc=0 1 passed in 1.13s
+RUN 43 rc=0 1 passed in 1.15s
+RUN 44 rc=1 1 failed in 0.93s
+=== FAILED on run 44 ===
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_manager_verify_command_not_found_clean_error _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1275/test_manager_verify_command_no0')
+
+    def test_manager_verify_command_not_found_clean_error(tmp_path: Path) -> None:
+        """When verify command executable is not found, clear error and no crash."""
+        cfg = Config(verify_allowlist=["nonexistent_bin_123"])
+        manager, repo_dir = _setup_manager_and_repo(tmp_path, config=cfg)
+    
+        env = manager.start(
+            prompt="Execute task __SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Verify Not Found Test",
+            verify="nonexistent_bin_123 --test",
+        )
+    
+        deadline = time.time() + 8.0
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                break
+            time.sleep(0.3)
+    
+        st = manager.status(env.job_id)
+        assert st.state == JobState.NEEDS_REVIEW
+        job = get_job(env.job_id, manager.state_dir)
+>       assert job.review_reason == "verify_failed"
+E       assert None == 'verify_failed'
+E        +  where None = Job(job_id='6e2816a8-2b88-4002-9fc5-ff8b8bdfc803', title='Verify Not Found Test', repo_path=PosixPath('/tmp/pytest-of-...4ebbd0ca">', audit_status='passed', audit_reason=None, scratchpad_files=['PLAN.md', 'NOTES.md', 'LOG.md', 'REPORT.md']).review_reason
+
+tests/test_manager.py:550: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_manager.py::test_manager_verify_command_not_found_clean_error
+1 failed in 0.93s
+RUN 1 rc=0
+RUN 2 rc=0
+RUN 3 rc=1
+=== FAILED on run 3 ===
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_manager_verify_command_not_found_clean_error _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1278/test_manager_verify_command_no0')
+
+    def test_manager_verify_command_not_found_clean_error(tmp_path: Path) -> None:
+        """When verify command executable is not found, clear error and no crash."""
+        cfg = Config(verify_allowlist=["nonexistent_bin_123"])
+        manager, repo_dir = _setup_manager_and_repo(tmp_path, config=cfg)
+    
+        env = manager.start(
+            prompt="Execute task __SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Verify Not Found Test",
+            verify="nonexistent_bin_123 --test",
+        )
+    
+        deadline = time.time() + 8.0
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                break
+            time.sleep(0.3)
+    
+        st = manager.status(env.job_id)
+>       assert st.state == JobState.NEEDS_REVIEW
+E       AssertionError: assert <JobState.RUNNING: 'running'> == <JobState.NEE...needs_review'>
+E         
+E         - needs_review
+E         + running
+
+tests/test_manager.py:548: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_manager.py::test_manager_verify_command_not_found_clean_error
+1 failed in 1.01s

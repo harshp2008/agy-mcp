@@ -1,0 +1,88 @@
+Mon Oct 26 10:42:41 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q -k uninstall
+..FFF                                                                    [100%]
+=================================== FAILURES ===================================
+_______________ test_uninstall_without_client_removes_dsh_blocks _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1214/test_uninstall_without_client_0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1214/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_uninstall_without_client_removes_dsh_blocks(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """A bare --uninstall must not leave dsh blocks pointing at a deleted run.sh."""
+        home = tmp_path / "home"
+        home.mkdir()
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+        assert proc.returncode == 0, _output(proc)
+    
+        proc = _run_installer(home, tmp_path, fake_wheel, "--uninstall")
+        assert proc.returncode == 0, _output(proc)
+        output = _output(proc)
+    
+        patch_text = _patch_path(home).read_text(encoding="utf-8")
+        agents_text = _agents_path(home).read_text(encoding="utf-8")
+>       assert PATCH_BEGIN not in patch_text
+E       AssertionError: assert '# >>> ai-stack agymcp >>>' not in '# >>> ai-st...agymcp <<<\n'
+E         
+E         '# >>> ai-stack agymcp >>>' is contained here:
+E           # >>> ai-stack agymcp >>>
+E           - insert:
+E               - id: mcp-agy
+E                 name: '@deepseek-ai/dsh-mcp-client'
+E                 config:...
+E         
+E         ...Full output truncated (5 lines hidden), use '-vv' to show
+
+tests/test_installer_chapter.py:719: AssertionError
+______________ test_uninstall_generic_keeps_dsh_blocks_but_warns _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1214/test_uninstall_generic_keeps_d0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1214/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_uninstall_generic_keeps_dsh_blocks_but_warns(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """Explicit --client generic must not touch dsh, and must warn about the now-dead block."""
+        home = tmp_path / "home"
+        home.mkdir()
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+        assert proc.returncode == 0, _output(proc)
+    
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "generic", "--uninstall")
+        assert proc.returncode == 0, _output(proc)
+        output = _output(proc)
+    
+        assert PATCH_BEGIN in _patch_path(home).read_text(encoding="utf-8")
+        assert AGENTS_BEGIN in _agents_path(home).read_text(encoding="utf-8")
+>       assert "still register the agy-mcp server" in output
+E       AssertionError: assert 'still register the agy-mcp server' in 'install: uninstalling agy-mcp (generic)\n  - kept: /tmp/pytest-of-<user>/pytest-1214/test_uninstall_generic_keeps_d0/h...oml, /tmp/pytest-of-<user>/pytest-1214/test_uninstall_generic_keeps_d0/home/.local/state/agy-mcp and any .bak backups\n'
+
+tests/test_installer_chapter.py:744: AssertionError
+__________ test_uninstall_dsh_reports_removed_blocks_and_restart_hint __________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1214/test_uninstall_dsh_reports_rem0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1214/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_uninstall_dsh_reports_removed_blocks_and_restart_hint(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """Explicit --client dsh removes both blocks and prints what it removed."""
+        home = tmp_path / "home"
+        home.mkdir()
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+        assert proc.returncode == 0, _output(proc)
+    
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh", "--uninstall")
+        assert proc.returncode == 0, _output(proc)
+        output = _output(proc)
+>       assert f"removed the agy-mcp block from {_patch_path(home)}" in output
+E       AssertionError: assert 'removed the agy-mcp block from /tmp/pytest-of-<user>/pytest-1214/test_uninstall_dsh_reports_rem0/home/.dsh/profiles/web/cordis.patch.yml' in 'install: uninstalling agy-mcp (dsh)\n  - kept: /tmp/pytest-of-<user>/pytest-1214/test_uninstall_dsh_reports_rem0/home/...oml, /tmp/pytest-of-<user>/pytest-1214/test_uninstall_dsh_reports_rem0/home/.local/state/agy-mcp and any .bak backups\n'
+
+tests/test_installer_chapter.py:763: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_uninstall_without_client_removes_dsh_blocks
+FAILED tests/test_installer_chapter.py::test_uninstall_generic_keeps_dsh_blocks_but_warns
+FAILED tests/test_installer_chapter.py::test_uninstall_dsh_reports_removed_blocks_and_restart_hint
+3 failed, 2 passed, 24 deselected in 15.36s
+rc=1

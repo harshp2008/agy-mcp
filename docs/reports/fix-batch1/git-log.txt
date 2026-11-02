@@ -1,0 +1,25 @@
+8c9a8a0 docs(reports): clean git-status.txt
+8733071 docs(reports): update git-log.txt and clean git-status.txt
+8762e55 docs(reports): make git-status.txt clean and empty
+860669d docs(reports): record git status for batch 1 fixes
+489ed05 docs(reports): record git log for batch 1 fixes
+6964bcd docs(reports): add full pytest suite pass and clean ruff check reports (batch 1)
+922cec6 test(jobs): update active job count assertion to include queued jobs (F13, SPEC 18)
+02749dc docs(spec,decisions): document batch 1 process control and state integrity decisions (D55, SPEC 5/7/18)
+a4572de test(manager,recovery): replace sleeps with poll_until and revert relaxed deadline (T4)
+836d365 test(hygiene): isolate artifacts under tmp_path, remove global /tmp pointer and track spawned pids (T2)
+f26df26 fix(manager,runner,supervisor): use RLock for manager, poll before killpg and persist conversation_id before kill (F1, F11, SPEC 10/16)
+d8115db fix(gitops,watcher): do not delete index.lock on unknown liveness and wire supervisor liveness (F23, SPEC 11)
+e269856 fix(supervisor,watcher): serialize commit operations under per-job commit_lock (F21, SPEC 11)
+cf95502 fix(manager,verify): build fix prompt once with trusted guidance and persist attempt counters (F20, SPEC 13/15)
+a970585 fix(supervisor,gitops): only increment commits_count on real commit sha (F15, SPEC 11/15)
+222e793 fix(jobs,manager): atomic concurrency cap check under flock with queued count (F13, SPEC 18)
+82710ce fix(runner): always signal pgid on kill and document detached grandchild limits (F11, SPEC 5/10)
+9e37c98 fix(manager,states): permit queued->cancelled transition and cancel before force cleanup (F12, SPEC 7)
+1cf0331 fix(supervisor): honour cancel during verify, kill verify proc and wait for finalization (F3, SPEC 7/13)
+dadcc5c fix(manager): serialize resume with per-job lock and kill launched process on setup/resume error (F4, SPEC 7/10)
+cc63b21 fix(supervisor): finalize and terminate agy on watcher needs_review (F1, SPEC 10/11)
+b56788a docs: DeepSeek code review 2
+603a2d7 docs(reports): record git status and log for verify-fixes round
+fc8dcb4 docs(spec): document junk exclusion, verify observability, and known_hosts.old per D54 and SPEC 11-13, 15
+9eb14cc test(manager): relax auto-fix double failure deadline for concurrent test runs

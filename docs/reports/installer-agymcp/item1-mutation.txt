@@ -1,0 +1,39 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________________ test_fresh_dsh_install_writes_every_file ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1076/test_fresh_dsh_install_writes_0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1076/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_fresh_dsh_install_writes_every_file(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        home = tmp_path / "home"
+        home.mkdir()
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+        assert proc.returncode == 0, _output(proc)
+    
+        install_dir = _install_dir(home)
+        run_sh = install_dir / "run.sh"
+        env_file = install_dir / "env"
+        assert run_sh.is_file()
+        assert run_sh.stat().st_mode & stat.S_IXUSR
+        assert env_file.is_file()
+        assert stat.S_IMODE(env_file.stat().st_mode) == 0o600
+        assert (install_dir / "mcp-client-config.json").is_file()
+        assert (install_dir / "orchestrator-guidance.md").is_file()
+        assert _config_path(home).is_file()
+        assert (home / ".local" / "state" / "agy-mcp").is_dir()
+    
+        patch_text = _patch_path(home).read_text(encoding="utf-8")
+        assert PATCH_BEGIN in patch_text
+        assert PATCH_END in patch_text
+        assert "- id: mcp-agy" in patch_text
+        assert "serverName: agy" in patch_text
+>       assert "toolCallTimeoutMs: 360000" in patch_text
+E       assert 'toolCallTimeoutMs: 360000' in "# >>> ai-stack agymcp >>>\n- insert:\n    - id: mcp-agy\n      name: '@deepseek-ai/dsh-mcp-client'\n      config:\n  ...h_install_writes_0/home/.config/ai-stack/agymcp/run.sh\n        toolCallTimeoutMs: 120000\n# <<< ai-stack agymcp <<<\n"
+
+tests/test_installer_chapter.py:237: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_fresh_dsh_install_writes_every_file
+1 failed in 2.84s

@@ -1,0 +1,6 @@
+{"ts": "2026-10-25T22:39:26.568347+00:00", "event": "job_created", "detail": {"title": "F1 Invalid Commit Msg Test", "model": "gemini-3.8-flash-medium", "max_minutes": 240, "verify": null}}
+{"ts": "2026-10-25T22:39:26.694873+00:00", "event": "state_transition", "detail": {"from": "queued", "to": "running", "trigger": "Worktree ready, process spawned & PID confirmed"}}
+{"ts": "2026-10-25T22:39:30.704769+00:00", "event": "state_transition", "detail": {"from": "running", "to": "needs_review", "trigger": "Malformed .agy/COMMIT_MSG after retries", "review_reason": "invalid_commit_message"}}
+{"ts": "2026-10-25T22:39:30.843503+00:00", "event": "state_transition", "detail": {"from": "needs_review", "to": "running", "trigger": "Resumed with answer: Fixed commit message format"}}
+{"ts": "2026-10-25T22:39:30.917269+00:00", "event": "process_terminated", "detail": {"state": "needs_review", "review_reason": "invalid_commit_message", "pgid": 113456}}
+{"ts": "2026-10-25T22:39:30.966697+00:00", "event": "state_transition", "detail": {"from": "running", "to": "done", "trigger": "Process terminated with rc 0", "return_code": 0}}

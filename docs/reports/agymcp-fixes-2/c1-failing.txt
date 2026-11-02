@@ -1,0 +1,177 @@
+..FFF.                                                                   [100%]
+=================================== FAILURES ===================================
+_______________ test_upgrade_does_not_copify_an_editable_install _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1302/test_upgrade_does_not_copify_a0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1302/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_upgrade_does_not_copify_an_editable_install(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """--upgrade on an editable install must not turn it into a normal copy."""
+        home = tmp_path / "home"
+        home.mkdir()
+        first = _run_installer(home, tmp_path, fake_wheel)
+        assert first.returncode == 0, _output(first)
+        marker = _write_editable_marker(home)
+    
+        newer = tmp_path / "agy_mcp-0.0.1-py3-none-any.whl"
+        _build_fake_wheel(newer, version="0.0.1")
+        proc = _run_installer(
+            home,
+            tmp_path,
+            newer,
+            "--upgrade",
+            extra={"AGY_MCP_SRC": str(newer)},
+        )
+        output = _output(proc)
+        assert proc.returncode == 0, output
+>       assert "editable install is already live; nothing to reinstall" in output
+E       AssertionError: assert 'editable install is already live; nothing to reinstall' in 'install: agy-mcp core install\n  - agy found: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_does_not_copify_a0/bin/ag...t the client tool-call timeout to at least 360000 ms: agy_wait blocks for up to 300 s and the client needs headroom.\n'
+
+tests/test_installer_chapter.py:768: AssertionError
+____________ test_upgrade_with_agymcp_editable_reinstalls_editable _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1302/test_upgrade_with_agymcp_edita0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1302/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_upgrade_with_agymcp_editable_reinstalls_editable(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """AGY_MCP_EDITABLE=1 forces an editable reinstall instead of the live note."""
+        home = tmp_path / "home"
+        home.mkdir()
+        first = _run_installer(home, tmp_path, fake_wheel)
+        assert first.returncode == 0, _output(first)
+        _write_editable_marker(home)
+    
+        proc = _run_installer(
+            home,
+            tmp_path,
+            fake_wheel,
+            "--upgrade",
+            "--dry-run",
+            extra={"AGY_MCP_EDITABLE": "1"},
+        )
+        output = _output(proc)
+        assert proc.returncode == 0, output
+        assert "editable install is already live" not in output
+        pip_lines = [line for line in output.splitlines() if "[dry-run] would run:" in line
+                     and "pip install" in line]
+        assert pip_lines, output
+        command = pip_lines[0]
+>       assert " -e " in command, command
+E       AssertionError: [dry-run] would run: env -u PYTHONPATH /tmp/pytest-of-<user>/pytest-1302/test_upgrade_with_agymcp_edita0/home/.config/ai-stack/agymcp/venv/bin/python -m pip install --disable-pip-version-check --upgrade --force-reinstall --no-deps --no-deps --no-index /tmp/pytest-of-<user>/pytest-1302/wheel0/agy_mcp-0.0.0-py3-none-any.whl
+E       assert ' -e ' in '[dry-run] would run: env -u PYTHONPATH /tmp/pytest-of-<user>/pytest-1302/test_upgrade_with_agymcp_edita0/home/.config/...-force-reinstall --no-deps --no-deps --no-index /tmp/pytest-of-<user>/pytest-1302/wheel0/agy_mcp-0.0.0-py3-none-any.whl'
+
+tests/test_installer_chapter.py:800: AssertionError
+________________ test_upgrade_resolves_the_new_dependency_list _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1302/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_upgrade_resolves_the_new_dependency_list(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """A normal --upgrade must let pip resolve the package's dependencies."""
+        home = tmp_path / "home"
+        home.mkdir()
+        first = _run_installer(home, tmp_path, fake_wheel)
+        assert first.returncode == 0, _output(first)
+        assert _module_importable(home, "fakedep") is False
+    
+        dep_dir = tmp_path / "deps"
+        _build_fake_dependency_wheel(dep_dir / "fakedep-1.0-py3-none-any.whl")
+        newer = tmp_path / "agy_mcp-0.0.2-py3-none-any.whl"
+        _build_fake_wheel(newer, version="0.0.2", requires=("fakedep==1.0",))
+    
+        proc = _run_installer(
+            home,
+            tmp_path,
+            newer,
+            "--upgrade",
+            extra={
+                "AGY_MCP_SRC": str(newer),
+                "AGY_MCP_PIP_ARGS": f"--no-index --find-links {dep_dir}",
+            },
+        )
+        output = _output(proc)
+        assert proc.returncode == 0, output
+        assert _installed_agy_mcp_version(home) == "0.0.2"
+>       assert _module_importable(home, "fakedep") is True, output
+E       AssertionError: install: agy-mcp core install
+E           - agy found: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/bin/agy
+E           - venv already exists: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.config/ai-stack/agymcp/venv
+E           - reinstalling agy-mcp from /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/agy_mcp-0.0.2-py3-none-any.whl (--upgrade)
+E         Looking in links: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/deps
+E         Processing /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/agy_mcp-0.0.2-py3-none-any.whl
+E         Installing collected packages: agy-mcp
+E           Attempting uninstall: agy-mcp
+E             Found existing installation: agy-mcp 0.0.0
+E             Uninstalling agy-mcp-0.0.0:
+E               Successfully uninstalled agy-mcp-0.0.0
+E         Successfully installed agy-mcp-0.0.2
+E           - config already exists; not overwriting: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.config/agy-mcp/config.toml
+E           - suggested additions (apply manually only if the key is missing):
+E           - run.sh: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.config/ai-stack/agymcp/run.sh
+E           - env: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.config/ai-stack/agymcp/env (mode 600)
+E           - config: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.config/agy-mcp/config.toml
+E           - state: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.local/state/agy-mcp
+E           - No agy login check was run. Run 'agy' once, log in, and check /usage yourself; there is one deliberate human step.
+E           - MCP client JSON: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.config/ai-stack/agymcp/mcp-client-config.json
+E         {
+E           "mcpServers": {
+E             "agy": {
+E               "command": "/tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.config/ai-stack/agymcp/run.sh",
+E               "args": [],
+E               "env": {}
+E             }
+E           }
+E         }
+E           - orchestrator guidance: /tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home/.config/ai-stack/agymcp/orchestrator-guidance.md
+E         # Coding jobs with agy (mcp__agy__ tools)
+E         You can hand self-contained coding work to Google's agy through the mcp__agy__ tools. agy works on its own git branch in an isolated worktree; the wrapper audits it, runs verification and makes the commits. The wrapper never merges or pushes.
+E         
+E         ## When to delegate
+E         - Delegate: a clearly specified chunk (one module, tests for existing code, a refactor, docs, a port), anything long-running, anything that can run while you do other work.
+E         - Do it yourself: small edits, design decisions, security-sensitive code, anything that needs the whole conversation's context.
+E         - Before delegating, call agy_usage. Do not start new jobs when the Gemini Models weekly bucket remaining is below 10% or its 5h bucket remaining is below 15%. Run at most 2 jobs at once.
+E         
+E         ## Running a job
+E         1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-8 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs). Do not pass the model parameter unless the human named one; use the server default.
+E         2. agy_wait until the state changes (it returns after at most 5 minutes; call it again). Do not poll agy_status in a loop.
+E         3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. agy_review carries the same plan, facts, agent_report and scratchpad as agy_wait, so read agent_report and plan to see what was skipped. Read the diff before accepting.
+E         4. Accept = merge the job branch into a dedicated integration branch in the project (for example integration/<topic>), run the project's tests there, then agy_cleanup. Never merge, fast-forward or push into main/master or the repository's default branch: that is the human's decision. Record "merge integration/<topic> into main when ready" in docs/orchestrator/REPORT.md and commit docs/orchestrator/ on the integration branch, not on main. Reject = agy_resume with specific feedback (keeping manual resumes to a small number; the cumulative max_minutes budget still applies), or discard and redo with a better prompt.
+E         5. Never pass force=true to agy_cleanup. If agy_cleanup refuses, remove the worktree only (delete_branch false), add the job branch to NEEDS_HUMAN and continue.
+E         
+E         ## States and what to do
+E         - done: review as above.
+E         - needs_decision: answer using the decision policy below, then agy_resume.
+E         - needs_review with plan_incomplete or verify_failed, or in the timeout state: agy_resume once with specific guidance; if it repeats, take over yourself or split the task.
+E         - needs_review with quota_exhausted: stop starting jobs, continue other work, resume after resume_after.
+E         - needs_review with auth_required: stop and add it to NEEDS_HUMAN (agy needs a login).
+E         - needs_review with audit_violation, host_path_modified, instruction_file_modified, audit_unavailable or blocked_by_permission: never auto-resume, never merge. Add it to NEEDS_HUMAN and continue with other work.
+E         - failed: read the error; retry once with a changed approach; otherwise report it.
+E         - If agy_resume fails with error code job_finalizing, the previous run is still wrapping up: wait 10 seconds and call agy_resume again (at most 5 attempts), then report it.
+E         
+E         ## Decision policy (you decide; the human is not there)
+E         Say yes and log it when the choice is reversible, stays inside the repo, follows existing conventions or the SPEC, and is the smaller, simpler option.
+E         Never decide alone (add to NEEDS_HUMAN and continue with other work): deleting or overwriting user data, pushing or any force operation, credentials/secrets/network access, spending money, changing permissions or sandbox settings, editing AGENTS.md / GEMINI.md / .agents/, installing system packages, touching files outside the repo, licensing, anything you cannot undo.
+E         
+E         ## Files to keep (in the project, docs/orchestrator/)
+E         PLAN.md (tasks and status), DECISIONS.md (every decision you made and why, with the job id), NEEDS_HUMAN.md (questions that need a person), REPORT.md (at the end: done, not done, risks, how to verify). Update them as you go; a restarted session must be able to continue from them.
+E         
+E         ## Unattended runs
+E         Work until the plan is done or only NEEDS_HUMAN items remain. Never loop on a failing job. If something is unclear, make the safe choice, log it and continue.
+E           - Paste the JSON into your MCP client's mcpServers map and the guidance into its instruction file.
+E           - Set the client tool-call timeout to at least 360000 ms: agy_wait blocks for up to 300 s and the client needs headroom.
+E         
+E       assert False is True
+E        +  where False = _module_importable(PosixPath('/tmp/pytest-of-<user>/pytest-1302/test_upgrade_resolves_the_new_0/home'), 'fakedep')
+
+tests/test_installer_chapter.py:833: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_upgrade_does_not_copify_an_editable_install
+FAILED tests/test_installer_chapter.py::test_upgrade_with_agymcp_editable_reinstalls_editable
+FAILED tests/test_installer_chapter.py::test_upgrade_resolves_the_new_dependency_list
+3 failed, 3 passed, 33 deselected in 13.78s

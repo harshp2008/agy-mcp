@@ -1,0 +1,1873 @@
+"""Safe, dry-run-first job record cleaner CLI for agy-mcp stores (SPEC §23, D89-D93).
+
+Scans an agy-mcp state store, classifies job records by project repository path
+or explicit job IDs, and removes stale job records while leaving git branches,
+repositories, worktrees, and conversation records strictly intact.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import re
+import stat
+import sys
+import unicodedata
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Optional
+
+from agy_mcp.cleanup_fixtures import (
+    _apply_edge_protection,
+    _check_pgid_status,
+    _check_pid_status,
+    _extract_strings,
+    _has_symlinks,
+    _is_canonical_uuid,
+    _parse_iso_ts,
+    _safe_delete_job_dir,
+    _safe_json_loads,
+    _write_manifest,
+)
+
+
+def normalize_repo_path(path_val: str | Path) -> str:
+    """Normalize a repository path string or Path object deterministically.
+
+    Expands user home directory (~), resolves dot and parent components without
+    requiring the directory to currently exist on disk (strict=False), strips
+    trailing slashes, and preserves case.
+    """
+    path_str = str(path_val)
+    if not path_str.strip():
+        raise ValueError("repository path cannot be empty or whitespace")
+    if "\x00" in path_str:
+        raise ValueError("embedded null byte in repository path")
+    expanded = os.path.expanduser(path_str)
+    return str(Path(expanded).resolve(strict=False))
+
+
+MAX_GIT_METADATA_SIZE: int = 1024 * 1024  # 1 MiB limit for git metadata files
+_HEX_SHA_RE = re.compile(r"^[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?$")
+_CONFIG_SECTION_RE = re.compile(r"^\[([a-zA-Z0-9_\-\.]+)(?:\s+\"([^\"]*)\")?\]$")
+_CONFIG_VAR_RE = re.compile(r"^([a-zA-Z0-9_\-]+)\s*(?:=\s*(.*))?$")
+
+
+def _read_git_metadata_file(
+    file_path: Path,
+    file_label: str,
+    *,
+    allow_empty: bool = False,
+    multiline: bool = False,
+    max_size: int = MAX_GIT_METADATA_SIZE,
+) -> tuple[Optional[str], Optional[str]]:
+    """Read and validate a git metadata text file per SPEC §23 (R2, R5, R10).
+
+    Returns (content, None) on success, or (None, failure_reason) on failure.
+    Validates:
+    - Must be a regular file or symlink resolving to a regular file (R5, R10).
+    - Checks stat() before opening so FIFOs, sockets, and device files can never block (R10, R11).
+    - Dangling symlinks or non-regular files return a failure reason.
+    - File size is capped to max_size (default 1 MiB) to prevent OOM/hang (R10, R11).
+    - If allow_empty is False, empty file returns a failure reason.
+    - Decodes with strict UTF-8 (no silent BOM stripping via utf-8-sig) (R2, R10).
+    - Must not contain UTF-8 BOM (\\xef\\xbb\\xbf or \\ufeff) (R2, R10).
+    - Must not contain NUL byte (\\x00) (R2, R10).
+    - For single-line files (multiline=False): at most one trailing LF or CRLF is stripped;
+      no other control characters allowed in the body (R2, R10).
+    - For multi-line files (multiline=True): returns text stripped of trailing whitespace,
+      with no NUL or BOM, strict UTF-8 (R10).
+    """
+    try:
+        # Check stat() before opening to guarantee we never block on FIFOs, sockets, or devices
+        if file_path.is_symlink() and not file_path.exists():
+            return None, f"{file_label} is invalid: dangling symlink: {file_path}"
+        try:
+            st = file_path.stat()
+        except OSError as exc:
+            return None, f"{file_label} is invalid ({exc}): {file_path}"
+
+        if not stat.S_ISREG(st.st_mode):
+            return None, f"{file_label} is invalid: not a regular file: {file_path}"
+
+        if st.st_size > max_size:
+            return (
+                None,
+                f"{file_label} is invalid: exceeds size limit ({st.st_size} > {max_size}): "
+                f"{file_path}",
+            )
+
+        if st.st_size == 0:
+            if allow_empty:
+                return "", None
+            return None, f"{file_label} is invalid: empty file: {file_path}"
+
+        raw_bytes = file_path.read_bytes()
+    except (OSError, UnicodeDecodeError) as exc:
+        return None, f"{file_label} unreadable ({exc}): {file_path}"
+
+    if raw_bytes.startswith(b"\xef\xbb\xbf"):
+        return None, f"{file_label} is invalid: contains UTF-8 BOM: {file_path}"
+    if b"\x00" in raw_bytes:
+        return None, f"{file_label} is invalid: contains NUL byte: {file_path}"
+
+    try:
+        text = raw_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        return None, f"{file_label} unreadable ({exc}): {file_path}"
+
+    if "\ufeff" in text:
+        return None, f"{file_label} is invalid: contains UTF-8 BOM: {file_path}"
+
+    if multiline:
+        return text, None
+
+    if text.endswith("\r\n"):
+        body = text[:-2]
+    elif text.endswith("\n"):
+        body = text[:-1]
+    else:
+        body = text
+
+    # Check for any control character in body (code < 32 or C1 controls or category Cc)
+    for ch in body:
+        code = ord(ch)
+        if code < 32 or (0x7F <= code <= 0x9F) or unicodedata.category(ch) == "Cc":
+            return (
+                None,
+                f"{file_label} is invalid: contains control character (code {code}): {file_path}",
+            )
+
+    if body != body.strip():
+        return (
+            None,
+            f"{file_label} is invalid: unstripped whitespace in single-line file: {file_path}",
+        )
+
+    if not allow_empty and not body:
+        return None, f"{file_label} is invalid: empty path: {file_path}"
+
+    return body, None
+
+
+def _validate_git_head_file(head_path: Path, label: str) -> tuple[bool, Optional[str]]:
+    """Validate git HEAD file per SPEC §23 (R10).
+
+    HEAD must be a regular file, strict UTF-8, no BOM, no NUL, no control chars,
+    and must match 'ref: refs/<name>' or a 40/64-char hex object id.
+    """
+    raw_content, err = _read_git_metadata_file(
+        head_path, label, allow_empty=False, multiline=False
+    )
+    if err is not None:
+        return False, err
+
+    # Validate HEAD format: symbolic ref or detached hex object id
+    if raw_content.startswith("ref: refs/"):
+        ref_part = raw_content[len("ref: refs/") :].strip()
+        if not ref_part or any(c.isspace() for c in ref_part):
+            return (
+                False,
+                f"{label} is invalid: malformed symbolic ref: {head_path}",
+            )
+        return True, None
+
+    if _HEX_SHA_RE.match(raw_content):
+        return True, None
+
+    return (
+        False,
+        f"{label} is invalid: neither a symbolic ref ('ref: refs/...') nor a valid hex object id: "
+        f"{head_path}",
+    )
+
+
+def _validate_git_config_file(config_path: Path, label: str) -> tuple[bool, Optional[str]]:
+    """Validate git config file per SPEC §23 (R10).
+
+    Must be regular file, strict UTF-8, no BOM, no NUL, and syntax parseable by git.
+    Empty config is valid (git defaults applied).
+    """
+    text, err = _read_git_metadata_file(
+        config_path, label, allow_empty=True, multiline=True
+    )
+    if err is not None:
+        return False, err
+
+    in_section = False
+    for line_num, raw_line in enumerate(text.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line or line.startswith(("#", ";")):
+            continue
+
+        if line.startswith("["):
+            m = _CONFIG_SECTION_RE.match(line)
+            if not m:
+                return (
+                    False,
+                    f"{label} is invalid: malformed section header on line {line_num}: "
+                    f"{config_path}",
+                )
+            in_section = True
+            continue
+
+        # Variables outside of a section cause git error: 'key does not contain a section'
+        # or 'fatal: bad config line N'
+        if not in_section:
+            return (
+                False,
+                f"{label} is invalid: variable outside section on line {line_num}: {config_path}",
+            )
+
+        m = _CONFIG_VAR_RE.match(line)
+        if not m:
+            return (
+                False,
+                f"{label} is invalid: bad config line {line_num}: {config_path}",
+            )
+
+        var_key = m.group(1).lower()
+        var_val = m.group(2)
+        if var_key == "repositoryformatversion":
+            if var_val is None or not var_val.strip().isdigit():
+                return (
+                    False,
+                    f"{label} is invalid: bad numeric value for repositoryformatversion on "
+                    f"line {line_num}: {config_path}",
+                )
+        if var_key in (
+            "bare",
+            "filemode",
+            "logallrefupdates",
+            "ignorecase",
+            "precomposeunicode",
+        ):
+            if var_val is not None and not var_val.strip():
+                return (
+                    False,
+                    f"{label} is invalid: empty boolean value for {var_key} on "
+                    f"line {line_num}: {config_path}",
+                )
+
+    return True, None
+
+
+def _validate_git_packed_refs_file(
+    packed_refs_path: Path, label: str
+) -> tuple[bool, Optional[str]]:
+    """Validate git packed-refs file per SPEC §23 (R10).
+
+    Must be regular file, strict UTF-8, no BOM, no NUL.
+    Empty file is valid.
+    Non-empty file must start with '# pack-refs with:', followed by comments,
+    refs ('<sha> refs/...'), or peeled refs ('^<sha>').
+    """
+    text, err = _read_git_metadata_file(
+        packed_refs_path, label, allow_empty=True, multiline=True
+    )
+    if err is not None:
+        return False, err
+
+    if text and not (text.endswith("\n") or text.endswith("\r\n")):
+        return (
+            False,
+            f"{label} is invalid: unterminated line: {packed_refs_path}",
+        )
+
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return True, None
+
+    if not lines[0].startswith("# pack-refs with:"):
+        return (
+            False,
+            f"{label} is invalid: missing '# pack-refs with:' header: {packed_refs_path}",
+        )
+
+    for line_num, line in enumerate(lines[1:], start=2):
+        if line.startswith("#"):
+            continue
+        if line.startswith("^"):
+            if not _HEX_SHA_RE.match(line[1:]):
+                return (
+                    False,
+                    f"{label} is invalid: bad peeled ref on line {line_num}: {packed_refs_path}",
+                )
+            continue
+        parts = line.split(" ", 1)
+        if len(parts) != 2:
+            return (
+                False,
+                f"{label} is invalid: unexpected line {line_num}: {packed_refs_path}",
+            )
+        sha, ref = parts
+        if not _HEX_SHA_RE.match(sha) or not ref.startswith("refs/"):
+            return (
+                False,
+                f"{label} is invalid: malformed ref line {line_num}: {packed_refs_path}",
+            )
+
+    return True, None
+
+
+_GIT_DIR_MARKERS: tuple[str, ...] = (
+    "worktrees",
+    "objects",
+    "refs",
+    "config",
+    "packed-refs",
+    "commondir",
+)
+
+
+def _has_git_dir_markers(path: Path) -> bool:
+    """Return True if path contains any git directory markers (file, dir, or symlink)."""
+    for marker in _GIT_DIR_MARKERS:
+        target = path / marker
+        try:
+            if target.is_symlink() or target.exists():
+                return True
+        except OSError:
+            return True
+    return False
+
+
+def _validate_git_dir(dir_path: Path, dir_label: str) -> tuple[bool, Optional[str]]:
+    """Validate that dir_path exists, is a directory, and is readable (R7)."""
+    try:
+        if dir_path.is_symlink() and not dir_path.exists():
+            return False, f"{dir_label} is invalid: dangling symlink: {dir_path}"
+        if not dir_path.is_dir():
+            return False, f"{dir_label} is invalid: not a directory: {dir_path}"
+        _ = list(dir_path.iterdir())
+        return True, None
+    except (OSError, UnicodeDecodeError) as exc:
+        return False, f"{dir_label} unreadable ({exc}): {dir_path}"
+
+
+def _validate_full_git_dir(gitdir: Path, label: str) -> tuple[bool, Optional[str]]:
+    """Validate that gitdir has required files and dirs for a working repository (R7, R10).
+
+    Required:
+    - HEAD: regular file, valid ref or hex sha (R1, R7, R10)
+    - objects: directory, readable (R7)
+    - refs: directory, readable (R7)
+    - config: regular file, valid syntax (R7, R10)
+    Optional:
+    - packed-refs: if present, must be valid syntax (R10)
+    """
+    ok, err = _validate_git_dir(gitdir, label)
+    if not ok:
+        return False, err
+
+    ok, err = _validate_git_head_file(gitdir / "HEAD", f"{label} HEAD")
+    if not ok:
+        return False, err
+
+    ok, err = _validate_git_dir(gitdir / "objects", f"{label} objects")
+    if not ok:
+        return False, err
+
+    ok, err = _validate_git_dir(gitdir / "refs", f"{label} refs")
+    if not ok:
+        return False, err
+
+    config_path = gitdir / "config"
+    if not (config_path.exists() or config_path.is_symlink()):
+        return False, f"{label} is not a git directory: missing config file: {config_path}"
+    ok, err = _validate_git_config_file(config_path, f"{label} config")
+    if not ok:
+        return False, err
+
+    packed_refs = gitdir / "packed-refs"
+    if packed_refs.exists() or packed_refs.is_symlink():
+        ok, err = _validate_git_packed_refs_file(packed_refs, f"{label} packed-refs")
+        if not ok:
+            return False, err
+
+    return True, None
+
+
+def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, Optional[str]]:
+    """Return (is_registered, reason) indicating git worktree registration status.
+
+    Checks:
+    1. Local work/ directory contains a .git file or directory.
+    2. Explicit worktree_path/.git exists.
+    3. Target repository .git directory or file (linked worktree commondir, submodule)
+       lists job_dir, work_dir, or worktree_path in its worktrees registrations (R8).
+    4. Validates repository files and dirs for working repo (HEAD, objects, refs,
+       config, commondir, gitdir) and fails closed if corrupted or missing (R7).
+    5. If worktree registrations directory exists but cannot be read (e.g. PermissionError),
+       fails closed: returns (True, "worktree registrations directory unreadable (...)").
+
+    Why the union: a registration can be recorded in the job's own work/.git, in
+    the explicit worktree_path, in the repository's .git/worktrees, or in the
+    worktrees directory of a bare repository that is itself the repo_path (a bare
+    repo may also contain a .git directory pointing elsewhere). The function
+    gathers every candidate root and accepts a match in ANY of them instead of
+    letting one layout shadow another. The asymmetry is deliberate: a false
+    "registered" only keeps a row (safe), while a false "not registered" would
+    let run_cleanup delete a record whose worktree still exists -- the fail-open
+    the differential harness exists to catch, which is why this function is so
+    much longer than the happy path suggests.
+    """
+    work_dir = job_dir / "work"
+    dot_git = work_dir / ".git"
+    try:
+        if dot_git.exists() or dot_git.is_file() or dot_git.is_dir():
+            return (
+                True,
+                "worktree registered (run 'git worktree prune' in repository to unregister)",
+            )
+    except OSError:
+        return (
+            True,
+            "worktree registered (run 'git worktree prune' in repository to unregister)",
+        )
+
+    worktree_path_val = data.get("worktree_path")
+    if worktree_path_val is not None:
+        if not isinstance(worktree_path_val, (str, Path)):
+            return (
+                True,
+                (
+                    "worktree registrations unreadable "
+                    f"(invalid worktree_path type: {type(worktree_path_val).__name__})"
+                ),
+            )
+        wt_str = str(worktree_path_val).strip()
+        if "\x00" in wt_str:
+            return (
+                True,
+                "worktree registrations unreadable (null byte in worktree_path)",
+            )
+        try:
+            wt_git = Path(os.path.expanduser(wt_str)) / ".git"
+            if wt_git.exists() or wt_git.is_file() or wt_git.is_dir():
+                return (
+                    True,
+                    "worktree registered (run 'git worktree prune' in repository to unregister)",
+                )
+        except (OSError, ValueError):
+            return (
+                True,
+                "worktree registered (run 'git worktree prune' in repository to unregister)",
+            )
+        if not os.path.isabs(os.path.expanduser(wt_str)):
+            try:
+                wt_rel_git = (job_dir / os.path.expanduser(wt_str)) / ".git"
+                if wt_rel_git.exists() or wt_rel_git.is_file() or wt_rel_git.is_dir():
+                    return (
+                        True,
+                        (
+                            "worktree registered (run 'git worktree prune' "
+                            "in repository to unregister)"
+                        ),
+                    )
+            except (OSError, ValueError):
+                return (
+                    True,
+                    "worktree registered (run 'git worktree prune' in repository to unregister)",
+                )
+
+    repo_path_val = data.get("repo_path")
+    if isinstance(repo_path_val, str) and repo_path_val.strip():
+        repo_path: Optional[Path] = None
+        if "\x00" not in repo_path_val:
+            try:
+                repo_path = Path(os.path.expanduser(repo_path_val)).resolve(strict=False)
+            except (ValueError, OSError):
+                repo_path = None
+
+        if repo_path is not None:
+            candidate_wt_roots: list[Path] = []
+            try:
+                git_dir = repo_path / ".git"
+
+                # 1. Inspect repo_path/.git if present (pointer file, directory, or invalid)
+                if git_dir.is_symlink() and not git_dir.exists():
+                    # Dangling symlink (R3, R5)
+                    return (
+                        True,
+                        (
+                            "worktree registrations unreadable "
+                            f"(.git is a dangling symlink: {git_dir})"
+                        ),
+                    )
+                elif git_dir.is_file():
+                    # Linked worktree or submodule: follow gitdir and commondir
+                    raw_content, err = _read_git_metadata_file(git_dir, ".git file")
+                    if err is not None:
+                        return True, f"worktree registrations unreadable ({err})"
+
+                    if not raw_content.startswith("gitdir:"):
+                        return (
+                            True,
+                            (
+                                "worktree registrations unreadable "
+                                "(.git file is invalid: missing 'gitdir:' pointer)"
+                            ),
+                        )
+                    raw_gitdir = raw_content[len("gitdir:") :].strip()
+                    if not raw_gitdir:
+                        return (
+                            True,
+                            (
+                                "worktree registrations unreadable "
+                                "(.git file is invalid: empty gitdir pointer)"
+                            ),
+                        )
+                    if os.path.isabs(raw_gitdir):
+                        actual_gitdir = Path(raw_gitdir).resolve(strict=False)
+                    else:
+                        actual_gitdir = (repo_path / raw_gitdir).resolve(strict=False)
+
+                    if not actual_gitdir.exists():
+                        return (
+                            True,
+                            (
+                                "worktree registrations unreadable "
+                                f"(.git file target missing: {actual_gitdir})"
+                            ),
+                        )
+                    if not actual_gitdir.is_dir():
+                        return (
+                            True,
+                            (
+                                "worktree registrations unreadable "
+                                f"(.git file target is not a directory: {actual_gitdir})"
+                            ),
+                        )
+
+                    commondir_file = actual_gitdir / "commondir"
+                    if commondir_file.exists() or commondir_file.is_symlink():
+                        # Linked worktree private dir: requires HEAD, gitdir, commondir (R7, R10)
+                        ok, err = _validate_git_head_file(
+                            actual_gitdir / "HEAD", ".git file target HEAD"
+                        )
+                        if not ok:
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(.git file target is not a git directory: {actual_gitdir})"
+                                ),
+                            )
+                        _, err = _read_git_metadata_file(
+                            actual_gitdir / "gitdir", ".git file target gitdir"
+                        )
+                        if err is not None:
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(.git file target is not a git directory: {actual_gitdir})"
+                                ),
+                            )
+
+                        if commondir_file.is_symlink() and not commondir_file.exists():
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(commondir file is invalid: dangling symlink: "
+                                    f"{commondir_file})"
+                                ),
+                            )
+                        raw_commondir, err = _read_git_metadata_file(
+                            commondir_file, "commondir file"
+                        )
+                        if err is not None:
+                            return True, f"worktree registrations unreadable ({err})"
+
+                        if os.path.isabs(raw_commondir):
+                            common_gitdir = Path(raw_commondir).resolve(strict=False)
+                        else:
+                            common_gitdir = (actual_gitdir / raw_commondir).resolve(strict=False)
+
+                        if not common_gitdir.exists():
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(commondir file is invalid: target missing: "
+                                    f"{common_gitdir})"
+                                ),
+                            )
+                        if not common_gitdir.is_dir():
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(commondir file is invalid: target is not a directory: "
+                                    f"{common_gitdir})"
+                                ),
+                            )
+                        ok, err = _validate_full_git_dir(common_gitdir, "commondir target")
+                        if not ok:
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(commondir target is not a git directory: "
+                                    f"{common_gitdir})"
+                                ),
+                            )
+                        if (common_gitdir / "worktrees") not in candidate_wt_roots:
+                            candidate_wt_roots.append(common_gitdir / "worktrees")
+                        if (actual_gitdir / "worktrees") not in candidate_wt_roots:
+                            candidate_wt_roots.append(actual_gitdir / "worktrees")
+                    else:
+                        # commondir missing: must be a standalone git directory / submodule (R7)
+                        is_full, _ = _validate_full_git_dir(
+                            actual_gitdir, ".git file target"
+                        )
+                        if is_full:
+                            if (actual_gitdir / "worktrees") not in candidate_wt_roots:
+                                candidate_wt_roots.append(actual_gitdir / "worktrees")
+                        else:
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(.git file target is not a git directory: {actual_gitdir})"
+                                ),
+                            )
+
+                elif git_dir.is_dir():
+                    # Normal git repository or bare repo containing .git
+                    if not (git_dir / "HEAD").is_file():
+                        return (
+                            True,
+                            (
+                                "worktree registrations unreadable "
+                                f"(.git is not a git directory: {git_dir})"
+                            ),
+                        )
+                    has_bare_internals = any(
+                        (repo_path / m).is_dir() or (repo_path / m).is_symlink()
+                        for m in ("worktrees", "objects", "refs")
+                    )
+                    if not has_bare_internals:
+                        # Normal git repository: validate full git directory structure (R7)
+                        ok, err = _validate_full_git_dir(git_dir, ".git directory")
+                        if not ok:
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(.git is not a git directory: {git_dir})"
+                                ),
+                            )
+                        if (git_dir / "worktrees") not in candidate_wt_roots:
+                            candidate_wt_roots.append(git_dir / "worktrees")
+                elif git_dir.exists():
+                    return (
+                        True,
+                        (
+                            "worktree registrations unreadable "
+                            f"(.git is invalid: not a regular file or directory: {git_dir})"
+                        ),
+                    )
+
+                # 2. R6 (a, b), R7: Bare-repo detection and union.
+                # Never let one branch shadow the other.
+                if not git_dir.exists() and not git_dir.is_symlink():
+                    # When .git is absent or not a pointer/dir:
+                    # Check if repo_path has ANY git directory markers.
+                    if _has_git_dir_markers(repo_path):
+                        ok, err = _validate_full_git_dir(repo_path, "bare repository")
+                        if not ok:
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(repo_path is not a git directory: {repo_path})"
+                                ),
+                            )
+                        if (repo_path / "worktrees") not in candidate_wt_roots:
+                            candidate_wt_roots.append(repo_path / "worktrees")
+                else:
+                    # When .git is a pointer or directory: repo_path may ALSO be a bare repo
+                    # (e.g. F2: bare repo containing a .git directory inside it).
+                    has_bare_internals = any(
+                        (repo_path / m).is_dir() or (repo_path / m).is_symlink()
+                        for m in ("worktrees", "objects", "refs")
+                    )
+                    if (repo_path / "HEAD").is_file() and _has_git_dir_markers(repo_path):
+                        ok, err = _validate_full_git_dir(repo_path, "bare repository")
+                        if ok:
+                            if (repo_path / "worktrees") not in candidate_wt_roots:
+                                candidate_wt_roots.append(repo_path / "worktrees")
+                        else:
+                            return (
+                                True,
+                                (
+                                    "worktree registrations unreadable "
+                                    f"(repo_path is not a git directory: {repo_path})"
+                                ),
+                            )
+                    elif (has_bare_internals or _has_git_dir_markers(repo_path)) and not (
+                        repo_path / "HEAD"
+                    ).is_file():
+                        return (
+                            True,
+                            (
+                                "worktree registrations unreadable "
+                                f"(repo_path is not a git directory: {repo_path})"
+                            ),
+                        )
+            except (OSError, UnicodeDecodeError) as exc:
+                return True, f"worktree registrations directory unreadable ({exc})"
+            except Exception as exc:
+                return True, f"worktree registrations unreadable ({exc})"
+
+            job_dir_res = job_dir.resolve(strict=False)
+            work_dir_res = (job_dir / "work").resolve(strict=False)
+
+            owned_paths: list[Path] = [
+                job_dir_res,
+                work_dir_res,
+                work_dir_res / ".git",
+            ]
+
+            if isinstance(worktree_path_val, (str, Path)) and str(worktree_path_val).strip():
+                wt_str = str(worktree_path_val).strip()
+                if "\x00" in wt_str:
+                    return (
+                        True,
+                        "worktree registrations unreadable (null byte in worktree_path)",
+                    )
+                try:
+                    wt_norm = Path(normalize_repo_path(wt_str))
+                    owned_paths.append(wt_norm)
+                    owned_paths.append(wt_norm / ".git")
+                    if not os.path.isabs(os.path.expanduser(wt_str)):
+                        wt_rel_job = (job_dir / os.path.expanduser(wt_str)).resolve(strict=False)
+                        owned_paths.append(wt_rel_job)
+                        owned_paths.append(wt_rel_job / ".git")
+                except (ValueError, OSError) as exc:
+                    return True, f"worktree registrations unreadable ({exc})"
+
+            for wt_root in candidate_wt_roots:
+                try:
+                    if not wt_root.exists() or not wt_root.is_dir():
+                        continue
+                    try:
+                        entries = list(wt_root.iterdir())
+                    except (OSError, UnicodeDecodeError) as exc:
+                        return True, f"worktree registrations directory unreadable ({exc})"
+
+                    unreadable_entry_reason: Optional[str] = None
+                    for entry in entries:
+                        if entry.is_dir():
+                            gitdir_file = entry / "gitdir"
+                            try:
+                                if gitdir_file.is_symlink() and not gitdir_file.exists():
+                                    if unreadable_entry_reason is None:
+                                        unreadable_entry_reason = (
+                                            "worktree registrations unreadable "
+                                            f"({entry.name}: gitdir is a dangling symlink: "
+                                            f"{gitdir_file})"
+                                        )
+                                elif gitdir_file.exists():
+                                    raw_entry, err = _read_git_metadata_file(
+                                        gitdir_file, f"{entry.name}: gitdir file"
+                                    )
+                                    if err is not None:
+                                        if unreadable_entry_reason is None:
+                                            unreadable_entry_reason = (
+                                                f"worktree registrations unreadable ({err})"
+                                            )
+                                    else:
+                                        target = raw_entry
+                                        if os.path.isabs(target):
+                                            target_path = Path(target).resolve(strict=False)
+                                        else:
+                                            target_path = (entry / target).resolve(strict=False)
+
+                                        target_parent = (
+                                            target_path.parent
+                                            if target_path.name == ".git"
+                                            else None
+                                        )
+                                        is_match = False
+                                        for p in owned_paths:
+                                            if target_path == p or p in target_path.parents:
+                                                is_match = True
+                                                break
+                                            if target_parent is not None and target_parent == p:
+                                                is_match = True
+                                                break
+
+                                        if is_match:
+                                            return (
+                                                True,
+                                                (
+                                                    "worktree registered (run 'git worktree prune' "
+                                                    "in repository to unregister)"
+                                                ),
+                                            )
+                            except (OSError, UnicodeDecodeError) as exc:
+                                if unreadable_entry_reason is None:
+                                    unreadable_entry_reason = (
+                                        f"worktree registrations unreadable ({entry.name}: {exc})"
+                                    )
+
+                            # Validate entry commondir if present (R2, R5)
+                            entry_commondir = entry / "commondir"
+                            try:
+                                if entry_commondir.is_symlink() and not entry_commondir.exists():
+                                    if unreadable_entry_reason is None:
+                                        unreadable_entry_reason = (
+                                            "worktree registrations unreadable "
+                                            f"({entry.name}: commondir is a dangling symlink: "
+                                            f"{entry_commondir})"
+                                        )
+                                elif entry_commondir.exists():
+                                    _, err = _read_git_metadata_file(
+                                        entry_commondir, f"{entry.name}: commondir file"
+                                    )
+                                    if err is not None and unreadable_entry_reason is None:
+                                        unreadable_entry_reason = (
+                                            f"worktree registrations unreadable ({err})"
+                                        )
+                            except (OSError, UnicodeDecodeError) as exc:
+                                if unreadable_entry_reason is None:
+                                    unreadable_entry_reason = (
+                                        f"worktree registrations unreadable ({entry.name}: {exc})"
+                                    )
+
+                            # Validate entry locked if present (R2, R5)
+                            entry_locked = entry / "locked"
+                            try:
+                                if entry_locked.is_symlink() and not entry_locked.exists():
+                                    if unreadable_entry_reason is None:
+                                        unreadable_entry_reason = (
+                                            "worktree registrations unreadable "
+                                            f"({entry.name}: locked is a dangling symlink: "
+                                            f"{entry_locked})"
+                                        )
+                                elif entry_locked.exists():
+                                    _, err = _read_git_metadata_file(
+                                        entry_locked,
+                                        f"{entry.name}: locked file",
+                                        allow_empty=True,
+                                    )
+                                    if err is not None and unreadable_entry_reason is None:
+                                        unreadable_entry_reason = (
+                                            f"worktree registrations unreadable ({err})"
+                                        )
+                            except (OSError, UnicodeDecodeError) as exc:
+                                if unreadable_entry_reason is None:
+                                    unreadable_entry_reason = (
+                                        f"worktree registrations unreadable ({entry.name}: {exc})"
+                                    )
+                    if unreadable_entry_reason is not None:
+                        return True, unreadable_entry_reason
+                except (OSError, UnicodeDecodeError) as exc:
+                    return True, f"worktree registrations directory unreadable ({exc})"
+                except Exception as exc:
+                    return True, f"worktree registrations unreadable ({exc})"
+
+    return False, None
+
+
+# Same 1 MiB cap as jobs.MAX_JOB_FILE_BYTES. The cleaner re-reads job.json
+# outside the server on every scan and immediately before every delete, so a
+# corrupted or inflated record must not be able to exhaust it (audit C3a).
+MAX_JOB_JSON_BYTES: int = 1024 * 1024
+
+
+class JobJsonProblem(str, Enum):
+    """Why :func:`load_job_json` refused a record.
+
+    Callers own the user-facing wording: the five read sites deliberately word
+    the same failure differently (kept rows, warnings, fail-closed store-wide
+    messages), and those strings are part of the CLI contract.
+    """
+
+    NOT_REGULAR = "not_regular"
+    TOO_LARGE = "too_large"
+    UNREADABLE = "unreadable"
+
+
+@dataclass(frozen=True)
+class JobJsonFailure:
+    """A fail-closed job.json read; ``detail`` is the underlying error text."""
+
+    problem: JobJsonProblem
+    detail: str = ""
+
+
+def load_job_json(job_file: Path) -> tuple[Any, Optional[JobJsonFailure]]:
+    """Read one job.json fail-closed under the shared 1 MiB cap.
+
+    The cleaner used to re-implement "stat -> 1 MiB cap -> read -> safe parse"
+    at five sites, and two of the copies had a regular-file check the others
+    lacked (audit C3a). This is the single implementation.
+
+    It deliberately does not decide what a non-object root means: the call
+    sites word that reason differently, and the pre-delete re-check must keep
+    its historical AttributeError path for a job.json swapped after
+    classification.
+
+    Returns ``(document, None)`` on success, or ``(None, failure)`` when the file
+    can never be trusted. ``stat()`` runs before opening so a FIFO/device file
+    can never block the cleaner.
+    """
+    try:
+        st = job_file.stat()
+    except OSError as exc:
+        return None, JobJsonFailure(JobJsonProblem.UNREADABLE, str(exc))
+    if not stat.S_ISREG(st.st_mode):
+        return None, JobJsonFailure(
+            JobJsonProblem.NOT_REGULAR, "job.json is not a regular file"
+        )
+    if st.st_size > MAX_JOB_JSON_BYTES:
+        return None, JobJsonFailure(JobJsonProblem.TOO_LARGE)
+    try:
+        content = job_file.read_text(encoding="utf-8")
+        data = _safe_json_loads(content)
+    except (OSError, UnicodeDecodeError, ValueError) as exc:
+        return None, JobJsonFailure(JobJsonProblem.UNREADABLE, str(exc))
+    return data, None
+
+
+def _classify_job_for_cleanup(
+    child: Path,
+    store_path: Path,
+    *,
+    check_age: bool,
+    older_than_days: float,
+    now: datetime,
+) -> tuple[bool, list[str], Optional[dict[str, Any]], Optional[dict[str, Any]]]:
+    """Classify a single job folder for cleanup eligibility.
+
+    Returns (is_candidate, reasons, candidate_info_dict, parsed_job_data).
+    """
+    c_name = child.name
+    try:
+        if child.is_symlink():
+            return False, ["job directory is a symlink"], None, None
+
+        if not child.is_dir():
+            return False, ["not a directory"], None, None
+
+        if not _is_canonical_uuid(c_name):
+            return False, ["folder name is not a canonical UUID"], None, None
+
+        if _has_symlinks(child):
+            return False, ["contains symlinks inside job directory"], None, None
+
+        job_file = child / "job.json"
+        if job_file.is_symlink():
+            return False, ["job.json is a symlink"], None, None
+
+        if not job_file.is_file():
+            return False, ["job.json is missing or not a regular file"], None, None
+
+        data, failure = load_job_json(job_file)
+        if failure is not None:
+            if failure.problem is JobJsonProblem.TOO_LARGE:
+                return False, ["job.json exceeds 1 MiB limit"], None, None
+            return (
+                False,
+                [f"job directory or job.json unreadable: {failure.detail}"],
+                None,
+                None,
+            )
+        if not isinstance(data, dict):
+            return False, ["job.json root is not an object"], None, None
+
+        if data.get("job_id") != c_name:
+            return (
+                False,
+                [f"job.json job_id ({data.get('job_id')!r}) does not match directory name"],
+                None,
+                None,
+            )
+
+        state = data.get("state")
+        if state not in ("done", "failed", "cancelled"):
+            return False, [f"state {state!r} is not terminal (done, failed, cancelled)"], None, None
+
+        is_wt, wt_reason = _check_worktree_status(child, data)
+        if is_wt:
+            return (
+                False,
+                [
+                    wt_reason
+                    or "worktree registered (run 'git worktree prune' in repository to unregister)"
+                ],
+                None,
+                None,
+            )
+
+        pid = data.get("pid")
+        if pid is not None:
+            should_keep, pid_reason = _check_pid_status(pid)
+            if should_keep:
+                return False, [pid_reason or f"ambiguous pid: {pid!r}"], None, None
+
+        pgid = data.get("pgid")
+        if pgid is not None:
+            should_keep, pgid_reason = _check_pgid_status(pgid)
+            if should_keep:
+                return False, [pgid_reason or f"ambiguous pgid: {pgid!r}"], None, None
+
+        age_days = 0.0
+        ts = None
+        updated_raw = data.get("updated_at")
+        if updated_raw is not None:
+            ts = _parse_iso_ts(updated_raw)
+            if ts is None:
+                return False, ["updated_at is not parseable timezone-aware ISO 8601"], None, None
+        else:
+            ts = _parse_iso_ts(data.get("created_at"))
+            if ts is None:
+                return False, ["missing or unparseable timezone-aware created_at"], None, None
+
+        if ts is not None:
+            age_seconds = (now - ts.astimezone(timezone.utc)).total_seconds()
+            age_days = age_seconds / 86400.0
+            if check_age:
+                min_age_seconds = older_than_days * 86400.0
+                if age_seconds < min_age_seconds:
+                    return (
+                        False,
+                        [
+                            f"job age ({age_days:.2f} days) is less than "
+                            f"older-than-days ({older_than_days} days)"
+                        ],
+                        None,
+                        None,
+                    )
+
+        cand_info = {
+            "job_id": c_name,
+            "title": str(data.get("title", "")),
+            "state": str(state),
+            "repo_path": str(data.get("repo_path") or ""),
+            "age_days": round(age_days, 2),
+            "reasons": [
+                f"terminal state ({state}), no live process, no registered worktree"
+            ],
+        }
+        return True, cand_info["reasons"], cand_info, data
+    except OSError as exc:
+        return False, [f"job directory or job.json unreadable: {exc}"], None, None
+    except json.JSONDecodeError:
+        return False, ["job.json is not valid JSON"], None, None
+    except ValueError as exc:
+        return False, [f"job.json is not valid JSON: {exc}"], None, None
+    except Exception as exc:
+        return False, [f"unhandled error classifying job: {exc}"], None, None
+
+
+def _collect_kept_strings(
+    store_jobs: Path,
+    candidate_ids: set[str],
+) -> tuple[Optional[list[str]], Optional[str]]:
+    """Collect all strings from kept job records in store_jobs for edge protection.
+
+    Returns (strings_list, None) on success, or (None, failure_reason) if any
+    kept job record is corrupt, non-object, unreadable, or cannot be accessed.
+    """
+    strings: list[str] = []
+    try:
+        children = sorted(store_jobs.iterdir(), key=lambda p: p.name)
+    except OSError as exc:
+        return None, f"store/jobs directory unreadable: {exc}"
+
+    for child in children:
+        c_name = child.name
+        if c_name.startswith(".cleanup-manifest-"):
+            continue
+        if c_name in candidate_ids:
+            continue
+        try:
+            if child.is_symlink() or not child.is_dir():
+                continue
+            if not _is_canonical_uuid(c_name):
+                continue
+            child_path = str(child.resolve())
+            job_file = child / "job.json"
+            if job_file.is_symlink() or not job_file.is_file():
+                return (
+                    None,
+                    f"store contains unreadable or corrupt kept job record ({c_name}) at "
+                    f"{child_path}; left untouched; inspect or remove manually; "
+                    "keeping all candidates fail-closed",
+                )
+            data, failure = load_job_json(job_file)
+            if failure is not None:
+                if failure.problem is JobJsonProblem.TOO_LARGE:
+                    return (
+                        None,
+                        f"store contains oversized kept job record ({c_name}) at "
+                        f"{child_path}; left untouched; inspect or remove manually; "
+                        "keeping all candidates fail-closed",
+                    )
+                return (
+                    None,
+                    f"store contains unreadable or corrupt kept job record ({c_name}) at "
+                    f"{child_path}: {failure.detail}; left untouched; inspect or remove "
+                    "manually; keeping all candidates fail-closed",
+                )
+            if not isinstance(data, dict):
+                return (
+                    None,
+                    f"store contains non-object kept job record ({c_name}) at "
+                    f"{child_path}; left untouched; inspect or remove manually; "
+                    "keeping all candidates fail-closed",
+                )
+            strings.extend(_extract_strings(data))
+        except (OSError, json.JSONDecodeError, ValueError, UnicodeDecodeError) as exc:
+            child_path = str(child.resolve())
+            return (
+                None,
+                f"store contains unreadable or corrupt kept job record ({c_name}) at "
+                f"{child_path}: {exc}; left untouched; inspect or remove manually; "
+                "keeping all candidates fail-closed",
+            )
+        except Exception as exc:
+            child_path = str(child.resolve())
+            return (
+                None,
+                f"store contains unreadable or corrupt kept job record ({c_name}) at "
+                f"{child_path}: {exc}; left untouched; inspect or remove manually; "
+                "keeping all candidates fail-closed",
+            )
+    return strings, None
+
+
+def run_cleanup(
+    store_path: Path | str,
+    *,
+    project: Optional[Path | str] = None,
+    job_ids: Optional[list[str]] = None,
+    dry_run: bool = True,
+    older_than_days: float = 7.0,
+    before_delete: Optional[Callable[[str], None]] = None,
+) -> dict[str, Any]:
+    """Execute job record cleanup or dry-run scan against store_path."""
+    if project is not None and job_ids is not None:
+        raise ValueError("project and job_ids are mutually exclusive")
+    if project is None and job_ids is None:
+        raise ValueError("Exactly one of project or job_ids must be specified")
+    if not math.isfinite(older_than_days) or older_than_days < 0:
+        raise ValueError("older_than_days must be finite and non-negative")
+
+    if job_ids is not None:
+        job_ids = list(dict.fromkeys(job_ids))
+
+    store_path_obj = Path(store_path)
+    store_jobs = store_path_obj / "jobs"
+    if not store_jobs.is_dir():
+        raise ValueError(f"store/jobs is missing or not a directory: {store_jobs}")
+
+    now = datetime.now(timezone.utc)
+    candidates: dict[str, dict[str, Any]] = {}
+    cand_raw_data: dict[str, dict[str, Any]] = {}
+    kept: dict[str, list[str]] = {}
+
+    if project is not None:
+        mode = "project"
+        target_project: Optional[str] = normalize_repo_path(project)
+        check_age = True
+
+        children = sorted(store_jobs.iterdir(), key=lambda p: p.name)
+        for child in children:
+            if child.name.startswith(".cleanup-manifest-"):
+                continue
+
+            # Skip symlink row directories or unreadable/non-dir entries for project matching
+            if child.is_symlink() or not child.is_dir() or not _is_canonical_uuid(child.name):
+                continue
+
+            job_file = child / "job.json"
+            if job_file.is_symlink() or not job_file.is_file():
+                continue
+
+            try:
+                data, failure = load_job_json(job_file)
+                if failure is not None:
+                    if failure.problem in (
+                        JobJsonProblem.NOT_REGULAR,
+                        JobJsonProblem.TOO_LARGE,
+                    ):
+                        kept[child.name] = ["job.json invalid or exceeds 1 MiB limit"]
+                    else:
+                        kept[child.name] = [
+                            f"job.json unreadable or corrupt: {failure.detail}"
+                        ]
+                    continue
+                if not isinstance(data, dict):
+                    kept[child.name] = ["job.json root is not an object"]
+                    continue
+            except Exception as exc:
+                kept[child.name] = [f"job.json unreadable or corrupt: {exc}"]
+                continue
+
+            repo_path_val = data.get("repo_path")
+            norm_repo = None
+            if (
+                isinstance(repo_path_val, str)
+                and repo_path_val.strip()
+                and "\x00" not in repo_path_val
+            ):
+                try:
+                    norm_repo = normalize_repo_path(repo_path_val)
+                except (ValueError, OSError):
+                    norm_repo = None
+
+            if norm_repo is None:
+                kept[child.name] = ["repo_path invalid"]
+                continue
+
+            if norm_repo != target_project:
+                continue
+
+            is_cand, reasons, cand_info, raw_data = _classify_job_for_cleanup(
+                child,
+                store_path_obj,
+                check_age=check_age,
+                older_than_days=older_than_days,
+                now=now,
+            )
+            if is_cand and cand_info is not None:
+                candidates[child.name] = cand_info
+                if raw_data is not None:
+                    cand_raw_data[child.name] = raw_data
+            else:
+                kept[child.name] = reasons
+    else:
+        mode = "job"
+        target_project = None
+        check_age = False
+
+        # The mode-count check in main() guarantees exactly one mode and the
+        # project branch returned above, so job_ids cannot be None here. The
+        # assert only narrows the Optional for the type checker; under -O it
+        # vanishes and the loop below raises TypeError instead of ever deleting
+        # rows the caller did not name (D8).
+        assert job_ids is not None
+        for jid in job_ids:
+            if not _is_canonical_uuid(jid):
+                raise ValueError(f"malformed UUID: {jid}")
+            child = store_jobs / jid
+            if not child.exists() or not child.is_dir() or child.is_symlink():
+                raise ValueError(f"job id not found in store: {jid}")
+
+            is_cand, reasons, cand_info, raw_data = _classify_job_for_cleanup(
+                child,
+                store_path_obj,
+                check_age=check_age,
+                older_than_days=older_than_days,
+                now=now,
+            )
+            if is_cand and cand_info is not None:
+                candidates[jid] = cand_info
+                if raw_data is not None:
+                    cand_raw_data[jid] = raw_data
+            else:
+                kept[jid] = reasons
+
+    # Edge protection from kept jobs:
+    # Any candidate referenced as key or substring in any kept job's job.json is protected.
+    # If any kept job record is corrupt or unreadable, fail closed and keep all candidates.
+    kept_strings, fail_reason = _collect_kept_strings(
+        store_jobs, candidate_ids=set(candidates.keys())
+    )
+    if fail_reason is not None:
+        for cid in sorted(candidates.keys()):
+            kept[cid] = [fail_reason]
+        candidates.clear()
+        kept_text = ""
+    else:
+        # No failure reason means the collector returned a list; this narrows the
+        # Optional. Under -O the assert vanishes and the join below raises
+        # TypeError rather than silently protecting the wrong (empty) set (D8).
+        assert kept_strings is not None
+        kept_text = "\0".join(kept_strings)
+
+    def _candidate_strings(cid: str) -> list[str]:
+        # Reuse the record parsed during classification instead of re-reading it:
+        # that parse already passed the same cap and duplicate-key checks.
+        c_data = cand_raw_data.get(cid)
+        if c_data is None:
+            return []
+        return _extract_strings(c_data)
+
+    kept_text = _apply_edge_protection(
+        candidates, kept, kept_text, strings_for=_candidate_strings
+    )
+
+    candidates_list = [candidates[cid] for cid in sorted(candidates.keys())]
+    kept_list = [{"job_id": kid, "reasons": kept[kid]} for kid in sorted(kept.keys())]
+
+    deleted_ids: list[str] = []
+    failed_ids: list[str] = []
+    skipped: list[dict[str, Any]] = []
+    manifest_path_str: Optional[str] = None
+
+    if not dry_run and candidates:
+        planned_ids = sorted(candidates.keys())
+        ts_str = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        manifest_target = store_jobs / f".cleanup-manifest-{ts_str}.json"
+        planned_manifest: dict[str, Any] = {
+            "status": "planned",
+            "mode": mode,
+            "planned_ids": planned_ids,
+        }
+        if mode == "project":
+            planned_manifest["project"] = str(target_project)
+        _write_manifest(store_jobs, manifest_target, planned_manifest)
+        manifest_path_str = str(manifest_target.resolve())
+
+        for idx, cid in enumerate(planned_ids):
+            if before_delete is not None:
+                before_delete(cid)
+
+            c_dir = store_jobs / cid
+            if not c_dir.exists() or not c_dir.is_dir() or c_dir.is_symlink():
+                failed_ids.append(cid)
+                skipped.append({"job_id": cid, "reasons": ["job directory missing or symlink"]})
+                continue
+
+            # 1. Re-check classification
+            is_cand, reasons, _, _ = _classify_job_for_cleanup(
+                c_dir,
+                store_path_obj,
+                check_age=check_age,
+                older_than_days=older_than_days,
+                now=now,
+            )
+            if not is_cand:
+                failed_ids.append(cid)
+                skipped.append({"job_id": cid, "reasons": reasons})
+                continue
+
+            # 2. In project mode, re-check repo_path (Requirement 1)
+            if mode == "project":
+                c_file = c_dir / "job.json"
+                try:
+                    c_data, failure = load_job_json(c_file)
+                    if failure is not None:
+                        if failure.problem in (
+                            JobJsonProblem.NOT_REGULAR,
+                            JobJsonProblem.TOO_LARGE,
+                        ):
+                            reason = "job.json invalid or exceeds 1 MiB limit"
+                        else:
+                            reason = f"job.json unreadable: {failure.detail}"
+                        failed_ids.append(cid)
+                        skipped.append({"job_id": cid, "reasons": [reason]})
+                        continue
+                    c_repo = c_data.get("repo_path")
+                    if (
+                        not isinstance(c_repo, str)
+                        or not c_repo.strip()
+                        or "\x00" in c_repo
+                    ):
+                        failed_ids.append(cid)
+                        skipped.append(
+                            {"job_id": cid, "reasons": ["repo_path invalid or missing"]}
+                        )
+                        continue
+                    try:
+                        norm_c_repo = normalize_repo_path(c_repo)
+                    except (ValueError, OSError):
+                        norm_c_repo = None
+                    if norm_c_repo != target_project:
+                        failed_ids.append(cid)
+                        skipped.append(
+                            {
+                                "job_id": cid,
+                                "reasons": [
+                                    f"repo_path {c_repo!r} does not match target project "
+                                    f"{target_project!r}"
+                                ],
+                            }
+                        )
+                        continue
+                except Exception as exc:
+                    failed_ids.append(cid)
+                    skipped.append(
+                        {"job_id": cid, "reasons": [f"job.json unreadable: {exc}"]}
+                    )
+                    continue
+
+            # 3. Recompute edge protection from current on-disk records of all kept rows.
+            # Kept rows are all jobs in store_jobs not in planned_ids[idx:]
+            # (which includes original kept jobs, plus any previous candidates from
+            # planned_ids[:idx] that failed or were skipped and remain on disk).
+            dyn_kept_strings, blocker_reason = _collect_kept_strings(
+                store_jobs, candidate_ids=set(planned_ids[idx:])
+            )
+            if blocker_reason is not None:
+                failed_ids.append(cid)
+                skipped.append({"job_id": cid, "reasons": [blocker_reason]})
+                for rem_id in planned_ids[idx + 1 :]:
+                    if rem_id not in failed_ids:
+                        failed_ids.append(rem_id)
+                    if not any(s.get("job_id") == rem_id for s in skipped):
+                        skipped.append({"job_id": rem_id, "reasons": [blocker_reason]})
+                break
+
+            # Same narrowing as above: a None here would contradict the
+            # blocker_reason contract, so the assert only satisfies the type
+            # checker. Under -O it vanishes and the join below raises TypeError
+            # instead of deleting a row it failed to protect (D8).
+            assert dyn_kept_strings is not None
+
+            if cid in "\0".join(dyn_kept_strings):
+                failed_ids.append(cid)
+                skipped.append(
+                    {"job_id": cid, "reasons": ["referenced by kept job (edge protection)"]}
+                )
+                continue
+
+            # 4. Safely delete
+            try:
+                _safe_delete_job_dir(c_dir, cid, store_jobs)
+                deleted_ids.append(cid)
+            except Exception as exc:
+                failed_ids.append(cid)
+                skipped.append({"job_id": cid, "reasons": [f"deletion failed: {exc}"]})
+
+    # In --job mode:
+    # - In dry-run mode, only ineligible requested IDs (not candidates) appear
+    #   in failed_ids and skipped.
+    # - In real mode (--yes), any requested ID not deleted appears in failed_ids and skipped.
+    if mode == "job" and job_ids:
+        seen = candidates if dry_run else set(deleted_ids)
+        for jid in job_ids:
+            if jid not in seen:
+                if jid not in failed_ids:
+                    failed_ids.append(jid)
+                if not any(s.get("job_id") == jid for s in skipped):
+                    reasons = kept.get(jid, ["ineligible job"])
+                    skipped.append({"job_id": jid, "reasons": reasons})
+
+    if not dry_run and manifest_path_str:
+        manifest_status = "partial" if failed_ids else "completed"
+        completed_manifest: dict[str, Any] = {
+            "status": manifest_status,
+            "mode": mode,
+            "planned_ids": planned_ids,
+            "removed_ids": deleted_ids,
+            "failed_ids": failed_ids,
+        }
+        if mode == "project":
+            completed_manifest["project"] = str(target_project)
+        _write_manifest(store_jobs, Path(manifest_path_str), completed_manifest)
+
+    warnings_list = [fail_reason] if fail_reason is not None else []
+
+    return {
+        "store": str(store_path_obj.resolve()),
+        "mode": mode,
+        "project": str(target_project) if mode == "project" else None,
+        "dry_run": dry_run,
+        "older_than_days": older_than_days,
+        "candidates": candidates_list,
+        "kept": kept_list,
+        "skipped": skipped,
+        "candidate_count": len(candidates_list),
+        "kept_count": len(kept_list),
+        "skipped_count": len(skipped),
+        "deleted_ids": deleted_ids,
+        "deleted_count": len(deleted_ids),
+        "failed_ids": failed_ids,
+        "manifest": manifest_path_str,
+        "warnings": warnings_list,
+    }
+
+
+def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
+    """Parse CLI command line arguments."""
+    parser = argparse.ArgumentParser(
+        prog="agy_mcp.cleanup_jobs",
+        description="Safe, dry-run-first job record cleaner for agy-mcp stores.",
+    )
+    parser.add_argument(
+        "--store",
+        required=True,
+        type=str,
+        help="Path to the agy-mcp state store directory.",
+    )
+    parser.add_argument(
+        "--list",
+        action="store_true",
+        default=False,
+        help="Read-only mode: list projects, counts by state, and eligible counts.",
+    )
+    parser.add_argument(
+        "--project",
+        type=str,
+        default=None,
+        help="Target project path to clean up stale job records for.",
+    )
+    parser.add_argument(
+        "--job",
+        dest="jobs",
+        action="append",
+        default=None,
+        help=(
+            "Explicit job ID to remove (repeatable). Note: symlinked job folders exit 2 "
+            "by design; Unicode paths are not normalized."
+        ),
+    )
+    parser.add_argument(
+        "--older-than-days",
+        type=float,
+        default=7.0,
+        help="Minimum age in days for job records to be candidates in project mode (default: 7.0).",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        default=False,
+        help="Enable deletion of confirmed candidate jobs (default: dry run).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        default=False,
+        help="Output result as JSON only.",
+    )
+    return parser.parse_args(argv)
+
+
+def _list_projects(
+    store_path: Path, older_than_days: float
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Inspect store and return project summaries with state/eligible counts and warnings."""
+    store_jobs = store_path / "jobs"
+    projects_map: dict[str, dict[str, Any]] = {}
+    warnings: list[str] = []
+
+    for child in sorted(store_jobs.iterdir(), key=lambda p: p.name):
+        if child.name.startswith(".cleanup-manifest-"):
+            continue
+        if child.is_symlink() or not child.is_dir() or not _is_canonical_uuid(child.name):
+            continue
+
+        c_name = child.name
+        child_path = str(child.resolve())
+        job_file = child / "job.json"
+        if job_file.is_symlink() or not job_file.is_file():
+            warnings.append(
+                f"store contains unreadable or corrupt job record ({c_name}) at {child_path}; "
+                "left untouched; inspect or remove manually"
+            )
+            continue
+
+        try:
+            data, failure = load_job_json(job_file)
+            if failure is not None:
+                if failure.problem is JobJsonProblem.TOO_LARGE:
+                    warnings.append(
+                        f"store contains oversized job record ({c_name}) at {child_path}; "
+                        "left untouched; inspect or remove manually"
+                    )
+                else:
+                    warnings.append(
+                        f"store contains unreadable or corrupt job record ({c_name}) at "
+                        f"{child_path}: {failure.detail}; left untouched; inspect or remove "
+                        "manually"
+                    )
+                continue
+            if not isinstance(data, dict):
+                warnings.append(
+                    f"store contains non-object job record ({c_name}) at {child_path}; "
+                    "left untouched; inspect or remove manually"
+                )
+                continue
+        except Exception as exc:
+            warnings.append(
+                f"store contains unreadable or corrupt job record ({c_name}) at "
+                f"{child_path}: {exc}; left untouched; inspect or remove manually"
+            )
+            continue
+
+        repo_val = data.get("repo_path")
+        norm_repo = None
+        if isinstance(repo_val, str) and repo_val.strip() and "\x00" not in repo_val:
+            try:
+                norm_repo = normalize_repo_path(repo_val)
+            except (ValueError, OSError):
+                norm_repo = None
+
+        if norm_repo is None:
+            norm_repo = "(unknown)"
+
+        if norm_repo not in projects_map:
+            projects_map[norm_repo] = {
+                "repo_path": norm_repo,
+                "total_jobs": 0,
+                "eligible_count": 0,
+                "states": {},
+            }
+
+        entry = projects_map[norm_repo]
+        entry["total_jobs"] += 1
+        state_str = str(data.get("state", "unknown"))
+        entry["states"][state_str] = entry["states"].get(state_str, 0) + 1
+
+    for norm_repo, entry in projects_map.items():
+        if norm_repo == "(unknown)":
+            entry["eligible_count"] = 0
+        else:
+            res = run_cleanup(
+                store_path,
+                project=norm_repo,
+                dry_run=True,
+                older_than_days=older_than_days,
+            )
+            entry["eligible_count"] = res["candidate_count"]
+
+    return [projects_map[k] for k in sorted(projects_map.keys())], warnings
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    """CLI entry point for python -m agy_mcp.cleanup_jobs."""
+    try:
+        args = parse_args(argv)
+    except SystemExit as exc:
+        return exc.code
+
+    modes_count = sum([bool(args.list), args.project is not None, bool(args.jobs)])
+    if modes_count == 0:
+        sys.stderr.write("Error: one of --list, --project, or --job mode is required\n")
+        return 2
+    if modes_count > 1:
+        sys.stderr.write(
+            "Error: --list, --project, and --job are mutually exclusive modes\n"
+        )
+        return 2
+
+    if args.project is not None and not args.project.strip():
+        sys.stderr.write("Error: --project path cannot be empty or whitespace\n")
+        return 2
+
+    try:
+        val = float(args.older_than_days)
+        if not math.isfinite(val) or val < 0:
+            sys.stderr.write("Error: --older-than-days must be finite and non-negative\n")
+            return 2
+    except ValueError:
+        sys.stderr.write("Error: --older-than-days must be a valid float\n")
+        return 2
+
+    # argparse's type=Path would normalize "" to Path(".") before this check,
+    # silently turning an empty argument into the current directory (D100).
+    store_raw = args.store
+    if not str(store_raw).strip():
+        sys.stderr.write("Error: --store path cannot be empty or whitespace\n")
+        return 2
+    store_path = Path(store_raw)
+    try:
+        abs_store = Path(os.path.abspath(store_path))
+
+        if (
+            store_path.is_symlink()
+            or abs_store.is_symlink()
+            or any(p.is_symlink() for p in abs_store.parents)
+            or abs_store.resolve(strict=False) != abs_store
+        ):
+            sys.stderr.write(
+                f"Error: store path or ancestor directory is a symlink: {store_path}\n"
+            )
+            return 2
+
+        if not store_path.exists():
+            sys.stderr.write(f"Error: store path does not exist: {store_path}\n")
+            return 2
+
+        if not store_path.is_dir():
+            sys.stderr.write(f"Error: store path is not a directory: {store_path}\n")
+            return 2
+
+        store_jobs = store_path / "jobs"
+        if store_jobs.is_symlink():
+            sys.stderr.write(f"Error: store/jobs is a symlink: {store_jobs}\n")
+            return 2
+
+        if not store_jobs.exists() or not store_jobs.is_dir():
+            sys.stderr.write(f"Error: store/jobs is missing or not a directory: {store_jobs}\n")
+            return 2
+
+        try:
+            next(store_jobs.iterdir(), None)
+        except OSError as exc:
+            sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
+            return 2
+
+        home_env = os.environ.get("HOME")
+        if not home_env:
+            sys.stderr.write("Error: HOME environment variable is not set\n")
+            return 2
+
+        resolved_home = Path(home_env).resolve(strict=False)
+        resolved_store = store_path.resolve(strict=False)
+        if resolved_home not in resolved_store.parents:
+            sys.stderr.write(
+                f"Error: resolved store {resolved_store} is not contained inside "
+                f"HOME {resolved_home}\n"
+            )
+            return 2
+    except OSError as exc:
+        sys.stderr.write(f"Error: cannot access store path or ancestor directory: {exc}\n")
+        return 2
+
+    # 1. --list mode (read-only, disk bit-for-bit unmodified)
+    if args.list:
+        try:
+            projects, warnings = _list_projects(store_path, args.older_than_days)
+        except OSError as exc:
+            sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
+            return 2
+        if args.json:
+            sys.stdout.write(
+                json.dumps(
+                    {
+                        "store": str(store_path.resolve()),
+                        "projects": projects,
+                        "warnings": warnings,
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
+        else:
+            write = sys.stdout.write
+            write(f"Store: {store_path.resolve()}\n")
+            if warnings:
+                for w in warnings:
+                    write(f"Warning: {w}\n")
+            if not projects:
+                write("No projects found.\n")
+            for p in projects:
+                write(f"Project: {p['repo_path']}\n")
+                write(
+                    f"  Total jobs: {p['total_jobs']}, Eligible for cleanup: "
+                    f"{p['eligible_count']}\n"
+                )
+                write("  States:\n")
+                for s, c in sorted(p["states"].items()):
+                    write(f"    {s}: {c}\n")
+        return 0
+
+    # 2. Pre-flight checks for explicit --job IDs
+    if args.jobs:
+        args.jobs = list(dict.fromkeys(args.jobs))
+        for jid in args.jobs:
+            if not jid.strip() or not _is_canonical_uuid(jid):
+                sys.stderr.write(f"Error: malformed UUID: {jid}\n")
+                return 2
+            try:
+                jdir = store_jobs / jid
+                if not jdir.exists() or not jdir.is_dir() or jdir.is_symlink():
+                    sys.stderr.write(f"Error: job id not found in store: {jid}\n")
+                    return 2
+            except OSError as exc:
+                sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
+                return 2
+
+    # 3. Execute cleanup / scan
+    try:
+        report = run_cleanup(
+            store_path,
+            project=args.project,
+            job_ids=args.jobs,
+            dry_run=not args.yes,
+            older_than_days=args.older_than_days,
+        )
+    except OSError as exc:
+        sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
+        return 2
+    except Exception as exc:
+        sys.stderr.write(f"Unexpected internal error: {exc}\n")
+        return 1
+
+    # 4. Output results
+    if args.json:
+        sys.stdout.write(json.dumps(report, indent=2) + "\n")
+    else:
+        write = sys.stdout.write
+        write(f"Store: {report['store']}\n")
+        write(f"Dry run: {report['dry_run']}\n")
+        if report.get("project"):
+            write(f"Project: {report['project']}\n")
+        if report["mode"] == "project":
+            write(f"Older than (days): {report['older_than_days']}\n")
+
+        if report.get("warnings"):
+            for w in report["warnings"]:
+                write(f"Warning: {w}\n")
+
+        if report["candidate_count"] == 0 and report["kept_count"] == 0:
+            write("No jobs for project found.\n")
+
+        write(f"Candidates ({report['candidate_count']}):\n")
+        for c in report["candidates"]:
+            write(f"  {c['job_id']} [{c['state']}] {c['repo_path']}\n")
+            for r in c.get("reasons", []):
+                write(f"    - {r}\n")
+
+        write(f"Kept ({report['kept_count']}):\n")
+        for k in report["kept"]:
+            write(f"  {k['job_id']}\n")
+            for r in k.get("reasons", []):
+                write(f"    - {r}\n")
+
+        has_worktree_kept = any(
+            any("worktree" in r.lower() for r in k.get("reasons", []))
+            for k in report["kept"]
+        )
+        if has_worktree_kept:
+            write(
+                "Suggestion: Run 'git worktree prune' in the repository to clean up "
+                "registered worktrees.\n"
+            )
+
+        if not report["dry_run"]:
+            write(f"Deleted: {report['deleted_count']}\n")
+            if report.get("skipped"):
+                write(f"Skipped/Failed ({report['skipped_count']}):\n")
+                for s in report["skipped"]:
+                    write(f"  {s['job_id']}\n")
+                    for r in s.get("reasons", []):
+                        write(f"    - {r}\n")
+            if report.get("manifest"):
+                write(f"Manifest: {report['manifest']}\n")
+
+    # 5. Determine exit code
+    if not args.yes:
+        return 0
+
+    if args.jobs:
+        if report["candidate_count"] == 0:
+            return 2
+        deleted_count = report["deleted_count"]
+        total_requested = len(args.jobs)
+        if deleted_count < total_requested or report.get("failed_ids"):
+            return 1
+        return 0
+
+    if report.get("failed_ids"):
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

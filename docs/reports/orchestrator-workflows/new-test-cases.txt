@@ -1,0 +1,6 @@
+tests/test_installer_chapter.py::test_agents_block_names_the_four_workflows
+tests/test_installer_chapter.py::test_agents_block_protects_acceptance_tests
+tests/test_installer_chapter.py::test_agents_block_states_the_commit_subject_limit
+tests/test_installer_chapter.py::test_agents_block_fits_the_workflow_budget
+
+4/44 tests collected (40 deselected) in 0.08s

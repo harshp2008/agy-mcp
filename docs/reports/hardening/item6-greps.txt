@@ -1,0 +1,15 @@
+$ grep -n "starting\|job_budget_minutes\|audit_pass" SPEC.md
+(no matches)
+
+$ grep -n "print-timeout" src/agy_mcp/runner.py src/agy_mcp/manager.py
+src/agy_mcp/runner.py:107:      <agy_binary_abs> --mode accept-edits --output-format json --print-timeout <N>s
+src/agy_mcp/runner.py:150:        "--print-timeout",
+$ grep -n "print_timeout_seconds" src/agy_mcp/manager.py
+370:                print_timeout_seconds=effective_timeout,
+1173:                print_timeout_seconds=remaining_budget,
+
+$ grep -n "print_timeout_seconds" src/agy_mcp/runner.py
+98:    print_timeout_seconds: int,
+128:    if print_timeout_seconds < 1:
+130:            f"print_timeout_seconds must be >= 1, got {print_timeout_seconds}",
+151:        f"{int(print_timeout_seconds)}s",

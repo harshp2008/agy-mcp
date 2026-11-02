@@ -1,0 +1,44 @@
+S 2026-10-26T12:59:21.055441+00:00 thread=MainThread id=127167815860976 jid=95b380de state=queued reason=None
+S 2026-10-26T12:59:21.060775+00:00 thread=MainThread id=127167815860976 jid=95b380de state=queued reason=None
+R 2026-10-26T12:59:21.065003+00:00 thread=MainThread jid=95b380de state=queued reason=None
+R 2026-10-26T12:59:21.065030+00:00 thread=Thread-1 (_provision_and_launch) jid=95b380de state=queued reason=None
+R 2026-10-26T12:59:21.081313+00:00 thread=Thread-1 (_provision_and_launch) jid=95b380de state=queued reason=None
+S 2026-10-26T12:59:21.116850+00:00 thread=Thread-1 (_provision_and_launch) id=127167815860976 jid=95b380de state=queued reason=None
+T 2026-10-26T12:59:21.231712+00:00 thread=Thread-1 (_provision_and_launch) id=127167815860976 jid=95b380de queued->running detail=None
+S 2026-10-26T12:59:21.233542+00:00 thread=Thread-1 (_provision_and_launch) id=127167815860976 jid=95b380de state=running reason=None
+R 2026-10-26T12:59:21.365615+00:00 thread=MainThread jid=95b380de state=running reason=None
+R 2026-10-26T12:59:21.426556+00:00 thread=Thread-2 (_run_supervisor) jid=95b380de state=running reason=None
+S 2026-10-26T12:59:21.426732+00:00 thread=Thread-2 (_run_supervisor) id=127167815860976 jid=95b380de state=running reason=None
+T 2026-10-26T12:59:21.431797+00:00 thread=Thread-2 (_run_supervisor) id=127167815860976 jid=95b380de running->needs_review detail={'return_code': 0, 'review_reason': 'verify_failed', 'verify_tail': "Executable not found: [Errno 2] No such file or directory: 'nonexistent_bin_123'"}
+S 2026-10-26T12:59:21.433719+00:00 thread=Thread-2 (_run_supervisor) id=127167815860976 jid=95b380de state=needs_review reason='verify_failed'
+R 2026-10-26T12:59:21.437192+00:00 thread=Thread-2 (_run_supervisor) jid=95b380de state=needs_review reason='verify_failed'
+S 2026-10-26T12:59:21.438343+00:00 thread=Thread-2 (_run_supervisor) id=127167814406496 jid=95b380de state=needs_review reason='verify_failed'
+R 2026-10-26T12:59:21.441799+00:00 thread=Thread-2 (_run_supervisor) jid=95b380de state=needs_review reason='verify_failed'
+S 2026-10-26T12:59:21.441978+00:00 thread=Thread-2 (_run_supervisor) id=127167814408848 jid=95b380de state=needs_review reason='verify_failed'
+R 2026-10-26T12:59:21.445553+00:00 thread=Thread-2 (_run_supervisor) jid=95b380de state=needs_review reason='verify_failed'
+R 2026-10-26T12:59:21.451263+00:00 thread=Thread-2 (_run_supervisor) jid=95b380de state=needs_review reason='verify_failed'
+T 2026-10-26T12:59:21.452241+00:00 thread=Thread-2 (_run_supervisor) id=127167814410048 jid=95b380de needs_review->running detail=None
+S 2026-10-26T12:59:21.454814+00:00 thread=Thread-2 (_run_supervisor) id=127167814410048 jid=95b380de state=running reason=None
+R 2026-10-26T12:59:21.644611+00:00 thread=Thread-3 (_run_supervisor) jid=95b380de state=running reason=None
+S 2026-10-26T12:59:21.644795+00:00 thread=Thread-3 (_run_supervisor) id=127167814410048 jid=95b380de state=running reason=None
+T 2026-10-26T12:59:21.651040+00:00 thread=Thread-3 (_run_supervisor) id=127167814410048 jid=95b380de running->needs_review detail={'return_code': 0, 'review_reason': 'verify_failed', 'verify_tail': "Executable not found: [Errno 2] No such file or directory: 'nonexistent_bin_123'"}
+S 2026-10-26T12:59:21.652745+00:00 thread=Thread-3 (_run_supervisor) id=127167814410048 jid=95b380de state=needs_review reason='verify_failed'
+R 2026-10-26T12:59:21.656256+00:00 thread=Thread-3 (_run_supervisor) jid=95b380de state=needs_review reason='verify_failed'
+S 2026-10-26T12:59:21.657316+00:00 thread=Thread-3 (_run_supervisor) id=127167814414320 jid=95b380de state=needs_review reason='verify_failed'
+R 2026-10-26T12:59:21.660742+00:00 thread=Thread-3 (_run_supervisor) jid=95b380de state=needs_review reason='verify_failed'
+S 2026-10-26T12:59:21.660865+00:00 thread=Thread-3 (_run_supervisor) id=127167814416480 jid=95b380de state=needs_review reason='verify_failed'
+R 2026-10-26T12:59:21.664243+00:00 thread=Thread-3 (_run_supervisor) jid=95b380de state=needs_review reason='verify_failed'
+R 2026-10-26T12:59:21.670054+00:00 thread=Thread-3 (_run_supervisor) jid=95b380de state=needs_review reason='verify_failed'
+T 2026-10-26T12:59:21.670797+00:00 thread=Thread-3 (_run_supervisor) id=127167814417680 jid=95b380de needs_review->running detail=None
+R 2026-10-26T12:59:21.671192+00:00 thread=MainThread jid=95b380de state=needs_review reason='verify_failed'
+S 2026-10-26T12:59:21.672674+00:00 thread=Thread-3 (_run_supervisor) id=127167814417680 jid=95b380de state=running reason=None
+R 2026-10-26T12:59:21.675985+00:00 thread=MainThread jid=95b380de state=running reason=None
+--- assertion ---
+        st = manager.status(env.job_id)
+>       assert st.state == JobState.NEEDS_REVIEW
+E       AssertionError: assert <JobState.RUNNING: 'running'> == <JobState.NEE...needs_review'>
+E         
+E         - needs_review
+E         + running
+
+tests/test_manager.py:548: AssertionError

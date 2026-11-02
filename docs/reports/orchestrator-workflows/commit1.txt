@@ -1,0 +1,12 @@
+75e6b05 docs(orchestrator): add the workflow-selection section and its tests
+ docs/DECISIONS.md                                  |  11 ++
+ docs/ORCHESTRATION.md                              |  48 ++++++
+ .../orchestrator-workflows/block-counts.txt        |  10 ++
+ docs/reports/orchestrator-workflows/change.diff    | 163 +++++++++++++++++++++
+ docs/reports/orchestrator-workflows/full-suite.txt |  12 ++
+ docs/reports/orchestrator-workflows/sync-check.txt |   4 +
+ .../orchestrator-workflows/targeted-tests.txt      |   2 +
+ installer/agents_block.md                          |  11 +-
+ installer/install.sh                               |  11 +-
+ tests/test_installer_chapter.py                    |  31 ++++
+ 10 files changed, 301 insertions(+), 2 deletions(-)

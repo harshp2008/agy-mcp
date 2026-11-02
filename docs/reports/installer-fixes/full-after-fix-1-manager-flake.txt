@@ -1,0 +1,47 @@
+Mon Oct 26 10:35:17 AM IST 2026
+CMD: timeout 900 env -u PYTHONPATH .venv/bin/python -m pytest -q
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 34%]
+........................................................................ [ 46%]
+...................................F.................................... [ 57%]
+........................................................................ [ 69%]
+........................................................................ [ 80%]
+........................................................................ [ 92%]
+...............................................                          [100%]
+=================================== FAILURES ===================================
+______________ test_manager_verify_command_not_found_clean_error _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1163/test_manager_verify_command_no0')
+
+    def test_manager_verify_command_not_found_clean_error(tmp_path: Path) -> None:
+        """When verify command executable is not found, clear error and no crash."""
+        cfg = Config(verify_allowlist=["nonexistent_bin_123"])
+        manager, repo_dir = _setup_manager_and_repo(tmp_path, config=cfg)
+    
+        env = manager.start(
+            prompt="Execute task __SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Verify Not Found Test",
+            verify="nonexistent_bin_123 --test",
+        )
+    
+        deadline = time.time() + 8.0
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                break
+            time.sleep(0.3)
+    
+        st = manager.status(env.job_id)
+>       assert st.state == JobState.NEEDS_REVIEW
+E       AssertionError: assert <JobState.RUNNING: 'running'> == <JobState.NEE...needs_review'>
+E         
+E         - needs_review
+E         + running
+
+tests/test_manager.py:548: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_manager.py::test_manager_verify_command_not_found_clean_error
+1 failed, 622 passed in 196.67s (0:03:16)
+Mon Oct 26 10:38:34 AM IST 2026

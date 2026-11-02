@@ -1,0 +1,31 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_invalid_commit_msg_discarded_and_resume_does_not_refail _________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1050/test_invalid_commit_msg_discar0')
+
+    def test_invalid_commit_msg_discarded_and_resume_does_not_refail(tmp_path: Path) -> None:
+        """After needs_review the stale message is renamed, so the resumed run is clean."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+        env = manager.start(
+            prompt="Work on task __SCENARIO:stale_commit_msg__",
+            repo_path=str(repo_dir),
+            title="Stale Commit Message Test",
+        )
+        _wait_for_review(manager, env.job_id)
+    
+        job = get_job(env.job_id, manager.state_dir)
+        job_dir = get_job_dir(env.job_id, manager.state_dir)
+        wt_path = Path(job.worktree_path or "")
+        assert job.review_reason == "invalid_commit_message"
+    
+        discarded = wt_path / ".agy" / "COMMIT_MSG.invalid.1"
+>       assert not (wt_path / ".agy" / "COMMIT_MSG").exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = ((PosixPath('/tmp/pytest-of-<user>/pytest-1050/test_invalid_commit_msg_discar0/state/jobs/7383be8a-7b48-4c63-8a96-8d9697bc345b/work') / '.agy') / 'COMMIT_MSG').exists
+
+tests/test_stale_commit_msg.py:132: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_stale_commit_msg.py::test_invalid_commit_msg_discarded_and_resume_does_not_refail
+1 failed in 0.62s

@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "job_id": "d99d8cd1-dbbb-415f-b56e-aa04c298f28e",
+  "title": "F1 Invalid Commit Msg Test",
+  "repo_path": "/tmp/flaky-f1-runs/run-26/test_f1_invalid_commit_msg_kil0/home/repo",
+  "branch": "agy/f1-invalid-commit-msg-test-4cc55967",
+  "base_commit": "4e83e4851cd0eaa06e6cefc811fcf28686c4c4f3",
+  "head_commit": "4e83e4851cd0eaa06e6cefc811fcf28686c4c4f3",
+  "state": "needs_review",
+  "model": "gemini-3.8-flash-medium",
+  "model_resolved": null,
+  "max_minutes": 240,
+  "verify": null,
+  "conversation_id": "conv-invalid-msg-001",
+  "pid": 117708,
+  "pgid": 117708,
+  "start_time": 52193699,
+  "worktree_path": "/tmp/flaky-f1-runs/run-26/test_f1_invalid_commit_msg_kil0/state/jobs/d99d8cd1-dbbb-415f-b56e-aa04c298f28e/work",
+  "commit_msg_generation": 0,
+  "review_reason": "invalid_commit_message",
+  "source_dirty": false,
+  "recovered": false,
+  "created_at": "2026-10-25T22:41:42.789296+00:00",
+  "updated_at": "2026-10-25T22:41:47.030843+00:00",
+  "cumulative_minutes": 0.0,
+  "commits_count": 0,
+  "files_modified": [],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "thinking_tokens": null,
+    "cache_read_tokens": null,
+    "num_turns": null
+  },
+  "verify_status": null,
+  "auto_fix_count": 0,
+  "denial_resume_count": 0,
+  "error": null,
+  "stdout_offset": 0,
+  "run_generation": 1,
+  "launch_wall_clock": 1792968102.9046123,
+  "usage_at_launch": {
+    "available": true,
+    "groups": [
+      {
+        "name": "Gemini Models",
+        "buckets": [
+          {
+            "window": "weekly",
+            "remaining_fraction": 0.6406044960021973,
+            "reset_time_utc": "2026-11-01T09:54:57Z",
+            "resets_in_seconds": 558794
+          },
+          {
+            "window": "5h",
+            "remaining_fraction": 0.6454957723617554,
+            "reset_time_utc": "2026-10-25T19:54:57Z",
+            "resets_in_seconds": 0
+          }
+        ]
+      },
+      {
+        "name": "Claude and GPT models",
+        "buckets": [
+          {
+            "window": "weekly",
+            "remaining_fraction": 1.0,
+            "reset_time_utc": "2026-11-01T16:54:32Z",
+            "resets_in_seconds": 583969
+          },
+          {
+            "window": "5h",
+            "remaining_fraction": 1.0,
+            "reset_time_utc": "2026-10-25T21:54:32Z",
+            "resets_in_seconds": 0
+          }
+        ]
+      }
+    ],
+    "cross_check": "ok",
+    "account": {
+      "masked_email": "fa***@example.invalid",
+      "auth_method": "consumer"
+    },
+    "fetched_at": "2026-10-25T22:41:42.848423+00:00",
+    "cached": false
+  },
+  "usage_cost": null,
+  "resume_after": null,
+  "plan_summary": null,
+  "plan_nudge_count": 0,
+  "agent_report": null,
+  "audit_status": null,
+  "audit_reason": null,
+  "scratchpad_files": [
+    "PLAN.md",
+    "NOTES.md",
+    "LOG.md",
+    "REPORT.md"
+  ]
+}

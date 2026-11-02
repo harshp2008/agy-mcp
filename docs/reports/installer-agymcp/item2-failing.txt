@@ -1,0 +1,145 @@
+FFFFF                                                                    [100%]
+=================================== FAILURES ===================================
+__________________ test_agents_block_file_exists_and_is_short __________________
+
+    def test_agents_block_file_exists_and_is_short() -> None:
+>       assert AGENTS_MD.is_file(), f"missing {AGENTS_MD}"
+E       AssertionError: missing ~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md
+E       assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md').is_file
+
+tests/test_installer_chapter.py:568: AssertionError
+____________________ test_agents_block_matches_dsh_install _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1078/test_agents_block_matches_dsh_0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1078/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_agents_block_matches_dsh_install(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+>       expected = AGENTS_MD.read_text(encoding="utf-8")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_installer_chapter.py:576: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md'
+
+/usr/lib/python3.12/pathlib.py:1015: FileNotFoundError
+__________________ test_agents_block_matches_generic_install ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1078/test_agents_block_matches_gene0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1078/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_agents_block_matches_generic_install(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+>       expected = AGENTS_MD.read_text(encoding="utf-8")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_installer_chapter.py:590: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md'
+
+/usr/lib/python3.12/pathlib.py:1015: FileNotFoundError
+__________________ test_agents_block_mentions_only_real_tools __________________
+
+    def test_agents_block_mentions_only_real_tools() -> None:
+>       text = AGENTS_MD.read_text(encoding="utf-8")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_installer_chapter.py:602: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md'
+
+/usr/lib/python3.12/pathlib.py:1015: FileNotFoundError
+_____________ test_agents_block_mentions_real_job_finalizing_code ______________
+
+    def test_agents_block_mentions_real_job_finalizing_code() -> None:
+>       text = AGENTS_MD.read_text(encoding="utf-8")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_installer_chapter.py:613: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '~/Documents/GITHUB PROJECTS/agy-mcp/installer/agents_block.md'
+
+/usr/lib/python3.12/pathlib.py:1015: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_agents_block_file_exists_and_is_short
+FAILED tests/test_installer_chapter.py::test_agents_block_matches_dsh_install
+FAILED tests/test_installer_chapter.py::test_agents_block_matches_generic_install
+FAILED tests/test_installer_chapter.py::test_agents_block_mentions_only_real_tools
+FAILED tests/test_installer_chapter.py::test_agents_block_mentions_real_job_finalizing_code
+5 failed, 18 deselected in 0.38s

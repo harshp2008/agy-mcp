@@ -1,0 +1,32 @@
+{
+  "dot_git_content": "gitdir: /tmp/flaky-f1-live/attempt-4/home/repo/.git/worktrees/work",
+  "git_config": {
+    "core.repositoryformatversion": "0",
+    "core.filemode": "true",
+    "core.bare": "false",
+    "core.logallrefupdates": "true",
+    "user.name": "Test Author",
+    "user.email": "author@example.com"
+  },
+  "host_paths": {
+    "/tmp/flaky-f1-live/attempt-4/home/.bashrc": "missing",
+    "/tmp/flaky-f1-live/attempt-4/home/.profile": "missing",
+    "/tmp/flaky-f1-live/attempt-4/home/.zshrc": "missing",
+    "/tmp/flaky-f1-live/attempt-4/home/.gitconfig": "missing",
+    "/tmp/flaky-f1-live/attempt-4/home/.netrc": "missing",
+    "/tmp/flaky-f1-live/attempt-4/home/.config/agy-mcp/config.toml": "missing",
+    "/tmp/flaky-f1-live/attempt-4/home/repo/.git/config": "1792968244631526986:147:8372eca144c20305a2af8630c6f3db3621ca0deb148b44ec4ecf34e1cd60f69d",
+    "/tmp/flaky-f1-live/attempt-4/home/.ssh": "missing",
+    "/tmp/flaky-f1-live/attempt-4/home/.gnupg": "missing"
+  },
+  "instruction_files": {
+    "AGENTS.md": null,
+    "GEMINI.md": null
+  },
+  "policy_files": {
+    ".gitignore": null,
+    ".gitattributes": null,
+    ".gitmodules": null
+  },
+  "agents_files": {}
+}

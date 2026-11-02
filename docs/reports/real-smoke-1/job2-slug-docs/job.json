@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "job_id": "97c5139e-ba79-49eb-b050-7a6b70de09d1",
+  "title": "slug docs",
+  "repo_path": "~/agy-smoke-repo",
+  "branch": "agy/slug-docs-2bf72c13",
+  "base_commit": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "head_commit": "33fda9e20e144b93b0d2e3d945a7da717a350e75",
+  "state": "done",
+  "model": "gemini-3.8-flash",
+  "max_minutes": 10,
+  "verify": null,
+  "conversation_id": "a20e9a23-3349-4da9-9321-c062be609312",
+  "pid": 40525,
+  "pgid": 40525,
+  "start_time": 51843148,
+  "worktree_path": "/tmp/agy-real-smoke-state-yupwl5i1/jobs/97c5139e-ba79-49eb-b050-7a6b70de09d1/work",
+  "commit_msg_generation": 3,
+  "review_reason": null,
+  "source_dirty": false,
+  "recovered": false,
+  "created_at": "2026-10-25T21:43:10.517045+00:00",
+  "updated_at": "2026-10-25T21:47:34.739706+00:00",
+  "cumulative_minutes": 4.171525661150614,
+  "commits_count": 2,
+  "files_modified": [
+    "README.md",
+    "slug/__init__.py"
+  ],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 396287,
+    "output_tokens": 17544,
+    "total_tokens": 413831
+  },
+  "verify_status": null,
+  "auto_fix_count": 0,
+  "denial_resume_count": 0,
+  "error": null,
+  "stdout_offset": 0,
+  "run_generation": 1,
+  "launch_wall_clock": 1792964597.3949473,
+  "usage_at_launch": {
+    "available": true,
+    "groups": [
+      {
+        "name": "Gemini Models",
+        "buckets": [
+          {
+            "window": "weekly",
+            "remaining_fraction": 0.2525261342525482,
+            "reset_time_utc": "2026-10-27T21:12:09Z",
+            "resets_in_seconds": 170931
+          },
+          {
+            "window": "5h",
+            "remaining_fraction": 0.9885119795799255,
+            "reset_time_utc": "2026-10-26T02:36:56Z",
+            "resets_in_seconds": 17618
+          }
+        ]
+      },
+      {
+        "name": "Claude and GPT models",
+        "buckets": [
+          {
+            "window": "weekly",
+            "remaining_fraction": 1.0,
+            "reset_time_utc": "2026-11-01T21:43:17Z",
+            "resets_in_seconds": 604799
+          },
+          {
+            "window": "5h",
+            "remaining_fraction": 1.0,
+            "reset_time_utc": "2026-10-26T02:43:17Z",
+            "resets_in_seconds": 17999
+          }
+        ]
+      }
+    ],
+    "cross_check": "ok",
+    "account": {
+      "masked_email": "<user-email>",
+      "auth_method": "consumer"
+    },
+    "fetched_at": "2026-10-25T21:43:17.386925+00:00",
+    "cached": false
+  },
+  "usage_cost": {
+    "five_hour_pct_points": 1.35,
+    "weekly_pct_points": 0.39,
+    "measured": true,
+    "concurrent_jobs": 1,
+    "note": "single active job; quota points attributed to this job"
+  },
+  "resume_after": null,
+  "plan_summary": {
+    "total": 3,
+    "done": 3,
+    "remaining": []
+  },
+  "plan_nudge_count": 0,
+  "agent_report": "<untrusted_text id=\"35851cd1c14fa757\">\n# REPORT\n\n## Done\n- Added a short docstring to `slugify` in `slug/__init__.py` describing its behavior (converting text to a slug by lowercasing and replacing spaces with hyphens).\n- Added a `Usage` section to `README.md` featuring two usage examples with input and output.\n\n## Not done / skipped\nnone\n\n## Open issues\nnone\n\n## Files changed\n- `slug/__init__.py`\n- `README.md`\n- `.agy/PLAN.md`\n- `.agy/NOTES.md`\n- `.agy/COMMIT_MSG`\n- `.agy/REPORT.md`\n\n## How verified\n- Read back `slug/__init__.py` to confirm the docstring accurately describes the behavior.\n- Read back `README.md` to confirm the section format and the presence of two distinct examples.\n- Did not run automated test suites directly as tests are handled by the wrapper verification environment.\n\n</untrusted_text id=\"35851cd1c14fa757\">",
+  "audit_status": "passed",
+  "audit_reason": null,
+  "scratchpad_files": [
+    "PLAN.md",
+    "NOTES.md",
+    "LOG.md",
+    "REPORT.md"
+  ]
+}

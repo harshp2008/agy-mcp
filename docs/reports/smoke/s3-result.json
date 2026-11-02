@@ -1,0 +1,65 @@
+{
+  "job_id": "2100e3c8-2689-4953-89bb-9f9a5a292a32",
+  "state": "needs_review",
+  "elapsed_seconds": 24.11,
+  "title": "s3-denial-probe",
+  "branch": "agy/s3-denial-probe-0009d888",
+  "base_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+  "head_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+  "commits_count": 0,
+  "files_modified": [],
+  "skipped_files": [],
+  "denials": [
+    {
+      "action": "command",
+      "display_name": "RunCommand"
+    }
+  ],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 23715,
+    "output_tokens": 939,
+    "total_tokens": 24654
+  },
+  "next_actions": [
+    "Inspect changes with agy_review",
+    "Resume job with advice using agy_resume",
+    "Cancel job with agy_cancel"
+  ],
+  "error": null,
+  "response": "<untrusted_text id=\"818c954e5ae68009\">\n\n</untrusted_text id=\"818c954e5ae68009\">",
+  "diff_stat": "",
+  "commits": [],
+  "audit_events_tail": [
+    {
+      "ts": "2026-10-25T06:33:46.941918+00:00",
+      "event": "job_created",
+      "detail": {
+        "title": "s3-denial-probe",
+        "model": "gemini-3.8-flash-medium",
+        "max_minutes": 10,
+        "verify": null
+      }
+    },
+    {
+      "ts": "2026-10-25T06:33:46.964099+00:00",
+      "event": "state_transition",
+      "detail": {
+        "from": "queued",
+        "to": "running",
+        "trigger": "Worktree ready, process spawned & PID confirmed"
+      }
+    },
+    {
+      "ts": "2026-10-25T06:34:10.993282+00:00",
+      "event": "state_transition",
+      "detail": {
+        "from": "running",
+        "to": "needs_review",
+        "trigger": "Process terminated with rc 0",
+        "return_code": 0,
+        "review_reason": "blocked_by_permission"
+      }
+    }
+  ]
+}

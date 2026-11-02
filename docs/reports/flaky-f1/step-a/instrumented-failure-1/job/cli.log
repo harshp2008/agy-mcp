@@ -1,0 +1,7 @@
+[2026-10-25T22:44:04Z] Starting fake agy session
+[2026-10-25T22:44:04Z] Detected simulation scenario: hang_after_invalid_commit_msg
+[2026-10-25T22:44:04Z] Writing malformed COMMIT_MSG (header > 72 chars)
+[2026-10-25T22:44:04Z] Session conversation: conv-invalid-msg-001
+[2026-10-25T22:44:09Z] Starting fake agy session
+[2026-10-25T22:44:09Z] Detected simulation scenario: hang_after_invalid_commit_msg
+[2026-10-25T22:44:09Z] Resumed conversation conv-invalid-msg-001

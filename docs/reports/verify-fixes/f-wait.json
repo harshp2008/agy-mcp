@@ -1,0 +1,38 @@
+{
+  "job_id": "3aacf457-9a0c-44c7-b315-b44f4153afa8",
+  "state": "done",
+  "elapsed_seconds": 85.53,
+  "title": "Verify Fixes Part F Price Rounding",
+  "branch": "agy/verify-fixes-part-f-price-rounding-5688b6a2",
+  "base_commit": "1c3ea6b8c95d0e25f7d1e5cd05cf52f58b43a04c",
+  "head_commit": "dd615084787381dcbe65debb850c176621b7575b",
+  "commits_count": 1,
+  "files_modified": [
+    "src/price.py"
+  ],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 158221,
+    "output_tokens": 6190,
+    "total_tokens": 164411
+  },
+  "next_actions": [
+    "Inspect result with agy_result",
+    "Review diff with agy_review",
+    "Clean up worktree with agy_cleanup"
+  ],
+  "error": null,
+  "verify": {
+    "requested": true,
+    "ran": true,
+    "passed": true,
+    "rc": 0,
+    "duration_seconds": 0.256,
+    "attempts": 1,
+    "last_tail": "<untrusted_text id=\"dc34dc9a195a2903\">\n============================= test session starts ==============================\nplatform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0\nrootdir: ~/agy-smoke/verify-fixes-f/state/jobs/3aacf457-9a0c-44c7-b315-b44f4153afa8/work\nplugins: anyio-4.15.1\ncollected 2 items\n\ntests/test_price.py ..                                                   [100%]\n\n============================== 2 passed in 0.01s ===============================\n\n</untrusted_text id=\"dc34dc9a195a2903\">"
+  }
+}

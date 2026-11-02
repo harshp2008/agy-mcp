@@ -1,0 +1,89 @@
+F...F.............                                                       [100%]
+=================================== FAILURES ===================================
+___________________ test_fresh_dsh_install_writes_every_file ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1074/test_fresh_dsh_install_writes_0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1074/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_fresh_dsh_install_writes_every_file(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        home = tmp_path / "home"
+        home.mkdir()
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+        assert proc.returncode == 0, _output(proc)
+    
+        install_dir = _install_dir(home)
+        run_sh = install_dir / "run.sh"
+        env_file = install_dir / "env"
+        assert run_sh.is_file()
+        assert run_sh.stat().st_mode & stat.S_IXUSR
+        assert env_file.is_file()
+        assert stat.S_IMODE(env_file.stat().st_mode) == 0o600
+        assert (install_dir / "mcp-client-config.json").is_file()
+        assert (install_dir / "orchestrator-guidance.md").is_file()
+        assert _config_path(home).is_file()
+        assert (home / ".local" / "state" / "agy-mcp").is_dir()
+    
+        patch_text = _patch_path(home).read_text(encoding="utf-8")
+        assert PATCH_BEGIN in patch_text
+        assert PATCH_END in patch_text
+        assert "- id: mcp-agy" in patch_text
+        assert "serverName: agy" in patch_text
+        assert "toolCallTimeoutMs: 360000" in patch_text
+>       assert _patch_path(home).with_suffix(".yml.bak").is_file()
+E       AssertionError: assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('/tmp/pytest-of-<user>/pytest-1074/test_fresh_dsh_install_writes_0/home/.dsh/profiles/web/cordis.patch.yml.bak').is_file
+E        +      where PosixPath('/tmp/pytest-of-<user>/pytest-1074/test_fresh_dsh_install_writes_0/home/.dsh/profiles/web/cordis.patch.yml.bak') = with_suffix('.yml.bak')
+E        +        where with_suffix = PosixPath('/tmp/pytest-of-<user>/pytest-1074/test_fresh_dsh_install_writes_0/home/.dsh/profiles/web/cordis.patch.yml').with_suffix
+E        +          where PosixPath('/tmp/pytest-of-<user>/pytest-1074/test_fresh_dsh_install_writes_0/home/.dsh/profiles/web/cordis.patch.yml') = _patch_path(PosixPath('/tmp/pytest-of-<user>/pytest-1074/test_fresh_dsh_install_writes_0/home'))
+
+tests/test_installer_chapter.py:238: AssertionError
+__________ test_dsh_install_preserves_mcp_search_block_and_user_text ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1074/test_dsh_install_preserves_mcp0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1074/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_dsh_install_preserves_mcp_search_block_and_user_text(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        home = tmp_path / "home"
+        patch = _patch_path(home)
+        patch.parent.mkdir(parents=True)
+        search_block = (
+            "# >>> ai-stack searchmcp >>>\n"
+            "- insert:\n"
+            "    - id: mcp-search\n"
+            "      name: '@deepseek-ai/dsh-mcp-client'\n"
+            "      config:\n"
+            "        serverName: search\n"
+            "        transport: stdio\n"
+            "        command: /opt/search/run.sh\n"
+            "        toolCallTimeoutMs: 120000\n"
+            "# <<< ai-stack searchmcp <<<\n"
+        )
+        patch.write_text("user_patch: keep-me\n" + search_block, encoding="utf-8")
+    
+        agents = _agents_path(home)
+>       agents.parent.mkdir(parents=True)
+
+tests/test_installer_chapter.py:305: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-<user>/pytest-1074/test_dsh_install_preserves_mcp0/home/.dsh')
+mode = 511, parents = True, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileExistsError: [Errno 17] File exists: '/tmp/pytest-of-<user>/pytest-1074/test_dsh_install_preserves_mcp0/home/.dsh'
+
+/usr/lib/python3.12/pathlib.py:1313: FileExistsError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_fresh_dsh_install_writes_every_file
+FAILED tests/test_installer_chapter.py::test_dsh_install_preserves_mcp_search_block_and_user_text
+2 failed, 16 passed in 29.37s

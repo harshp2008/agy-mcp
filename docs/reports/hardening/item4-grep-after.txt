@@ -1,0 +1,25 @@
+$ grep -rn --include=*.py "run_hardened_git" src/ tests/
+(no matches)
+
+$ grep -rn --include=*.py "read_proc_pgid" src/ tests/
+(no matches)
+
+$ grep -n "refreshed = get_job" src/agy_mcp/manager.py
+482:            refreshed = get_job(job.job_id, self.state_dir)
+734:            refreshed = get_job(job_id, self.state_dir)
+765:        refreshed = get_job(job_id, self.state_dir)
+1037:            refreshed = get_job(job_id, self.state_dir)
+
+$ grep -n "def preflight\|def provision\|def verify_host_path_snapshot\|def run_security_audit\|def rebuild_daily_cap_from_audit\|def prune_retained_jobs\|def get_diff_stat\|def get_commits_list\|def has_base_moved\|def sha256_bytes\|def check_daily_cap" src/agy_mcp/*.py
+src/agy_mcp/audit.py:366:def verify_host_path_snapshot(
+src/agy_mcp/audit.py:628:def run_security_audit(
+src/agy_mcp/gitops.py:809:def has_base_moved(
+src/agy_mcp/gitops.py:820:def get_diff_stat(
+src/agy_mcp/gitops.py:831:def get_commits_list(
+src/agy_mcp/jobs.py:394:def rebuild_daily_cap_from_audit(
+src/agy_mcp/jobs.py:480:def prune_retained_jobs(
+src/agy_mcp/usage.py:785:def check_daily_cap(state_dir: Path, daily_cap: int) -> bool:
+src/agy_mcp/util.py:158:def sha256_bytes(data: bytes) -> str:
+src/agy_mcp/worktree.py:156:def preflight(
+src/agy_mcp/worktree.py:245:def provision_metadata_dir(worktree_path: Path, title: str) -> None:
+src/agy_mcp/worktree.py:268:def provision(worktree_path: Path, title: str) -> None:

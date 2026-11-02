@@ -1,0 +1,81 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 2 items
+
+tests/test_f13.py FF                                                     [100%]
+
+=================================== FAILURES ===================================
+__________________ test_f13_count_active_jobs_includes_queued __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-362/test_f13_count_active_jobs_inc0')
+
+    def test_f13_count_active_jobs_includes_queued(tmp_path: Path) -> None:
+        """count_active_jobs must include QUEUED jobs in the active count."""
+        state_dir = tmp_path / "state"
+        job = create_job(
+            repo_path=tmp_path / "repo",
+            title="Queued Count Job",
+            prompt="prompt",
+            model="gemini-3.8-flash-low",
+            max_minutes=60,
+            base_state_dir=state_dir,
+            job_id="job-queued-1",
+        )
+        job.state = JobState.QUEUED
+        save_job(job, state_dir)
+    
+        active = count_active_jobs(state_dir)
+>       assert active == 1, f"Expected 1 active job for QUEUED state, got {active}"
+E       AssertionError: Expected 1 active job for QUEUED state, got 0
+E       assert 0 == 1
+
+tests/test_f13.py:54: AssertionError
+__________ test_f13_simultaneous_starts_never_exceed_concurrency_cap ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-362/test_f13_simultaneous_starts_n0')
+
+    def test_f13_simultaneous_starts_never_exceed_concurrency_cap(tmp_path: Path) -> None:
+        """Starting multiple jobs concurrently must never exceed max_concurrent_jobs."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path, config=Config(max_concurrent_jobs=1))
+    
+        started = []
+        rejected = []
+        barrier = threading.Barrier(3)
+    
+        def _worker(idx: int) -> None:
+            barrier.wait()
+            try:
+                env = manager.start(
+                    prompt=f"Task {idx} __SCENARIO:hang_after_partial_commit__",
+                    repo_path=str(repo_dir),
+                    title=f"Concurrent Job {idx}",
+                )
+                started.append(env)
+            except ManagerError as exc:
+                if exc.code == "concurrency_limit_exceeded":
+                    rejected.append(exc)
+                else:
+                    raise
+    
+        threads = [threading.Thread(target=_worker, args=(i,)) for i in range(3)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    
+        # With max_concurrent_jobs = 1, exactly 1 must succeed and 2 must be rejected
+>       assert len(started) == 1, (
+            f"Expected exactly 1 job to start under max_concurrent_jobs=1, got {len(started)}"
+        )
+E       AssertionError: Expected exactly 1 job to start under max_concurrent_jobs=1, got 3
+E       assert 3 == 1
+E        +  where 3 = len([StandardEnvelope(job_id='08082f16-12e5-4b9c-947a-e0f52fdc01bb', state=<JobState.QUEUED: 'queued'>, elapsed_seconds=0....uested': False, 'ran': False, 'passed': None, 'rc': None, 'duration_seconds': None, 'attempts': 0, 'last_tail': None})])
+
+tests/test_f13.py:87: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f13.py::test_f13_count_active_jobs_includes_queued - Assert...
+FAILED tests/test_f13.py::test_f13_simultaneous_starts_never_exceed_concurrency_cap
+============================== 2 failed in 0.18s ===============================

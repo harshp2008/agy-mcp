@@ -1,0 +1,6 @@
+is_verify_allowed('python -m pytest -q') -> False
+is_verify_allowed('pytest -q') -> True
+is_verify_allowed('pytest') -> True
+is_verify_allowed('.venv/bin/python -m pytest -q') -> False
+is_verify_allowed('python3 -m pytest -q') -> False
+default verify_allowlist: ['pytest', 'ruff', 'npm test', 'cargo test', 'go test']

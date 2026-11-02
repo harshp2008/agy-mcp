@@ -1,0 +1,60 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_kill_usage_process_always_sigkills_surviving_child ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-791/test_kill_usage_process_always0')
+
+    def test_kill_usage_process_always_sigkills_surviving_child(tmp_path: Path) -> None:
+        """After SIGTERM and wait, the whole group gets SIGKILL even if the leader exited."""
+        script = tmp_path / "leader_exits_child_survives.py"
+        script.write_text(
+            "import os, subprocess, sys\n"
+            "from pathlib import Path\n"
+            "child = subprocess.Popen([\n"
+            "    sys.executable,\n"
+            "    '-c',\n"
+            "    (\n"
+            "        'import signal,sys,time\\n'\n"
+            "        'signal.signal(signal.SIGTERM, signal.SIG_IGN)\\n'\n"
+            "        'open(sys.argv[1], \"w\").write(\"ready\")\\n'\n"
+            "        'time.sleep(60)\\n'\n"
+            "    ),\n"
+            "    sys.argv[2],\n"
+            "])\n"
+            "Path(sys.argv[1]).write_text(str(child.pid), encoding='utf-8')\n"
+            "os._exit(0)\n",
+            encoding="utf-8",
+        )
+        pid_file = tmp_path / "child.pid"
+        ready_file = tmp_path / "child.ready"
+        proc = subprocess.Popen(
+            [sys.executable, str(script), str(pid_file), str(ready_file)],
+            start_new_session=True,
+        )
+    
+        child_pid = 0
+        try:
+            deadline = time.time() + 10.0
+            while time.time() < deadline and not (pid_file.is_file() and ready_file.is_file()):
+                time.sleep(0.02)
+            assert pid_file.is_file()
+            assert ready_file.is_file(), "child did not install its SIGTERM handler in time"
+            child_pid = int(pid_file.read_text(encoding="utf-8").strip())
+    
+            proc.wait(timeout=10.0)
+            assert _pid_alive(child_pid), "the ignored-SIGTERM child should outlive its leader"
+    
+            _kill_usage_process(proc)
+    
+            deadline = time.time() + 5.0
+            while time.time() < deadline and _pid_alive(child_pid):
+                time.sleep(0.05)
+>           assert not _pid_alive(child_pid), "surviving child outlived _kill_usage_process"
+E           AssertionError: surviving child outlived _kill_usage_process
+E           assert not True
+E            +  where True = _pid_alive(4124396)
+
+tests/test_usage_read.py:216: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_usage_read.py::test_kill_usage_process_always_sigkills_surviving_child
+1 failed in 5.17s

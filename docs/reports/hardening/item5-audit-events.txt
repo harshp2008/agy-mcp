@@ -1,0 +1,6 @@
+$ grep -h cleanup_error */jobs/*/audit.jsonl (latest pytest run)
+{"ts": "2026-10-25T20:15:26.785022+00:00", "event": "cleanup_error", "detail": {"code": "pre_kill_checkpoint_failed"}}
+{"ts": "2026-10-25T20:15:27.264486+00:00", "event": "cleanup_error", "detail": {"code": "kill_after_tick_errors"}}
+{"ts": "2026-10-25T20:15:26.965770+00:00", "event": "cleanup_error", "detail": {"code": "safety_net_commit_failed"}}
+{"ts": "2026-10-25T20:15:26.339591+00:00", "event": "cleanup_error", "detail": {"code": "kill_cancelled_launch"}}
+{"ts": "2026-10-25T20:15:26.590552+00:00", "event": "cleanup_error", "detail": {"code": "kill_setup_failure"}}

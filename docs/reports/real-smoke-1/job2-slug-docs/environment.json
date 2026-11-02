@@ -1,0 +1,24 @@
+{
+  "recorded_at": "2026-10-26T03:12:56+0530",
+  "driver_argv": [
+    "scripts/real_smoke.py",
+    "--job-name",
+    "job2-slug-docs",
+    "--title",
+    "slug docs",
+    "--prompt",
+    "Add a short docstring to slugify describing its behavior, and add a README section with two usage examples.",
+    "--prior-weekly-spend",
+    "0.3282"
+  ],
+  "agy_binary": "~/.local/bin/agy",
+  "agy_on_path": null,
+  "repo_path": "~/agy-smoke-repo",
+  "state_dir": "/tmp/agy-real-smoke-state-yupwl5i1",
+  "model": "gemini-3.8-flash",
+  "max_minutes": 10,
+  "usage_guard": "block",
+  "plan_nudge": 1,
+  "prior_weekly_spend": 0.3282,
+  "max_wait_seconds": 840
+}

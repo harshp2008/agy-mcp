@@ -1,0 +1,10 @@
+{
+  "status": "SUCCESS",
+  "response": "I have created the file foo.txt and written the test suite.\n",
+  "conversation_id": "c23620ff-d233-4205-8593-50bae5d2bdb3",
+  "usage": {
+    "input_tokens": 6776,
+    "output_tokens": 150,
+    "total_tokens": 6926
+  }
+}

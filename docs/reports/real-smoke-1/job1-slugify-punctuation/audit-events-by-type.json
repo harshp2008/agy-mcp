@@ -1,0 +1,8 @@
+{
+  "job_created": 1,
+  "state_transition": 2,
+  "commit": 2,
+  "commit_skipped_no_changes": 2,
+  "verify_started": 1,
+  "verify_finished": 1
+}

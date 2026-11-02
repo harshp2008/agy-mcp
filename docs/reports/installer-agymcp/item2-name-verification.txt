@@ -1,0 +1,36 @@
+mentioned tools: ['agy_cleanup', 'agy_resume', 'agy_review', 'agy_start', 'agy_status', 'agy_usage', 'agy_wait']
+PASS tool agy_cleanup
+PASS tool agy_resume
+PASS tool agy_review
+PASS tool agy_start
+PASS tool agy_status
+PASS tool agy_usage
+PASS tool agy_wait
+PASS parameter agy_start.title
+PASS parameter agy_start.prompt
+PASS parameter agy_start.checklist
+PASS parameter agy_start.verify
+PASS parameter agy_start.max_minutes
+PASS state done
+PASS state needs_decision
+PASS state needs_review
+PASS state failed
+PASS state timeout
+PASS state queued
+PASS state running
+PASS state cancelled
+PASS name plan_incomplete
+PASS name verify_failed
+PASS name quota_exhausted
+PASS name auth_required
+PASS name audit_violation
+PASS name host_path_modified
+PASS name instruction_file_modified
+PASS name audit_unavailable
+PASS name blocked_by_permission
+PASS name resume_after
+PASS name job_finalizing
+PASS name agent_report
+PASS name audit_findings
+PASS name facts
+PASS block lines: 33

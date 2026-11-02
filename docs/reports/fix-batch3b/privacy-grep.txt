@@ -1,0 +1,46 @@
+Run at: 2026-10-26T00:25:05+05:30
+
+$ grep -rnP "applyAuthResult: email=(?!REDACTED@)(?!\.\.\.)(?!\{)(?!..\*\*\*@)[^,\s]+@" . --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__
+exit=1
+
+$ grep -rnP "OAuth: authenticated successfully as (?!\{)(?!..\*\*\*@)[^[:space:]]+@" . --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__
+exit=1
+
+$ grep -rn "@gmail\.com" . --exclude-dir=.git --exclude-dir=.venv --exclude-dir=__pycache__
+./docs/reports/verify-loop/d1-cli.log:133:I1025 16:04:56.261344       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/verify-loop/d1-cli.log:134:I1025 16:04:56.261349       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/smoke/s2-cli.log:147:I1025 12:02:54.283913       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/smoke/s2-cli.log:148:I1025 12:02:54.283927       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/smoke/s4-cli.log:148:I1025 12:05:20.753698       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/smoke/s4-cli.log:149:I1025 12:05:20.753705       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/smoke/s3-cli.log:133:I1025 12:03:47.433578       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/smoke/s3-cli.log:134:I1025 12:03:47.433583       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/smoke/s1-cli.log:149:I1025 12:02:26.133256       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/smoke/s1-cli.log:150:I1025 12:02:26.133260       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/smoke-fixes/h1-cli.log:149:I1025 13:11:16.224144       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/smoke-fixes/h1-cli.log:150:I1025 13:11:16.224147       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/smoke-fixes/h2-cli.log:149:I1025 13:12:47.512681       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/smoke-fixes/h2-cli.log:150:I1025 13:12:47.512687       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/verify-fixes/f-cli.log:141:I1025 17:08:43.285996       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/verify-fixes/f-cli.log:142:I1025 17:08:43.286000       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/smoke-fixes-2/f1-cli.log:137:I1025 15:01:23.495265       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/smoke-fixes-2/f1-cli.log:138:I1025 15:01:23.495271       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./docs/reports/smoke-fixes-2/f2-cli.log:133:I1025 15:03:46.373265       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./docs/reports/smoke-fixes-2/f2-cli.log:134:I1025 15:03:46.373270       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+./tests/fixtures/real_logs/real_log.log:133:I1025 12:03:47.433578       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+./tests/fixtures/real_logs/real_log.log:134:I1025 12:03:47.433583       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+exit=0
+
+$ grep -rnP "applyAuthResult: email=(?!REDACTED@)(?!\.\.\.)(?!\{)(?!..\*\*\*@)[^,\s]+@" /tmp/pytest-of-<user>
+exit=1
+
+$ grep -rn "fa\*\*\*@example.invalid" /tmp/pytest-of-<user> | head -3
+/tmp/pytest-of-<user>/pytest-774/test_manager_scenario_denial_b0/state/jobs/fac0e2d4-4e20-4b99-9e25-a1e876402354/job.json:89:      "masked_email": "fa***@example.invalid",
+/tmp/pytest-of-<user>/pytest-774/test_f20_failing_auto_resume_w0/state/jobs/d0294373-2473-4fce-bfbc-7706577dc8a9/job.json:94:      "masked_email": "fa***@example.invalid",
+/tmp/pytest-of-<user>/pytest-774/test_manager_source_dirty_warn0/state/jobs/10d8c95e-0a4e-4482-b848-06d0b9e0a74e/job.json:87:      "masked_email": "fa***@example.invalid",
+grep: write error: Broken pipe
+exit=0
+
+$ find /tmp -maxdepth 1 -type d -name "agy-usage-*"
+/tmp/agy-usage-probe
+exit=0

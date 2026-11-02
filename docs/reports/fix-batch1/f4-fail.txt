@@ -1,0 +1,109 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 2 items
+
+tests/test_f4.py FF                                                      [100%]
+
+=================================== FAILURES ===================================
+______________ test_f4_concurrent_resumes_one_launch_one_rejected ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-340/test_f4_concurrent_resumes_one0')
+
+    def test_f4_concurrent_resumes_one_launch_one_rejected(tmp_path: Path) -> None:
+        """Two concurrent resumes must result in exactly one launch and one clean rejection."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        # Start a job that pauses in needs_decision
+        env = manager.start(
+            prompt="Decision task __SCENARIO:needs_decision__",
+            repo_path=str(repo_dir),
+            title="F4 Decision Job",
+        )
+        wait_env = manager.wait(env.job_id, seconds=5)
+        assert wait_env.state == JobState.NEEDS_DECISION
+    
+        results = []
+        errors = []
+    
+        def _do_resume(ans: str) -> None:
+            try:
+                r = manager.resume(env.job_id, ans)
+                results.append(r)
+            except Exception as exc:
+                errors.append(exc)
+    
+        t1 = threading.Thread(target=_do_resume, args=("Option A",))
+        t2 = threading.Thread(target=_do_resume, args=("Option B",))
+    
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+    
+        # Exactly one resume should succeed
+>       assert len(results) == 1, f"Expected 1 successful resume, got {len(results)}"
+E       AssertionError: Expected 1 successful resume, got 2
+E       assert 2 == 1
+E        +  where 2 = len([StandardEnvelope(job_id='fe5d44b3-3409-44e9-ac27-b9124a0e94e5', state=<JobState.RUNNING: 'running'>, elapsed_seconds=...uested': False, 'ran': False, 'passed': None, 'rc': None, 'duration_seconds': None, 'attempts': 0, 'last_tail': None})])
+
+tests/test_f4.py:81: AssertionError
+______________ test_f4_provision_and_launch_failure_kills_process ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-340/test_f4_provision_and_launch_f0')
+
+    def test_f4_provision_and_launch_failure_kills_process(tmp_path: Path) -> None:
+        """Failure injected after launch in _provision_and_launch must kill the spawned process."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        spawned_pids = []
+        original_launch = manager.runner.launch
+    
+        def tracking_launch(*args, **kwargs):
+            handle = original_launch(*args, **kwargs)
+            spawned_pids.append(handle.pid)
+            return handle
+    
+        manager.runner.launch = tracking_launch
+    
+        # Inject failure right after launch (e.g. disk full during save_snapshot)
+        with patch("agy_mcp.manager.save_snapshot", side_effect=OSError("Disk full simulation")):
+            env = manager.start(
+                prompt="Simple task __SCENARIO:hang_after_partial_commit__",
+                repo_path=str(repo_dir),
+                title="F4 Setup Failure Job",
+            )
+    
+            deadline = time.time() + 5.0
+            while time.time() < deadline:
+                st = manager.status(env.job_id)
+                if st.state == JobState.FAILED:
+                    break
+                time.sleep(0.1)
+    
+            st = manager.status(env.job_id)
+            assert st.state == JobState.FAILED
+            job = get_job(env.job_id, manager.state_dir)
+            assert job.review_reason == "setup_failed"
+    
+            # The spawned process must have been killed!
+            assert len(spawned_pids) == 1
+            spawned_pid = spawned_pids[0]
+    
+            # Give it a brief moment to finish reaping
+            kill_deadline = time.time() + 2.0
+            while time.time() < kill_deadline and _is_alive(spawned_pid):
+                time.sleep(0.05)
+    
+>           assert not _is_alive(spawned_pid), f"PID {spawned_pid} was orphaned after setup failure"
+E           AssertionError: PID 3691943 was orphaned after setup failure
+E           assert not True
+E            +  where True = _is_alive(3691943)
+
+tests/test_f4.py:131: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f4.py::test_f4_concurrent_resumes_one_launch_one_rejected
+FAILED tests/test_f4.py::test_f4_provision_and_launch_failure_kills_process
+============================== 2 failed in 3.42s ===============================

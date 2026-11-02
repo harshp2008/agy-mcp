@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/tmp/agy-real-smoke-state-yupwl5i1/jobs/97c5139e-ba79-49eb-b050-7a6b70de09d1/work",
+    "status",
+    "--porcelain=v1",
+    "-b"
+  ],
+  "returncode": 0,
+  "stdout": "## agy/slug-docs-2bf72c13\n",
+  "stderr": ""
+}

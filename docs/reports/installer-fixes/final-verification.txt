@@ -1,0 +1,81 @@
+Mon Oct 26 10:58:14 AM IST 2026
+=== ruff check src tests scripts ===
+All checks passed!
+ruff rc=0
+
+=== bash -n installer/install.sh tests/fake_agy/agy docs/reports/installer-fixes/repro_f22.sh ===
+install.sh rc=0
+tests/fake_agy/agy: line 17: syntax error near unexpected token `"hang_ignore_sigterm"'
+tests/fake_agy/agy: line 17: `if any("hang_ignore_sigterm" in a for a in sys.argv):'
+fake_agy rc=2
+repro_f22.sh rc=0
+
+=== shellcheck installer/install.sh ===
+
+In installer/install.sh line 306:
+        printf 'HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"\n'
+               ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 308:
+        printf 'source "$HERE/env"\n'
+               ^--------------------^ SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 310:
+            printf 'exec "$HERE/venv/bin/agy-mcp" --agy-binary "$AGY_MCP_AGY_BINARY" --config "$AGY_MCP_CONFIG" --state-dir "$AGY_MCP_STATE_DIR"\n'
+                   ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 312:
+            printf 'exec "$HERE/venv/bin/python" -m agy_mcp --agy-binary "$AGY_MCP_AGY_BINARY" --config "$AGY_MCP_CONFIG" --state-dir "$AGY_MCP_STATE_DIR"\n'
+                   ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2016 -- Expressions don't expand in singl...
+shellcheck rc=1
+
+=== codemap freshness ===
+....                                                                     [100%]
+4 passed in 0.16s
+
+=== AST compare ===
+same    src/agy_mcp/worktree.py
+
+OK: 22 files match the AST baseline (no behavior change)
+
+=== git status --porcelain ===
+?? docs/reports/installer-fixes/final-verification.txt
+?? docs/reports/installer-fixes/full-final-1.txt
+?? docs/reports/installer-fixes/full-final-2.txt
+
+=== git log --oneline main..HEAD ===
+b37ecdc chore(codemap,ast): regenerate the index and re-save the AST baseline (final)
+59dba1e docs: document --upgrade, uninstall safety, flow guard, generic JSON (B6)
+50ffd55 chore(shellcheck): record shellcheck 0.11.0 on installer/install.sh (B5)
+f8ebff7 feat(installer): generic JSON keeps only command/args/env (B4)
+b3fc9d3 test(installer): generic JSON carries only standard mcpServers keys (B4)
+7e755bb feat(installer): flow-style guard ignores comments and our own block (B3)
+0aab776 test(installer): failing tests for the flow-style guard (B3)
+0be7001 feat(installer): uninstall removes dangling dsh blocks and says so (B2)
+fb7de82 fix(installer): re-apply the B1 --upgrade implementation (lost to a revert)
+e19c767 test(installer): failing tests for uninstall safety (B2)
+22c415f feat(installer): --upgrade / AGY_MCP_UPGRADE=1 reinstalls from AGY_MCP_SRC (B1)
+0802166 test(installer): failing tests for --upgrade on rerun (B1)
+087e218 test(manager): record a pre-existing flake unrelated to D68
+d60664a docs(codemap): regenerate the module index after the D68 supervisor change
+205b8c9 test(f22): record the mutation check for D68
+d7d2046 chore(ast): re-save the behavior baseline after the D68 supervisor reorder
+03d4833 fix(supervisor): append usage.jsonl before the terminal state (D68)
+6a9140b test(f22): prove DONE is observable before usage.jsonl (D68, failing)
+Mon Oct 26 10:58:31 AM IST 2026
+=== bash -n on real bash scripts ===
+installer/install.sh rc=0
+docs/reports/installer-fixes/repro_f22.sh rc=0
+docs/reports/flaky-f1/step-a/run_f1_loop.sh rc=0
+
+=== git status --porcelain (after this file) ===
+?? docs/reports/installer-fixes/REPORT.md
+?? docs/reports/installer-fixes/final-verification.txt
+?? docs/reports/installer-fixes/full-final-1.txt
+?? docs/reports/installer-fixes/full-final-2.txt

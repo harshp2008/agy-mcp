@@ -1,0 +1,10 @@
+{
+  "conversation_id": "54607eb6-546c-4183-98e6-cad72e0f6a95",
+  "status": "TIMEOUT",
+  "response": "Partial output before timeout",
+  "tokens": {
+    "input_tokens": 9000,
+    "output_tokens": 500,
+    "total_tokens": 9500
+  }
+}

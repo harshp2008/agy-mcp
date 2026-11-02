@@ -1,0 +1,47 @@
+=== ROOT: /tmp/flaky-f1-runs/run-23
+=== JOB DIR: /tmp/flaky-f1-runs/run-23/test_f1_invalid_commit_msg_kil0/state/jobs/67283f8f-cf65-4cdc-a558-d2edc9eb2767
+--- job.json summary (ordered):
+{
+  "job_id": "67283f8f-cf65-4cdc-a558-d2edc9eb2767",
+  "state": "needs_review",
+  "review_reason": "invalid_commit_message",
+  "pid": 117180,
+  "pgid": 117180,
+  "run_generation": 1,
+  "conversation_id": "conv-invalid-msg-001",
+  "commits_count": 0,
+  "cumulative_minutes": 0.0,
+  "warnings": [],
+  "plan_summary": null,
+  "error": null
+}
+--- audit.jsonl exists=True lines=5
+  [1] ts=2026-10-25T22:41:26.668819+00:00 event=job_created trigger=None detail={"title": "F1 Invalid Commit Msg Test", "model": "gemini-3.8-flash-medium", "max_minutes": 240, "verify": null}
+  [2] ts=2026-10-25T22:41:26.775073+00:00 event=state_transition trigger=None detail={"from": "queued", "to": "running", "trigger": "Worktree ready, process spawned & PID confirmed"}
+  [3] ts=2026-10-25T22:41:30.785141+00:00 event=state_transition trigger=None detail={"from": "running", "to": "needs_review", "trigger": "Malformed .agy/COMMIT_MSG after retries", "review_reason": "invalid_commit_message"}
+  [4] ts=2026-10-25T22:41:30.893547+00:00 event=state_transition trigger=None detail={"from": "needs_review", "to": "running", "trigger": "Resumed with answer: Fixed commit message format"}
+  [5] ts=2026-10-25T22:41:30.898106+00:00 event=process_terminated trigger=None detail={"state": "needs_review", "review_reason": "invalid_commit_message", "pgid": 117180}
+--- cli.log tail (/tmp/flaky-f1-runs/run-23/test_f1_invalid_commit_msg_kil0/state/jobs/67283f8f-cf65-4cdc-a558-d2edc9eb2767/cli.log):
+[2026-10-25T22:41:26Z] Starting fake agy session
+[2026-10-25T22:41:26Z] Detected simulation scenario: hang_after_invalid_commit_msg
+[2026-10-25T22:41:26Z] Writing malformed COMMIT_MSG (header > 72 chars)
+[2026-10-25T22:41:26Z] Session conversation: conv-invalid-msg-001
+[2026-10-25T22:41:30Z] Starting fake agy session
+[2026-10-25T22:41:30Z] Detected simulation scenario: hang_after_invalid_commit_msg
+[2026-10-25T22:41:30Z] Resumed conversation conv-invalid-msg-001
+--- stdout.txt tail (/tmp/flaky-f1-runs/run-23/test_f1_invalid_commit_msg_kil0/state/jobs/67283f8f-cf65-4cdc-a558-d2edc9eb2767/stdout.txt):
+{"conversation_id": "conv-invalid-msg-001", "status": "SUCCESS", "response": "Resumed and finished after invalid commit message review", "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150}}
+--- stderr.txt tail (/tmp/flaky-f1-runs/run-23/test_f1_invalid_commit_msg_kil0/state/jobs/67283f8f-cf65-4cdc-a558-d2edc9eb2767/stderr.txt):
+
+--- worktree: /tmp/flaky-f1-runs/run-23/test_f1_invalid_commit_msg_kil0/state/jobs/67283f8f-cf65-4cdc-a558-d2edc9eb2767/work exists=True
+--- .agy dir exists=True
+    COMMIT_MSG size=98 sha256=bbb8ba012ce2fba6c8f1c4ae12ddf0fae715597279cd4fcee209bf9f0aa94b6e
+      CONTENT: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n\nBody of message.'
+    LOG.md size=7 sha256=f8c1276b551558b243d95d3b57dfc03efcad158bb45cc8e45db851a1e1300cc0
+    NOTES.md size=58 sha256=849414e7062baa5d7802a5a07b21116a4fbe35a1f48f3548a1c919985157a471
+    PLAN.md size=128 sha256=838e9c352f129051fe96dd789ecfed9ae8019942a7ad3cadfc711f77ef02734b
+    REPORT.md size=152 sha256=d60a97d1fe240bb6fdbcf8a540c286d79f0e25fee8975b56f23a9e7be52126a6
+--- stale COMMIT_MSG present: True
+--- COMMIT_MSG.seen.* files: []
+--- .fake_agy_scenario: False
+--- jobdir .fake_agy_scenario=True content=hang_after_invalid_commit_msg

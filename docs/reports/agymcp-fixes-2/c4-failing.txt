@@ -1,0 +1,138 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+___________ test_usage_row_exists_when_watcher_review_is_observable ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1371/test_usage_row_exists_when_wat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a1a7fbd7f20>
+
+    def test_usage_row_exists_when_watcher_review_is_observable(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        job, job_dir, state_dir = _setup_running_job(tmp_path, "C4 Watcher Review")
+        runner, handle = _launch_fake_agy(job, job_dir, tmp_path, "hang_after_invalid_commit_msg")
+        supervisor = JobSupervisor(
+            job=job,
+            handle=handle,
+            runner=runner,
+            job_dir=job_dir,
+            max_minutes=60,
+            home=tmp_path,
+            base_state_dir=state_dir,
+            settle_window_seconds=0.1,
+            poll_interval_seconds=0.02,
+        )
+        _make_usage_slow(monkeypatch)
+        thread = threading.Thread(target=supervisor.run_loop, daemon=True)
+        thread.start()
+        try:
+            observed = _poll_state(state_dir, job.job_id)
+            assert observed is not None, "the job never left running"
+            rows = _usage_rows(state_dir)
+>           assert rows, (
+                f"state {observed.state.value!r} was observable in job.json before the "
+                "usage.jsonl row existed"
+            )
+E           AssertionError: state 'needs_review' was observable in job.json before the usage.jsonl row existed
+E           assert []
+
+tests/test_agymcp_fixes2_c4.py:149: AssertionError
+_________ test_usage_row_exists_when_tick_failure_state_is_observable __________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1371/test_usage_row_exists_when_tic0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a1a7f91f620>
+
+    def test_usage_row_exists_when_tick_failure_state_is_observable(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        job, job_dir, state_dir = _setup_running_job(tmp_path, "C4 Tick Failure")
+        runner, handle = _launch_fake_agy(job, job_dir, tmp_path, "hang")
+    
+        def failing_tick(self, now=None):
+            raise RuntimeError("injected tick failure")
+    
+        monkeypatch.setattr(CommitWatcher, "tick", failing_tick)
+        supervisor = JobSupervisor(
+            job=job,
+            handle=handle,
+            runner=runner,
+            job_dir=job_dir,
+            max_minutes=60,
+            home=tmp_path,
+            base_state_dir=state_dir,
+            poll_interval_seconds=0.02,
+        )
+        _make_usage_slow(monkeypatch)
+        thread = threading.Thread(target=supervisor.run_loop, daemon=True)
+        thread.start()
+        try:
+            observed = _poll_state(state_dir, job.job_id)
+            assert observed is not None, "the job never left running"
+            assert observed.state == JobState.FAILED
+            rows = _usage_rows(state_dir)
+>           assert rows, (
+                "state 'failed' was observable in job.json before the usage.jsonl row existed"
+            )
+E           AssertionError: state 'failed' was observable in job.json before the usage.jsonl row existed
+E           assert []
+
+tests/test_agymcp_fixes2_c4.py:191: AssertionError
+____________ test_recovery_records_usage_before_the_recovered_state ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1371/test_recovery_records_usage_be0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a1a7f91ebd0>
+
+    def test_recovery_records_usage_before_the_recovered_state(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        repo_dir = tmp_path / "repo"
+        make_repo(repo_dir, initial_commit=True)
+        state_dir = tmp_path / "state"
+        state_dir.mkdir()
+        job = create_job(
+            repo_path=repo_dir,
+            title="C4 Recovery",
+            prompt="Execute task",
+            model="gemini-3.8-flash-medium",
+            max_minutes=60,
+            base_state_dir=state_dir,
+        )
+        job_dir = get_job_dir(job.job_id, state_dir)
+        (job_dir / "stdout.txt").write_text(
+            json.dumps(
+                {
+                    "status": "SUCCESS",
+                    "response": "recovered work",
+                    "usage": {"input_tokens": 5, "output_tokens": 5, "total_tokens": 10},
+                }
+            ),
+            encoding="utf-8",
+        )
+        job.state = JobState.RUNNING
+        job.pid = None
+        job.start_time = None
+        save_job(job, state_dir)
+    
+        _make_usage_slow(monkeypatch)
+        runner = LocalProcessRunner(executable=FAKE_AGY)
+        thread = threading.Thread(
+            target=lambda: reconcile_on_startup(state_dir=state_dir, runner=runner, home=tmp_path),
+            daemon=True,
+        )
+        thread.start()
+        try:
+            observed = _poll_state(state_dir, job.job_id)
+            assert observed is not None, "recovery never finalized the dead job"
+            rows = _usage_rows(state_dir)
+>           assert rows, (
+                f"recovered state {observed.state.value!r} was observable in job.json before "
+                "the usage.jsonl row existed"
+            )
+E           AssertionError: recovered state 'needs_review' was observable in job.json before the usage.jsonl row existed
+E           assert []
+
+tests/test_agymcp_fixes2_c4.py:246: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_agymcp_fixes2_c4.py::test_usage_row_exists_when_watcher_review_is_observable
+FAILED tests/test_agymcp_fixes2_c4.py::test_usage_row_exists_when_tick_failure_state_is_observable
+FAILED tests/test_agymcp_fixes2_c4.py::test_recovery_records_usage_before_the_recovered_state
+3 failed in 1.67s

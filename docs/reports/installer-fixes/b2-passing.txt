@@ -1,0 +1,5 @@
+Mon Oct 26 10:43:39 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q -k uninstall
+.....                                                                    [100%]
+5 passed, 24 deselected in 15.22s
+rc=0

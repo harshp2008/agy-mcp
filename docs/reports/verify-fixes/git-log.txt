@@ -1,0 +1,12 @@
+fc8dcb4 (HEAD -> main) docs(spec): document junk exclusion, verify observability, and known_hosts.old per D54 and SPEC 11-13, 15
+9eb14cc test(manager): relax auto-fix double failure deadline for concurrent test runs
+35a8b60 test(models): assert verification failure prioritized in derive_next_actions per SPEC 15 and Part B2
+56e31c5 fix(watcher): resolve job_dir via base_state_dir in safety-net commit per SPEC 11
+141f193 test(gitops): strengthen python filter layer isolation test with standalone pyc per Part E
+4f44fea fix(audit): reclassify known_hosts.old as warn_only per SPEC 12 and D54
+704bba8 fix(warnings): format dangerous permission rules and check source dirty state per SPEC 8 and D54
+8081c3f feat(verify): expose verify telemetry in standard envelope and audit events per SPEC 13 and D54
+181ec6c fix(gitops): exclude build junk from staging and safety-net commit per SPEC 11 and D54
+526f54b record test suite and ruff verification reports for verify-loop
+2d1fdb9 docs(spec): document D52 known_hosts rule and D53 verify prompt guidance in SPEC and DECISIONS
+4aa9893 fix(verify): align tools schema snapshot and config error message with D53

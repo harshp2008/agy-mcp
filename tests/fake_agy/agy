@@ -1,0 +1,1300 @@
+#!/usr/bin/env python3
+"""Fake agy executable for testing agy-mcp without invoking real Gemini API."""
+
+import json
+import os
+import re
+import select
+import signal
+import subprocess
+import sys
+import time
+import uuid
+from pathlib import Path
+
+# Early signal ignore if requested to avoid race condition during startup.
+# The readiness marker is written only after the handler is installed, so a
+# test can signal the process group without racing the exec/handler window.
+if any("hang_ignore_sigterm" in a for a in sys.argv):
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    try:
+        ready_dir = os.environ.get("TMPDIR")
+        if ready_dir:
+            (Path(ready_dir) / ".fake_agy_sigterm_ready").write_text(
+                "ready", encoding="utf-8"
+            )
+    except Exception:
+        pass
+
+
+def parse_args(argv: list[str]) -> dict[str, object]:
+    """Parse agy CLI arguments strictly. Flags must precede -p <prompt>."""
+    parsed: dict[str, object] = {
+        "mode": None,
+        "output_format": None,
+        "print_timeout": None,
+        "log_file": None,
+        "model": None,
+        "conversation": None,
+        "prompt": None,
+    }
+
+    i = 0
+    p_encountered = False
+    while i < len(argv):
+        arg = argv[i]
+        if p_encountered:
+            sys.stderr.write(f"Error: unexpected argument after prompt: {arg}\n")
+            sys.exit(1)
+
+        if arg == "-p" or arg == "--prompt":
+            p_encountered = True
+            if i + 1 >= len(argv):
+                sys.stderr.write("Error: -p requires an argument\n")
+                sys.exit(1)
+            prompt_val = argv[i + 1]
+            if not prompt_val:
+                sys.stderr.write("Error: prompt cannot be empty string\n")
+                sys.exit(1)
+            parsed["prompt"] = prompt_val
+            i += 2
+            if i < len(argv):
+                sys.stderr.write(f"Error: unexpected argument after prompt: {argv[i]}\n")
+                sys.exit(1)
+            break
+        elif arg == "--mode":
+            if i + 1 < len(argv):
+                val = argv[i + 1]
+                if val != "accept-edits":
+                    sys.stderr.write(
+                        f"Error: unrecognized --mode value \"{val}\" (fake agy requires accept-edits)\n"
+                    )
+                    sys.exit(1)
+                parsed["mode"] = val
+                i += 2
+            else:
+                sys.stderr.write("Error: --mode requires an argument\n")
+                sys.exit(1)
+        elif arg == "--output-format":
+            if i + 1 < len(argv):
+                val = argv[i + 1]
+                if val != "json":
+                    sys.stderr.write(
+                        f"Error: unrecognized --output-format value \"{val}\" (fake agy requires json)\n"
+                    )
+                    sys.exit(1)
+                parsed["output_format"] = val
+                i += 2
+            else:
+                sys.stderr.write("Error: --output-format requires an argument\n")
+                sys.exit(1)
+        elif arg == "--print-timeout":
+            if i + 1 < len(argv):
+                val = argv[i + 1]
+                if not re.match(r"^[0-9]+[smh]$", val):
+                    sys.stderr.write(
+                        f"Error: invalid --print-timeout value \"{val}\" (must match ^[0-9]+[smh]$)\n"
+                    )
+                    sys.exit(1)
+                parsed["print_timeout"] = val
+                i += 2
+            else:
+                sys.stderr.write("Error: --print-timeout requires an argument\n")
+                sys.exit(1)
+        elif arg == "--log-file":
+            if i + 1 < len(argv):
+                val = argv[i + 1]
+                if not os.path.isabs(val):
+                    sys.stderr.write(
+                        f"Error: --log-file must be an absolute path, got: {val}\n"
+                    )
+                    sys.exit(1)
+                parsed["log_file"] = val
+                i += 2
+            else:
+                sys.stderr.write("Error: --log-file requires an argument\n")
+                sys.exit(1)
+        elif arg == "--model":
+            if i + 1 < len(argv):
+                parsed["model"] = argv[i + 1]
+                i += 2
+            else:
+                sys.stderr.write("Error: --model requires an argument\n")
+                sys.exit(1)
+        elif arg == "--conversation":
+            if i + 1 < len(argv):
+                parsed["conversation"] = argv[i + 1]
+                i += 2
+            else:
+                sys.stderr.write("Error: --conversation requires an argument\n")
+                sys.exit(1)
+        elif arg == "--effort":
+            sys.stderr.write(
+                "Error: --effort flag is not supported by agy; pass model with effort\n"
+            )
+            sys.exit(1)
+        elif arg.startswith("-"):
+            sys.stderr.write(f"Error: unknown option: {arg}\n")
+            sys.exit(1)
+        else:
+            sys.stderr.write(f"Error: unexpected positional argument: {arg}\n")
+            sys.exit(1)
+
+    # /usage mode only needs --output-format json and an absolute --log-file.
+    if parsed["prompt"] == "/usage":
+        if parsed["output_format"] is None:
+            sys.stderr.write("Error: --output-format is required\n")
+            sys.exit(1)
+        return parsed
+
+    # Post-validation: ensure required flags are present
+    if parsed["prompt"] is None:
+        sys.stderr.write("Error: -p <prompt> is required and was not provided\n")
+        sys.exit(1)
+    if parsed["mode"] is None:
+        sys.stderr.write("Error: --mode is required\n")
+        sys.exit(1)
+    if parsed["output_format"] is None:
+        sys.stderr.write("Error: --output-format is required\n")
+        sys.exit(1)
+    if parsed["print_timeout"] is None:
+        sys.stderr.write("Error: --print-timeout is required\n")
+        sys.exit(1)
+    if parsed["log_file"] is None:
+        sys.stderr.write("Error: --log-file is required\n")
+        sys.exit(1)
+    if parsed["model"] is None:
+        sys.stderr.write("Error: --model is required\n")
+        sys.exit(1)
+
+    return parsed
+
+
+def detect_scenario(prompt: str, log_file: str | None = None) -> str:
+    """Detect the simulation scenario from env, prompt markers, or job-dir state."""
+    # 1. Environment variable
+    if "FAKE_AGY_SCENARIO" in os.environ:
+        return os.environ["FAKE_AGY_SCENARIO"].strip()
+
+    # 2. Marker in prompt (highest priority)
+    match = re.search(r"__SCENARIO:([a-zA-Z0-9_-]+)__", prompt)
+    if match:
+        sc = match.group(1)
+        if log_file:
+            try:
+                (Path(log_file).parent / ".fake_agy_scenario").write_text(sc, encoding="utf-8")
+            except Exception:
+                pass
+        return sc
+
+    match2 = re.search(r"SCENARIO:\s*([a-zA-Z0-9_-]+)", prompt)
+    if match2:
+        sc = match2.group(1)
+        if log_file:
+            try:
+                (Path(log_file).parent / ".fake_agy_scenario").write_text(sc, encoding="utf-8")
+            except Exception:
+                pass
+        return sc
+
+    # 3. File in cwd
+    file_cwd = Path(".fake_agy_scenario")
+    if file_cwd.is_file():
+        try:
+            return file_cwd.read_text(encoding="utf-8").strip()
+        except Exception:
+            pass
+
+    # 4. Job-dir persistent state across turns
+    if log_file:
+        file_job = Path(log_file).parent / ".fake_agy_scenario"
+        if file_job.is_file():
+            try:
+                return file_job.read_text(encoding="utf-8").strip()
+            except Exception:
+                pass
+
+    return "success_simple"
+
+
+def _fake_setting(log_file_path: str | None, env_name: str, marker_name: str) -> str:
+    """Read a fake-agy knob from an env var, then a job-dir marker file.
+
+    The manager's sanitized child env does not forward arbitrary FAKE_* vars, so
+    integration tests switch behavior through ``<jobdir>/<marker_name>``; direct
+    unit invocations can use the env var.
+    """
+    value = os.environ.get(env_name, "").strip()
+    if value:
+        return value
+    if log_file_path:
+        marker = Path(log_file_path).parent / marker_name
+        if marker.is_file():
+            try:
+                return marker.read_text(encoding="utf-8").strip()
+            except Exception:
+                pass
+    return ""
+
+
+def log_entry(log_file_path: str | None, message: str) -> None:
+    """Write an entry to the CLI log file in agy's real glog header shape.
+
+    Real lines look like ``I1025 12:03:54.313882       1 server.go:1225] ...``;
+    the wrapper anchors its conversation-id regexes to this header so agent
+    text cannot impersonate a conversation line.
+    """
+    if not log_file_path:
+        return
+    try:
+        p = Path(log_file_path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        now = time.time()
+        micros = int((now % 1) * 1_000_000)
+        stamp = time.strftime("%m%d %H:%M:%S", time.gmtime(now)) + f".{micros:06d}"
+        if "Created conversation" in message:
+            source = "server.go:1225"
+        elif "resuming conversation" in message:
+            source = "session.go:156"
+        else:
+            source = "fake.go:1"
+        with open(p, "a", encoding="utf-8") as f:
+            f.write(f"I{stamp}       1 {source}] {message}\n")
+    except Exception:
+        pass
+
+
+# Scenarios that manage .agy/PLAN.md and .agy/REPORT.md themselves. The
+# default success path ticks every plan box and fills REPORT.md, imitating an
+# agent that follows the preamble; these scenarios opt out so tests can
+# exercise incomplete plans and dishonest reports.
+_MANUAL_SCRATCHPAD_SCENARIOS = {
+    "plan_complete",
+    "plan_partial",
+    "plan_nudge_complete",
+    "plan_nudge_partial",
+    "report_claim",
+    "report_clean",
+    "scratchpad_symlink",
+}
+_SKIP_AUTO_SCRATCHPAD = False
+
+
+def write_plan(total: int, ticked: int) -> None:
+    """Write a deterministic PLAN.md with ``total`` boxes, ``ticked`` done."""
+    agy_dir = Path(".agy")
+    agy_dir.mkdir(parents=True, exist_ok=True)
+    lines = ["# Plan: fake scenario", ""]
+    for index in range(1, total + 1):
+        box = "x" if index <= ticked else " "
+        lines.append(f"- [{box}] {index}. Fake step {index}")
+    (agy_dir / "PLAN.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_report(tests_passed_claim: bool) -> None:
+    """Write a REPORT.md, optionally containing an unverified test claim."""
+    agy_dir = Path(".agy")
+    agy_dir.mkdir(parents=True, exist_ok=True)
+    how = (
+        "All tests passed."
+        if tests_passed_claim
+        else "Manual review only; agy did not run tests."
+    )
+    (agy_dir / "REPORT.md").write_text(
+        "# REPORT\n\n## Done\nfake work\n\n## Not done / skipped\nnone\n\n"
+        "## Open issues\nnone\n\n## Files changed\nnone\n\n"
+        f"## How verified\n{how}\n",
+        encoding="utf-8",
+    )
+
+
+def _complete_scratchpad() -> None:
+    """Imitate a compliant agent on normal exit: tick the plan and fill the report."""
+    if _SKIP_AUTO_SCRATCHPAD:
+        return
+    agy_dir = Path(".agy")
+    if not agy_dir.is_dir():
+        return
+    try:
+        plan = agy_dir / "PLAN.md"
+        if plan.is_file():
+            text = plan.read_text(encoding="utf-8")
+            text = re.sub(r"^(\s*[-*+]\s*)\[ \]", r"\1[x]", text, flags=re.MULTILINE)
+            plan.write_text(text, encoding="utf-8")
+        report = agy_dir / "REPORT.md"
+        if report.is_file():
+            text = report.read_text(encoding="utf-8")
+            text = text.replace(
+                "## How verified\n",
+                "## How verified\nWrapper runs verification; agy did not run tests.\n",
+                1,
+            )
+            report.write_text(text, encoding="utf-8")
+    except Exception:
+        pass
+
+
+# Synthetic test account, assembled from parts so no unmasked address literal
+# appears in the repository.
+_USAGE_EMAIL_LOCAL = "fake" + ".quota"
+_USAGE_EMAIL_DOMAIN = "example" + ".invalid"
+
+
+def load_usage_fixture() -> dict:
+    """Load the committed real /usage fixture."""
+    fixture = Path(__file__).resolve().parent.parent / "fixtures" / "real_usage.json"
+    return json.loads(fixture.read_text(encoding="utf-8"))
+
+
+def detect_usage_scenario() -> str:
+    """Select a /usage scenario via env var or $HOME/.fake_agy_usage_scenario."""
+    env_scenario = os.environ.get("FAKE_AGY_SCENARIO", "").strip()
+    if env_scenario:
+        return env_scenario
+    home = os.environ.get("HOME")
+    if home:
+        marker = Path(home) / ".fake_agy_usage_scenario"
+        if marker.is_file():
+            try:
+                value = marker.read_text(encoding="utf-8").strip()
+                if value:
+                    return value
+            except Exception:
+                pass
+    return "usage_real"
+
+
+def write_usage_auth_line(log_file: str | None) -> None:
+    log_entry(
+        log_file,
+        f"applyAuthResult: email={_USAGE_EMAIL_LOCAL}@{_USAGE_EMAIL_DOMAIN}, "
+        "authMethod=consumer",
+    )
+
+
+def render_usage_payload(scenario: str) -> dict:
+    """Return the fixture payload, optionally zeroed/low for scenario variants."""
+    payload = load_usage_fixture()
+    variants = ("usage_zero", "usage_low", "usage_zero_claude")
+    if scenario not in variants:
+        return payload
+
+    claude_only = scenario == "usage_zero_claude"
+    fraction = 0.0 if scenario in ("usage_zero", "usage_zero_claude") else 0.05
+    percent = "0%" if scenario in ("usage_zero", "usage_zero_claude") else "5%"
+
+    def targeted(group_name: str) -> bool:
+        if not claude_only:
+            return True
+        return "claude" in group_name.lower()
+
+    for group in payload.get("command", {}).get("data", {}).get("groups", []):
+        if not targeted(str(group.get("name", ""))):
+            continue
+        for bucket in group.get("buckets", []):
+            bucket["remaining_fraction"] = fraction
+    lines = []
+    for line in payload.get("response", "").splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("\t")
+        if len(parts) == 4 and targeted(parts[0]):
+            parts[2] = percent
+        lines.append("\t".join(parts))
+    payload["response"] = "\n".join(lines) + "\n"
+    return payload
+
+
+def handle_usage(log_file: str | None) -> None:
+    """Simulate `agy --output-format json -p "/usage"`."""
+    scenario = detect_usage_scenario()
+
+    if scenario == "usage_auth_required":
+        sys.stderr.write(
+            "Error: not logged in to agy. Run `agy login` to continue.\n"
+        )
+        sys.exit(1)
+
+    if scenario == "usage_hang":
+        while True:
+            time.sleep(1.0)
+
+    write_usage_auth_line(log_file)
+
+    if scenario == "usage_empty":
+        sys.exit(0)
+
+    if scenario == "usage_garbled":
+        print(
+            json.dumps(
+                {
+                    "status": "SUCCESS",
+                    "response": "garbled usage output that is not a table",
+                    "command": {"data": {}},
+                }
+            )
+        )
+        sys.exit(0)
+
+    print(json.dumps(render_usage_payload(scenario)))
+    sys.exit(0)
+
+
+def main() -> None:
+    record_file = None
+    if "FAKE_AGY_RECORD" in os.environ:
+        record_file = Path(os.environ["FAKE_AGY_RECORD"])
+    elif "TMPDIR" in os.environ and (Path(os.environ["TMPDIR"]) / ".fake_agy_record").is_file():
+        try:
+            ptr = Path(os.environ["TMPDIR"]) / ".fake_agy_record"
+            record_file = Path(ptr.read_text().strip())
+        except Exception:
+            pass
+    elif "HOME" in os.environ and (Path(os.environ["HOME"]) / ".fake_agy_record").is_file():
+        try:
+            ptr = Path(os.environ["HOME"]) / ".fake_agy_record"
+            record_file = Path(ptr.read_text().strip())
+        except Exception:
+            pass
+
+    if record_file:
+        try:
+            if "/usage" in sys.argv:
+                # Keep /usage records in a sidecar so job argv recordings are unchanged.
+                target = Path(str(record_file) + ".usage")
+                entry = {"argv": sys.argv, "cwd": os.getcwd()}
+            else:
+                target = record_file
+                entry = sys.argv
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with target.open("a", encoding="utf-8") as rf:
+                rf.write(json.dumps(entry) + "\n")
+        except Exception:
+            pass
+
+    args = parse_args(sys.argv[1:])
+    prompt = str(args.get("prompt", ""))
+    log_file = str(args["log_file"]) if args.get("log_file") else None
+    conversation_id = str(args["conversation"]) if args.get("conversation") else None
+
+    if prompt == "/usage":
+        handle_usage(log_file)
+
+    # agy is not known to append or truncate a reused --log-file on resume.
+    # Default keeps the historical append behavior; tests can switch to
+    # truncate with FAKE_AGY_CLI_LOG_MODE / <jobdir>/.fake_agy_cli_log_mode.
+    cli_log_mode = _fake_setting(
+        log_file, "FAKE_AGY_CLI_LOG_MODE", ".fake_agy_cli_log_mode"
+    ).lower()
+    if cli_log_mode == "truncate" and log_file:
+        try:
+            Path(log_file).write_text("", encoding="utf-8")
+        except Exception:
+            pass
+
+    log_entry(log_file, "Starting fake agy session")
+    # Real agy logs "Created conversation <uuid>" at startup and
+    # "Print mode: resuming conversation <uuid>" after --conversation. Both are
+    # strict-UUID sources for the wrapper; a fresh run gets a deterministic UUID
+    # derived from the job log path so tests stay reproducible. A test can force
+    # a distinct UUID for a later fresh generation (or make agy ignore the
+    # requested conversation) through a job-dir marker / env knob.
+    ignore_conversation = _fake_setting(
+        log_file, "FAKE_AGY_IGNORE_CONVERSATION", ".fake_agy_ignore_conversation"
+    ).lower() not in ("", "0", "false", "no")
+    if ignore_conversation:
+        conversation_id = None
+    resumed = conversation_id is not None
+    fresh_seed = _fake_setting(
+        log_file, "FAKE_AGY_FRESH_UUID_SEED", ".fake_agy_fresh_uuid_seed"
+    )
+    if resumed:
+        log_entry(log_file, f"Print mode: resuming conversation {conversation_id}")
+    else:
+        seed = "fake-agy:" + str(log_file or os.getcwd())
+        if fresh_seed:
+            seed += "|" + fresh_seed
+        if ignore_conversation:
+            seed += "|ignored"
+        conversation_id = str(uuid.uuid5(uuid.NAMESPACE_URL, seed))
+        log_entry(log_file, f"Created conversation {conversation_id}")
+    scenario = detect_scenario(prompt, log_file)
+    log_entry(log_file, f"Detected simulation scenario: {scenario}")
+
+    global _SKIP_AUTO_SCRATCHPAD
+    if scenario in _MANUAL_SCRATCHPAD_SCENARIOS:
+        _SKIP_AUTO_SCRATCHPAD = True
+
+    if "TRIGGER_AUTOFIX_CREATE_FIXED" in prompt:
+        Path("fixed.txt").write_text("fixed\n")
+
+    if scenario == "success_model_alias":
+        # Exact masked cli.log line from the real smoke evidence (JOB 1 line
+        # 152 / JOB 2 line 128): the unqualified alias is silently resolved.
+        log_entry(
+            log_file,
+            'model_resolver.go:155] model alias "gemini-3.8-flash" '
+            'resolved to "gemini-3.8-flash-high"',
+        )
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Task completed after the CLI resolved the model alias.",
+            "usage": {
+                "input_tokens": 100,
+                "output_tokens": 50,
+                "total_tokens": 150,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    if scenario == "success_simple":
+        log_entry(log_file, "Executing step 1/1")
+        log_entry(log_file, "Step 1 finished successfully")
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Task completed successfully without warnings.",
+            "usage": {
+                "input_tokens": 100,
+                "output_tokens": 50,
+                "total_tokens": 150,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "success_with_commits":
+        log_entry(log_file, "Creating worktree files")
+        # Write a file
+        Path("src_feature.py").write_text("# Feature code\ndef hello():\n    return 'hello'\n")
+        # Write .agy/COMMIT_MSG
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        commit_msg = agy_dir / "COMMIT_MSG"
+        commit_msg.write_text("Add src_feature.py module\n\nImplements hello function.")
+        log_entry(log_file, "Wrote .agy/COMMIT_MSG")
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Created feature module and requested commit.",
+            "usage": {
+                "input_tokens": 200,
+                "output_tokens": 80,
+                "total_tokens": 280,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "verify_fail_then_fix":
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        conv_id = conversation_id
+        if not resumed:
+            # First turn: write buggy code
+            log_entry(log_file, "Writing buggy calc implementation")
+            Path("calc.py").write_text("def add(a, b):\n    return a - b  # Buggy\n")
+            (agy_dir / "COMMIT_MSG").write_text("feat: initial buggy calc\n\nInitial attempt.")
+            output = {
+                "conversation_id": conv_id,
+                "status": "SUCCESS",
+                "response": "Initial implementation of calc.",
+                "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+            }
+        else:
+            # Fix turn: write correct code
+            log_entry(log_file, "Fixing calc implementation after verify error")
+            Path("calc.py").write_text("def add(a, b):\n    return a + b  # Fixed\n")
+            (agy_dir / "COMMIT_MSG").write_text("fix(calc): correct add function\n\nFixed addition.")
+            output = {
+                "conversation_id": conv_id,
+                "status": "SUCCESS",
+                "response": "Fixed calc based on test failure.",
+                "usage": {"input_tokens": 150, "output_tokens": 60, "total_tokens": 210},
+            }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "verify_always_fail":
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        conv_id = conversation_id
+        log_entry(log_file, "Writing persistent buggy code")
+        Path("calc.py").write_text("def add(a, b):\n    return -999  # Always failing\n")
+        (agy_dir / "COMMIT_MSG").write_text("feat: persistent buggy calc\n\nBuggy code.")
+        output = {
+            "conversation_id": conv_id,
+            "status": "SUCCESS",
+            "response": "Code written that fails tests.",
+            "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "needs_decision":
+        if resumed:
+            log_entry(log_file, f"Resumed conversation {conversation_id} with decision response")
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": f"Decision applied successfully: {prompt}",
+                "usage": {
+                    "input_tokens": 100,
+                    "output_tokens": 40,
+                    "total_tokens": 140,
+                },
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+
+        log_entry(log_file, "Encountered architectural branching point")
+        decision_line = (
+            "NEEDS_DECISION: Choose database engine | PostgreSQL, SQLite | PostgreSQL"
+        )
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": f"Analyzed persistence requirements.\n\n{decision_line}",
+            "usage": {
+                "input_tokens": 150,
+                "output_tokens": 60,
+                "total_tokens": 210,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "denial_with_progress":
+        log_entry(log_file, "Tool run_command denied for non-allowlisted command")
+        # Made progress: wrote a file
+        Path("partial.txt").write_text("Some useful work done before tool denial.\n")
+        sys.stderr.write(
+            'jetski: no output produced — a tool required the "command" permission '
+            "that headless mode cannot prompt for, so it was auto-denied. "
+            "Add an allow-rule under permissions.allow in settings.json (e.g. command(curl)).\n"
+        )
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Partial progress completed despite command denial.",
+            "denied_actions": [{"action": "command", "display_name": "RunCommand"}],
+            "warnings": ["command_denied_during_run: command(curl)"],
+            "usage": {
+                "input_tokens": 120,
+                "output_tokens": 40,
+                "total_tokens": 160,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "denial_blocked":
+        log_entry(log_file, "Command blocked, zero progress possible")
+        sys.stderr.write(
+            'jetski: no output produced — a tool required the "command" permission '
+            "that headless mode cannot prompt for, so it was auto-denied.\n"
+        )
+        output = {
+            "status": "SUCCESS",
+            "response": "",
+            "denied_actions": [{"action": "command", "display_name": "RunCommand"}],
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "hang_after_partial_commit":
+        if resumed:
+            log_entry(log_file, f"Resumed conversation {conversation_id}")
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": "Resumed and finished after partial commit review",
+                "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+        log_entry(log_file, "Writing partial commit files (.env tracked and feature.py)")
+        log_entry(log_file, "Session conversation: conv-partial-commit-001")
+        Path(".env").write_text("SECRET_KEY=leaked_12345\n", encoding="utf-8")
+        Path("feature.py").write_text("# new feature\n", encoding="utf-8")
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        (agy_dir / "COMMIT_MSG").write_text("feat: update feature and config\n\nAdd new secret.")
+        while True:
+            time.sleep(0.5)
+
+    elif scenario == "hang_after_invalid_commit_msg":
+        if resumed:
+            log_entry(log_file, f"Resumed conversation {conversation_id}")
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": "Resumed and finished after invalid commit message review",
+                "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+        log_entry(log_file, "Writing malformed COMMIT_MSG (NUL byte)")
+        log_entry(log_file, "Session conversation: conv-invalid-msg-001")
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        (agy_dir / "COMMIT_MSG").write_text("Bad commit message\x00\n\nBody of message.")
+        while True:
+            time.sleep(0.5)
+
+    elif scenario == "stale_commit_msg":
+        # First run leaves a malformed message behind; the resumed run lingers
+        # long enough for a fresh watcher to re-validate it if it still exists.
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        if resumed:
+            log_entry(log_file, f"Resumed conversation {conversation_id}")
+            time.sleep(1.2)
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": "Resumed and finished after the stale message was discarded",
+                "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+        log_entry(log_file, "Writing malformed COMMIT_MSG and hanging")
+        log_entry(log_file, "Session conversation: conv-stale-msg-001")
+        (agy_dir / "COMMIT_MSG").write_text("Bad stale message\x00\n\nBody of stale message.")
+        while True:
+            time.sleep(0.5)
+
+    elif scenario == "stale_commit_msg_valid_resume":
+        # After the invalid message is discarded, the resumed run writes a
+        # valid message plus a change and lives long enough for the commit.
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        if resumed:
+            log_entry(log_file, f"Resumed conversation {conversation_id}")
+            Path("resumed_feature.py").write_text(
+                "# resumed feature\ndef resumed():\n    return True\n", encoding="utf-8"
+            )
+            (agy_dir / "COMMIT_MSG").write_text(
+                "Resume after discard\n\nValid message from the resumed run."
+            )
+            time.sleep(1.2)
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": "Resumed and committed with a valid message",
+                "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+        log_entry(log_file, "Writing malformed COMMIT_MSG and hanging")
+        log_entry(log_file, "Session conversation: conv-stale-valid-msg-001")
+        (agy_dir / "COMMIT_MSG").write_text("Bad stale message\x00\n\nBody of stale message.")
+        while True:
+            time.sleep(0.5)
+
+    elif scenario == "leader_exits_child_survives":
+        log_entry(log_file, "Spawning child process in same process group")
+        # Spawn child in same process group (inherits pgid)
+        child = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(60)"],
+        )
+        Path("child_pid.txt").write_text(str(child.pid), encoding="utf-8")
+        log_entry(log_file, f"Spawned child PID {child.pid}")
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": f"Leader exiting, child PID {child.pid} left running",
+            "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "double_commit_msg":
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+
+        # Step 1: write file1 and COMMIT_MSG
+        log_entry(log_file, "Writing file1.txt and COMMIT_MSG")
+        Path("file1.txt").write_text("file1 content\n", encoding="utf-8")
+        (agy_dir / "COMMIT_MSG").write_text("Commit 1: file1 added\n\nFirst commit.")
+
+        # Wait for watcher to consume and finish COMMIT_MSG -> seen.1 or done.1
+        done_1 = agy_dir / "COMMIT_MSG.done.1"
+        deadline = time.time() + 60.0
+        while not done_1.exists() and time.time() < deadline:
+            time.sleep(0.01)
+
+        # Step 2: write duplicate COMMIT_MSG with NO changes
+        log_entry(log_file, "Writing COMMIT_MSG without any file change")
+        (agy_dir / "COMMIT_MSG").write_text("Commit 2 duplicate: no changes\n\nNo modifications.")
+
+        # Wait for watcher to consume and finish COMMIT_MSG -> seen.2 or done.2
+        done_2 = agy_dir / "COMMIT_MSG.done.2"
+        deadline = time.time() + 60.0
+        while not done_2.exists() and time.time() < deadline:
+            time.sleep(0.01)
+
+        # Step 3: write file2 and COMMIT_MSG
+        log_entry(log_file, "Writing file2.txt and COMMIT_MSG")
+        Path("file2.txt").write_text("file2 content\n", encoding="utf-8")
+        (agy_dir / "COMMIT_MSG").write_text("Commit 3: file2 added\n\nThird commit.")
+
+        # Wait for watcher to consume and finish COMMIT_MSG -> seen.3 or done.3
+        done_3 = agy_dir / "COMMIT_MSG.done.3"
+        deadline = time.time() + 60.0
+        while not done_3.exists() and time.time() < deadline:
+            time.sleep(0.01)
+
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "All 3 commit attempts finished.",
+            "usage": {
+                "input_tokens": 100,
+                "output_tokens": 50,
+                "total_tokens": 150,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "real_denial_halt":
+        log_entry(
+            log_file,
+            'I1025 12:02:50.468273     627 tool_confirmation_manager.go:216] '
+            'Print mode: soft-denying tool confirmation "RunCommand" at step 8',
+        )
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "",
+            "denied_actions": [{"action": "command", "display_name": "RunCommand"}],
+            "usage": {
+                "input_tokens": 100,
+                "output_tokens": 0,
+                "total_tokens": 100,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "denial_then_ok":
+        has_guidance = (
+            "Use only your built-in file tools" in prompt or "NEEDS_DECISION" in prompt
+        )
+        if resumed and has_guidance:
+            log_entry(
+                log_file,
+                "Resumed with guidance to use file tools; writing file and COMMIT_MSG",
+            )
+            Path("recovered_by_guidance.txt").write_text("Recovered using file tools\n")
+            agy_dir = Path(".agy")
+            agy_dir.mkdir(parents=True, exist_ok=True)
+            commit_text = "feat: recover using built-in file tools\n\nImplements recovery."
+            (agy_dir / "COMMIT_MSG").write_text(commit_text)
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": "Successfully recovered using file tools and completed task.",
+                "usage": {
+                    "input_tokens": 150,
+                    "output_tokens": 50,
+                    "total_tokens": 200,
+                },
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+        else:
+            log_entry(
+                log_file,
+                'I1025 12:02:50.468273     627 tool_confirmation_manager.go:216] '
+                'Print mode: soft-denying tool confirmation "RunCommand" at step 6',
+            )
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": "",
+                "denied_actions": [{"action": "command", "display_name": "RunCommand"}],
+                "usage": {
+                    "input_tokens": 100,
+                    "output_tokens": 0,
+                    "total_tokens": 100,
+                },
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+
+    elif scenario == "subagent_denial_halt":
+        log_entry(
+            log_file,
+            "I1025 13:14:05.277886     536 subagent_manager.go:670] addFromDiff: print mode, soft-denying: 55c62dde-8307-484a-bc8a-4e954192ba01 step 8\n"
+            "I1025 13:14:05.277901     536 server.go:2646] Tool confirmation for conversation 55c62dde-8307-484a-bc8a-4e954192ba01 step 8 (type=*gemini_coder_go_proto.Step_Generic approved=false)",
+        )
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        (agy_dir / "PLAN.md").write_text("# Plan\n- [ ] Survey repository\n- [ ] Run tests\n")
+        (agy_dir / "COMMIT_MSG").write_text("Initial plan setup and codebase survey started.\n\nPreparing execution.")
+
+        agy_home_env = os.environ.get("AGY_HOME") or os.environ.get("FAKE_AGY_HOME")
+        if agy_home_env:
+            subagent_t = Path(agy_home_env) / "brain" / "55c62dde-8307-484a-bc8a-4e954192ba01" / ".system_generated" / "logs" / "transcript.jsonl"
+            subagent_t.parent.mkdir(parents=True, exist_ok=True)
+            step_obj = {
+                "step_index": 7,
+                "type": "PLANNER_RESPONSE",
+                "tool_calls": [
+                    {
+                        "name": "view_file",
+                        "args": {"AbsolutePath": '"/fake/repo/.git/worktrees/work1/gitdir"'},
+                    }
+                ],
+            }
+            subagent_t.write_text(json.dumps(step_obj) + "\n", encoding="utf-8")
+
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "I will await the file list from the research subagent.\nI have initialized `.agy/PLAN.md` and `.agy/COMMIT_MSG` and am awaiting the codebase inventory from the research subagent.\n",
+            "denied_actions": [{"action": "read_file", "display_name": "ViewFile"}],
+            "usage": {
+                "input_tokens": 128971,
+                "output_tokens": 3091,
+                "total_tokens": 132062,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "subagent_denial_then_ok":
+        has_guidance = (
+            "Use only your built-in file tools" in prompt or "NEEDS_DECISION" in prompt
+        )
+        if resumed and has_guidance:
+            log_entry(
+                log_file,
+                "Resumed with guidance to use file tools; writing file and COMMIT_MSG",
+            )
+            Path("subagent_recovered.txt").write_text("Recovered after subagent denial\n")
+            agy_dir = Path(".agy")
+            agy_dir.mkdir(parents=True, exist_ok=True)
+            commit_text = "feat: recover from subagent denial using file tools\n\nDirect edit."
+            (agy_dir / "COMMIT_MSG").write_text(commit_text)
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": "Recovered by executing file tools directly without subagents.",
+                "usage": {
+                    "input_tokens": 500,
+                    "output_tokens": 100,
+                    "total_tokens": 600,
+                },
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+        else:
+            log_entry(
+                log_file,
+                "I1025 13:14:05.277886     536 subagent_manager.go:670] addFromDiff: print mode, soft-denying: 55c62dde-8307-484a-bc8a-4e954192ba01 step 8\n"
+                "I1025 13:14:05.277901     536 server.go:2646] Tool confirmation for conversation 55c62dde-8307-484a-bc8a-4e954192ba01 step 8 (type=*gemini_coder_go_proto.Step_Generic approved=false)",
+            )
+            agy_dir = Path(".agy")
+            agy_dir.mkdir(parents=True, exist_ok=True)
+            (agy_dir / "PLAN.md").write_text("# Plan\n- [ ] Survey repository\n")
+            (agy_dir / "COMMIT_MSG").write_text("Initial plan setup.\n\nPreparing.")
+
+            agy_home_env = os.environ.get("AGY_HOME") or os.environ.get("FAKE_AGY_HOME")
+            if agy_home_env:
+                subagent_t = Path(agy_home_env) / "brain" / "55c62dde-8307-484a-bc8a-4e954192ba01" / ".system_generated" / "logs" / "transcript.jsonl"
+                subagent_t.parent.mkdir(parents=True, exist_ok=True)
+                step_obj = {
+                    "step_index": 7,
+                    "type": "PLANNER_RESPONSE",
+                    "tool_calls": [
+                        {
+                            "name": "view_file",
+                            "args": {"AbsolutePath": '"/fake/repo/.git/worktrees/work1/gitdir"'},
+                        }
+                    ],
+                }
+                subagent_t.write_text(json.dumps(step_obj) + "\n", encoding="utf-8")
+
+            output = {
+                "conversation_id": conversation_id,
+                "status": "SUCCESS",
+                "response": "I will await the file list from the research subagent.\nI have initialized `.agy/PLAN.md` and `.agy/COMMIT_MSG` and am awaiting the codebase inventory from the research subagent.\n",
+                "denied_actions": [{"action": "read_file", "display_name": "ViewFile"}],
+                "usage": {
+                    "input_tokens": 128971,
+                    "output_tokens": 3091,
+                    "total_tokens": 132062,
+                },
+            }
+            print(json.dumps(output))
+            sys.exit(0)
+
+    elif scenario in (
+        "plan_complete",
+        "plan_partial",
+        "plan_nudge_complete",
+        "plan_nudge_partial",
+    ):
+        # Plan-accounting scenarios own PLAN.md/REPORT.md themselves; the
+        # auto-tick hook is disabled for them (see _SKIP_AUTO_SCRATCHPAD).
+        ticked = {
+            "plan_complete": 3,
+            "plan_partial": 1,
+            "plan_nudge_complete": 3 if resumed else 1,
+            "plan_nudge_partial": 1,
+        }[scenario]
+        write_plan(3, ticked)
+        write_report(tests_passed_claim=False)
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": f"Plan scenario {scenario}: {ticked} of 3 items ticked.",
+            "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario in ("report_claim", "report_clean"):
+        write_plan(3, 3)
+        write_report(tests_passed_claim=(scenario == "report_claim"))
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": f"Report scenario {scenario}.",
+            "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "scratchpad_symlink":
+        write_plan(3, 3)
+        write_report(tests_passed_claim=False)
+        # Replace NOTES.md with a symlink to a file outside .agy; the wrapper
+        # must refuse to follow it and must not retain the target's contents.
+        secret = Path("..") / "notes_secret.txt"
+        secret.write_text("DO-NOT-COPY-SECRET\n", encoding="utf-8")
+        notes = Path(".agy") / "NOTES.md"
+        if notes.exists() or notes.is_symlink():
+            notes.unlink()
+        notes.symlink_to(secret.resolve())
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Wrote a symlinked NOTES.md.",
+            "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "timeout":
+        log_entry(log_file, "Print timeout triggered by model hang")
+        sys.stderr.write("[agy] print timeout after 120s\n")
+        sys.exit(0)
+
+    elif scenario == "hang":
+        log_entry(log_file, "Simulating infinite loop / hang")
+        while True:
+            time.sleep(1.0)
+
+    elif scenario == "hang_ignore_sigterm":
+        log_entry(log_file, "Simulating stubborn hang ignoring SIGTERM")
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        while True:
+            time.sleep(1.0)
+
+    elif scenario == "crash_rc1":
+        log_entry(log_file, "Fatal runtime error")
+        sys.stderr.write("Fatal error: unhandled exception in core execution loop\n")
+        sys.exit(1)
+
+    elif scenario == "auth_error":
+        log_entry(log_file, "authentication expired: please log in again")
+        sys.stderr.write("Error: authentication failed; please log in again.\n")
+        sys.exit(1)
+
+    elif scenario == "crash_signal":
+        log_entry(log_file, "Process aborting via signal")
+        os.kill(os.getpid(), signal.SIGABRT)
+
+    elif scenario == "garbage_stdout":
+        log_entry(log_file, "Corrupt stdout produced")
+        print("<html><body><h1>502 Bad Gateway</h1><p>Traceback not valid json</p></body></html>")
+        sys.exit(0)
+
+    elif scenario == "huge_stdout":
+        log_entry(log_file, "Generating huge output payload (5 MB)")
+        filler = "A" * (5 * 1024 * 1024)
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": f"Large result payload: {filler}",
+            "usage": {
+                "input_tokens": 50000,
+                "output_tokens": 50000,
+                "total_tokens": 100000,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "malicious_hooks":
+        log_entry(log_file, "Attempting exploit: writing to .agents/hooks.json")
+        agents_dir = Path(".agents")
+        agents_dir.mkdir(parents=True, exist_ok=True)
+        (agents_dir / "hooks.json").write_text('{"hook": "malicious"}')
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Wrote lifecycle hook file.",
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "malicious_gitptr":
+        log_entry(log_file, "Attempting exploit: tampering with worktree .git pointer")
+        dot_git = Path(".git")
+        if dot_git.is_file():
+            dot_git.write_text("gitdir: /tmp/tampered_path\n")
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Tampered with .git pointer.",
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "malicious_hostwrite":
+        log_entry(log_file, "Attempting exploit: writing to host HOME path")
+        home = Path(os.environ.get("HOME", "/tmp"))
+        target = home / ".bashrc"
+        try:
+            with open(target, "a", encoding="utf-8") as f:
+                f.write("\n# Malicious payload\n")
+        except Exception:
+            pass
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Tampered with host file.",
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "known_hosts_append":
+        log_entry(log_file, "Scenario: appending to ~/.ssh/known_hosts")
+        home = Path(os.environ.get("HOME", "/tmp"))
+        ssh_dir = home / ".ssh"
+        ssh_dir.mkdir(parents=True, exist_ok=True)
+        target = ssh_dir / "known_hosts"
+        try:
+            with open(target, "a", encoding="utf-8") as f:
+                f.write("example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKey\n")
+        except Exception:
+            pass
+        (Path.cwd() / "output.txt").write_text("work done\n", encoding="utf-8")
+        dot_agy = Path.cwd() / ".agy"
+        dot_agy.mkdir(parents=True, exist_ok=True)
+        (dot_agy / "COMMIT_MSG").write_text(
+            "Feature: work done\n\nCompleted task.", encoding="utf-8"
+        )
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Appended to known_hosts and committed work.",
+            "usage": {
+                "input_tokens": 100,
+                "output_tokens": 50,
+                "total_tokens": 150,
+            },
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "slow_progress":
+        log_entry(log_file, "Simulating multi-stage slow execution")
+        time.sleep(0.6)
+        Path("slow_stage1.txt").write_text("Stage 1 done\n")
+        agy_dir = Path(".agy")
+        agy_dir.mkdir(parents=True, exist_ok=True)
+        (agy_dir / "COMMIT_MSG").write_text("Complete stage 1\n\nStage 1 details.")
+        time.sleep(0.4)
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Finished slow progress tasks.",
+            "usage": {"input_tokens": 300, "output_tokens": 100, "total_tokens": 400},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "resume_echo":
+        log_entry(log_file, f"Resuming session with conversation: {conversation_id}")
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": f"Resumed conversation {conversation_id} with prompt: {prompt}",
+            "usage": {"input_tokens": 180, "output_tokens": 90, "total_tokens": 270},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "env_probe":
+        log_entry(log_file, "Dumping environment variables to env_dump.json")
+        out_dir = Path(os.environ.get("TMPDIR", "."))
+        dump_file = out_dir / "env_dump.json"
+        dump_file.write_text(json.dumps(dict(os.environ), indent=2))
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": "Environment dumped successfully.",
+            "usage": {"input_tokens": 50, "output_tokens": 20, "total_tokens": 70},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    elif scenario == "stdin_probe":
+        log_entry(log_file, "Probing stdin descriptor")
+        # Check if stdin is non-blocking or at EOF
+        has_input = False
+        try:
+            rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
+            if rlist:
+                content = sys.stdin.read(1024)
+                has_input = len(content) > 0
+        except Exception:
+            has_input = False
+
+        Path("stdin_probe.txt").write_text(f"has_input={has_input}\n")
+        output = {
+            "conversation_id": conversation_id,
+            "status": "SUCCESS",
+            "response": f"Stdin checked, has_input={has_input}",
+            "usage": {"input_tokens": 50, "output_tokens": 20, "total_tokens": 70},
+        }
+        print(json.dumps(output))
+        sys.exit(0)
+
+    else:
+        log_entry(log_file, f"Unknown scenario: {scenario}")
+        sys.stderr.write(f"Error: unknown simulation scenario {scenario}\n")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    # A normal (rc 0) exit imitates an agent following the scratchpad rules:
+    # every PLAN box is ticked and REPORT.md gets a verification note. Scenarios
+    # in _MANUAL_SCRATCHPAD_SCENARIOS opt out.
+    _real_exit = sys.exit
+
+    def _exit_with_scratchpad(code=0):
+        if not code:
+            _complete_scratchpad()
+        _real_exit(code)
+
+    sys.exit = _exit_with_scratchpad
+    main()

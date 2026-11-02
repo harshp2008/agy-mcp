@@ -1,0 +1,270 @@
+I1025 15:03:45.988070       1 resolver.go:85] Model ID gemini-3.8-flash-medium not in local config, defaulting to CCPA
+I1025 15:03:45.988109       1 resolver.go:111] Model resolved via default
+I1025 15:03:45.988194      22 server.go:1771] Starting language server process with pid 3552923
+I1025 15:03:45.988461      22 server.go:1827] Language server version: 1.4.7
+I1025 15:03:45.988467      22 server.go:716] Language server will attempt to listen on host localhost
+I1025 15:03:45.988694      22 server.go:731] Language server listening on random port at 42029 for HTTPS (gRPC)
+I1025 15:03:45.988726      22 server.go:739] Language server listening on random port at 35479 for HTTP
+W1025 15:03:46.318888      44 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.318964      44 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.319353      44 errorreport.go:224] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.319393      44 model_configs.go:346] Auth mode is unspecified, skipping fetchAvailableModels and returning empty response
+I1025 15:03:46.320213     114 store_client.go:714] summary store: starting background reconciliation (trigger=startup)
+W1025 15:03:46.321297      22 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.321325      22 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.321409      22 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.321423      22 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.322060      22 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.322077      22 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.322130      22 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.322138      22 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.322220      22 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.322231      22 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.322272      22 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.322278      22 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.322547      22 auth_store.go:199] Using file-based secret storage at ~/.config/antigravity/plugin-secrets.json
+I1025 15:03:46.322559      22 auth_store.go:199] Using file-based secret storage at ~/.config/antigravity/plugin-secrets.json
+W1025 15:03:46.322712     140 cache.go:135] Cache(peopleInfo): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.322760     140 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.323041      22 defaults.go:732] failed to get cs path: cs path /usr/bin/cs invalid
+I1025 15:03:46.323083      22 manager.go:119] Creating trajectory store manager with proto store and SQLite store
+W1025 15:03:46.323757      22 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.323790      22 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.323856      22 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.323866      22 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.324200      74 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.324238      74 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.324332     199 manager.go:91] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] is enabled
+W1025 15:03:46.324371      74 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.324388      74 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.324448     199 manager.go:100] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 15:03:46.324455     199 manager.go:91] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] is enabled
+I1025 15:03:46.324526     199 manager.go:100] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 15:03:46.324532     199 manager.go:91] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] is enabled
+I1025 15:03:46.324589     199 manager.go:100] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 15:03:46.324595     199 manager.go:88] Migration [MIGRATION_ID_LIN_BUILTIN_TO_MARKETPLACE] is disabled, skipping entirely
+I1025 15:03:46.324599     199 manager.go:88] Migration [MIGRATION_ID_ADOPT_BWG_INSTALLS] is disabled, skipping entirely
+I1025 15:03:46.324610     199 manager.go:88] Migration [MIGRATION_ID_GDRIVE_BUILTIN_PLUGIN] is disabled, skipping entirely
+I1025 15:03:46.333418     114 store_client.go:764] summary store: reconciliation complete, synced 131 records
+W1025 15:03:46.335737     114 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.336138     114 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.337948     114 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.338343     114 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.363221      22 server.go:3370] Auth succeeded, refreshing features and managers
+W1025 15:03:46.363310      22 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.363335      22 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.363430      22 errorreport.go:224] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.363490      22 server.go:3380] State refresh took 0ms
+I1025 15:03:46.363498      22 server.go:3390] [RemoteControl] Subscription callback triggered.
+W1025 15:03:46.363481     228 cache.go:135] Cache(peopleInfo): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.363525     228 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.363566     228 rpcs_plugin_auth.go:106] Not reloading plugin MCP servers: cannot get the signed-in user: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.363621      22 server.go:3393] [RemoteControl] RemoteControlEnabled value: true
+I1025 15:03:46.363625      22 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected
+I1025 15:03:46.363629      22 server.go:3872] [RemoteControl] Resolved proxyServerURL: ""
+I1025 15:03:46.363666      22 profiler.go:231] Continuous pprof profiling is disabled.
+I1025 15:03:46.363872      22 server.go:2906] initialized server successfully in 375.598984ms
+I1025 15:03:46.363968     237 manager.go:91] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] is enabled
+I1025 15:03:46.364101     237 manager.go:100] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 15:03:46.364108     237 manager.go:91] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] is enabled
+I1025 15:03:46.364155     237 manager.go:100] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 15:03:46.364158     237 manager.go:91] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] is enabled
+I1025 15:03:46.364200     237 manager.go:100] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1025 15:03:46.364205     237 manager.go:88] Migration [MIGRATION_ID_LIN_BUILTIN_TO_MARKETPLACE] is disabled, skipping entirely
+I1025 15:03:46.364209     237 manager.go:88] Migration [MIGRATION_ID_ADOPT_BWG_INSTALLS] is disabled, skipping entirely
+I1025 15:03:46.364221     237 manager.go:88] Migration [MIGRATION_ID_GDRIVE_BUILTIN_PLUGIN] is disabled, skipping entirely
+W1025 15:03:46.364214     240 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.364239     240 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.364267       1 auto_updater.go:281] Last check was less than 15 minutes ago, skipping update (fast path)
+I1025 15:03:46.364284     234 reconcile_summaries.go:94] [Summaries] reconcile checked 131 conversations, restored 0, cached 131, skipped 0, dropped 0, cancelled false in 0ms (resident: 0 -> 0)
+I1025 15:03:46.364345       1 common.go:167] Launching CLI mode
+W1025 15:03:46.364349     240 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.364362     240 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.364366       1 launchsteps.go:95] Failed to resolve GeminiDir ".gemini": .gemini must be an absolute path: path is not absolute, falling back to default
+I1025 15:03:46.364385       1 common.go:188] CLI app data directory: ~/.gemini/antigravity-cli
+I1025 15:03:46.364419       1 server.go:305] Creating CLI server backend: product=antigravity workspaceDirs=[~/agy-smoke/f2_state/jobs/3c142842-da9a-4b26-94f1-2d3d29973961/work] appDataDir=~/.gemini/antigravity-cli languageServer=true codeAssist=true
+I1025 15:03:46.364592       1 auth_provider.go:954] [AuthProvider] SetEnableBusinessLogin called with enable: true
+I1025 15:03:46.365380       1 server.go:2222] Backend project ID updated dynamically to: default-cli-project
+I1025 15:03:46.365398       1 analytics.go:249] CLI startup completed (took 378.380168ms, phases [main_entered=0ms ls_start=1ms ls_ready=377ms launch_cli=377ms backend_created=378ms project_resolved=378ms])
+W1025 15:03:46.365409     216 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.365416       1 printmode.go:202] Print mode: starting (promptLength=1873, model="gemini-3.8-flash-medium", conversationID="")
+E1025 15:03:46.365423     216 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.365425       1 manager.go:492] Initializing CLI store manager for workspace ~/agy-smoke/f2_state/jobs/3c142842-da9a-4b26-94f1-2d3d29973961/work
+W1025 15:03:46.365506     216 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.365515     216 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.365576     216 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.365586     216 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.365625     216 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.365631     216 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.365650       1 cli_setting_manager.go:153] applyUserSettings: stored shared config permissions: allow=31 deny=0 ask=0 from ~/.gemini/config/config.json
+W1025 15:03:46.365687     216 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.365695     216 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.365714       1 store.go:31] Terminal sandbox unavailable: AppArmor restricts unprivileged user namespaces (kernel.apparmor_restrict_unprivileged_userns = 1)
+W1025 15:03:46.365726     216 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.365732     216 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.365736       1 cli_setting_manager.go:92] CLI settings initialized: permissions=<nil>, toolPermission=request-review
+W1025 15:03:46.365789     216 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.365798     216 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.365836     216 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.365842     216 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.366112       1 hooks_manager.go:53] loaded 0 named hooks from 0 hooks.json file(s)
+I1025 15:03:46.366122       1 manager.go:680] CLI store manager initialized successfully
+W1025 15:03:46.366297     234 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.366316     234 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.366375     234 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.366385     234 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.367419     292 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.367444     292 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.367529     292 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.367543     292 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.367631     297 manager.go:1498] Reloading system slash commands and skills
+I1025 15:03:46.367640     297 manager.go:1455] Reloading system slash commands
+I1025 15:03:46.367649     297 manager.go:1463] Slash commands unchanged, skipping update
+I1025 15:03:46.367963       1 hooks_manager.go:53] loaded 0 named hooks from 0 hooks.json file(s)
+I1025 15:03:46.367977       1 printmode.go:857] Print mode: applying agent mode accept-edits
+I1025 15:03:46.367983       1 manager.go:1550] SetCycleMode called: accept-edits
+I1025 15:03:46.367993       1 printmode.go:403] Print mode: not authenticated, trying silent auth
+W1025 15:03:46.371709     291 cache.go:135] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.371743     291 errorreport.go:224] error getting token source: You are not logged into Antigravity.
+W1025 15:03:46.371831     291 cache.go:135] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1025 15:03:46.371849     291 errorreport.go:224] failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+I1025 15:03:46.373232     181 keyring.go:64] keyringAuth: loaded token, expiry=2026-10-25 15:22:52.337801809 +0530 IST expired=false
+I1025 15:03:46.373259       1 auth.go:157] ChainedAuth: authenticated via keyring (effective: keyring)
+I1025 15:03:46.373265       1 server_oauth.go:224] applyAuthResult: email=<user-email>, authMethod=consumer, quotaProject=
+I1025 15:03:46.373270       1 server_oauth.go:229] OAuth: authenticated successfully as <user-email>
+I1025 15:03:46.373275       1 server_oauth.go:235] b.codeAssistClient.AuthProvider (0x22be119480f0) is same as b.cliAuth (0x22be119480f0)
+W1025 15:03:46.373372     390 cache.go:163] Failed to refresh cache in background: admin controls not applicable
+W1025 15:03:46.373392     378 cache.go:163] Failed to refresh cache in background: admin controls not applicable
+I1025 15:03:48.274458     369 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x8bcdad2552c3e556
+I1025 15:03:48.959137     374 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels Trace: 0x2fa7e83697580260
+I1025 15:03:48.969762       1 model_resolver.go:107] Resolving model gemini-3.8-flash-medium
+I1025 15:03:48.969798       1 model_config_manager.go:340] Propagating selected model override to backend: label="Gemini 3.8 Flash (Medium)"
+I1025 15:03:48.969833       1 printmode.go:405] Print mode: silent auth succeeded
+I1025 15:03:48.969888     259 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+I1025 15:03:48.969921     260 experiment_manager.go:66] Starting experiment refresh after login
+I1025 15:03:49.305692     260 remote_agent.go:167] Remote agent fastpush pin gate changed: false -> true
+I1025 15:03:49.306022     260 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected
+I1025 15:03:49.306033     260 server.go:3872] [RemoteControl] Resolved proxyServerURL: ""
+I1025 15:03:49.306040     260 experiment_manager.go:70] Experiments refreshed after login
+I1025 15:03:49.306219     457 manager.go:1455] Reloading system slash commands
+E1025 15:03:49.311174     457 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 15:03:49.311200     457 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+I1025 15:03:50.856885     347 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x19524ba948857731
+I1025 15:03:52.858996     347 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xa4f69cd256b3d89
+I1025 15:03:53.262186     347 model_resolver.go:107] Resolving model gemini-3.8-flash-medium
+I1025 15:03:53.262227     347 model_config_manager.go:340] Propagating selected model override to backend: label="Gemini 3.8 Flash (Medium)"
+I1025 15:03:53.262317     259 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+I1025 15:03:53.262364     260 experiment_manager.go:66] Starting experiment refresh after login
+I1025 15:03:53.262479     566 model_resolver.go:107] Resolving model gemini-3.8-flash-medium
+I1025 15:03:53.262494     566 model_config_manager.go:340] Propagating selected model override to backend: label="Gemini 3.8 Flash (Medium)"
+I1025 15:03:53.270223       1 model_resolver.go:107] Resolving model gemini-3.8-flash-medium
+I1025 15:03:53.270253       1 conversation_manager.go:668] Starting new conversation (agent=false)
+I1025 15:03:53.270266       1 server.go:1182] Creating new cascade trajectory (agentScript=false)
+I1025 15:03:53.270283       1 server.go:1208] Conversation using project ID: default-cli-project
+I1025 15:03:53.293163       1 server.go:1225] Created conversation 7c596e87-164d-4e64-9e10-eec8be2a7a60 (backend=BACKEND_TYPE_UNSPECIFIED)
+I1025 15:03:53.293746       1 server.go:3273] GetConversationDetail: found conversation 7c596e87-164d-4e64-9e10-eec8be2a7a60 (active=true)
+I1025 15:03:53.293878       1 server.go:3273] GetConversationDetail: found conversation 7c596e87-164d-4e64-9e10-eec8be2a7a60 (active=true)
+I1025 15:03:53.293886       1 conversation_manager.go:725] project: switching to conversation belonging to project ID: default-cli-project
+I1025 15:03:53.293928       1 server.go:2222] Backend project ID updated dynamically to: default-cli-project
+I1025 15:03:53.293947       1 cli_setting_manager.go:218] ApplyProjectPermissionGrants: no grants for project "CLI Project", cleared project permissions
+I1025 15:03:53.293957       1 conversation_manager.go:771] project: synced active project to "CLI Project" (id=default-cli-project) from conversation switch
+I1025 15:03:53.293965       1 conversation_manager.go:1079] Streaming conversation 7c596e87-164d-4e64-9e10-eec8be2a7a60
+I1025 15:03:53.294026     560 manager.go:1498] Reloading system slash commands and skills
+I1025 15:03:53.294036     560 manager.go:1455] Reloading system slash commands
+I1025 15:03:53.294066       1 server.go:3273] GetConversationDetail: found conversation 7c596e87-164d-4e64-9e10-eec8be2a7a60 (active=true)
+I1025 15:03:53.294330       1 server.go:1243] Starting conversation update stream for 7c596e87-164d-4e64-9e10-eec8be2a7a60
+I1025 15:03:53.294365       1 session.go:194] Print mode: conversation=7c596e87-164d-4e64-9e10-eec8be2a7a60, sending message
+I1025 15:03:53.294372       1 manager.go:1455] Reloading system slash commands
+E1025 15:03:53.296055       1 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 15:03:53.296084       1 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 15:03:53.296055     560 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 15:03:53.296161     560 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+I1025 15:03:53.297700       1 manager.go:1463] Slash commands unchanged, skipping update
+I1025 15:03:53.297857       1 conversation_manager.go:889] Forwarding user message to conversation 7c596e87-164d-4e64-9e10-eec8be2a7a60 (items=1, media=0)
+I1025 15:03:53.297870       1 server.go:1833] Sending user message to conversation 7c596e87-164d-4e64-9e10-eec8be2a7a60 (items=1, media=0)
+I1025 15:03:53.297996     560 manager.go:1463] Slash commands unchanged, skipping update
+I1025 15:03:53.299344       1 latency_breakdown.go:170] SEND_USER_CASCADE_MESSAGE_LATENCY latency breakdown: map[active_user_state_latency_ms:0 blocking:false cascade_id:7c596e87-164d-4e64-9e10-eec8be2a7a60 cascade_send_latency_ms:0 hydrate_slash_commands_latency_ms:0 load_trajectory_latency_ms:0 media_count:0 media_summaries_latency_ms:0 message_origin:AGENT_MESSAGE_ORIGIN_UNSPECIFIED resolve_agent_config_latency_ms:0 save_media_latency_ms:0 saved_media_count:0 status:OK total_latency_ms:1 trajectory_id:35cf2883-5557-4dbb-b358-ac9cb471dfdc]
+W1025 15:03:53.314379     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport gi\nfrom gi.repository import Gio\nr = Gio.Resource.load('/usr/lib/gnome-shell/libshell-14.so')\nfor name in r.enumerate_children('/org/gnome/shell/ui', Gio.ResourceLookupFlags.NONE):\n    if name.endswith('.js'):\n        data = r.lookup_data('/org/gnome/shell/ui/' + name, Gio.ResourceLookupFlags.NONE).get_data().decode('utf-8')\n        if 'osdWindowManager' in data:\n            print(f'=== {name} ===')\n            for line in data.splitlines():\n                if 'osdWindowManager' in line:\n                    print('  ', line.strip())\n\")": invalid grant string: "command(python3 -c \"\nimport gi\nfrom gi.repository import Gio\nr = Gio.Resource.load('/usr/lib/gnome-shell/libshell-14.so')\nfor name in r.enumerate_children('/org/gnome/shell/ui', Gio.ResourceLookupFlags.NONE):\n    if name.endswith('.js'):\n        data = r.lookup_data('/org/gnome/shell/ui/' + name, Gio.ResourceLookupFlags.NONE).get_data().decode('utf-8')\n        if 'osdWindowManager' in data:\n            print(f'=== {name} ===')\n            for line in data.splitlines():\n                if 'osdWindowManager' in line:\n                    print('  ', line.strip())\n\")"
+W1025 15:03:53.314429     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'loadExtension' in line or 'reloadExtension' in line or 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'loadExtension' in line or 'reloadExtension' in line or 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n        break\n\")"
+W1025 15:03:53.314448     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'import(' in line:\n        for j in range(max(0, i-5), min(len(lines), i+15)):\n            print(f'{j+1}: {lines[j]}')\n\")"
+W1025 15:03:53.314478     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport gi\ngi.require_version('Gtk', '3.0')\nfrom gi.repository import Gtk\ntheme = Gtk.IconTheme.get_default()\nfor name in ['sidebar-show-symbolic', 'sidebar-hide-symbolic', 'view-reveal-symbolic', 'view-conceal-symbolic', 'user-desktop-symbolic', 'view-paged-symbolic']:\n    print(name, theme.has_icon(name))\n\")": invalid grant string: "command(python3 -c \"\nimport gi\ngi.require_version('Gtk', '3.0')\nfrom gi.repository import Gtk\ntheme = Gtk.IconTheme.get_default()\nfor name in ['sidebar-show-symbolic', 'sidebar-hide-symbolic', 'view-reveal-symbolic', 'view-conceal-symbolic', 'user-desktop-symbolic', 'view-paged-symbolic']:\n    print(name, theme.has_icon(name))\n\")"
+W1025 15:03:53.314496     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nfor line in out.splitlines():\n    if '_senderChecker' in line:\n        print(line)\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nfor line in out.splitlines():\n    if '_senderChecker' in line:\n        print(line)\n\")"
+W1025 15:03:53.314512     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'DBusSenderChecker' in line:\n        for j in range(i, min(len(lines), i+15)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/shellDBus.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'DBusSenderChecker' in line:\n        for j in range(i, min(len(lines), i+15)):\n            print(lines[j])\n        break\n\")"
+W1025 15:03:53.314529     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'enableExtension(' in line:\n        for j in range(i, min(len(lines), i+30)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if 'enableExtension(' in line:\n        for j in range(i, min(len(lines), i+30)):\n            print(lines[j])\n        break\n\")"
+W1025 15:03:53.314545     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line or '_onEnabledExtensionsChanged' in line:\n        for j in range(max(0, i-5), min(len(lines), i+25)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line or '_onEnabledExtensionsChanged' in line:\n        for j in range(max(0, i-5), min(len(lines), i+25)):\n            print(lines[j])\n        break\n\")"
+W1025 15:03:53.314567     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line:\n        for j in range(i+20, min(len(lines), i+40)):\n            print(lines[j])\n        break\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\nlines = out.splitlines()\nfor i, line in enumerate(lines):\n    if '_callExtensionEnable(' in line:\n        for j in range(i+20, min(len(lines), i+40)):\n            print(lines[j])\n        break\n\")"
+W1025 15:03:53.314586     649 permission_grant_store.go:501] ignoring invalid allow entry "command(python3 -c \"\nimport subprocess\ntry:\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\n    import time\n    time.sleep(2)\n    proc.terminate()\n    print('Prefs launched successfully')\nexcept Exception as e:\n    print('Error:', e)\n\")": invalid grant string: "command(python3 -c \"\nimport subprocess\ntry:\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\n    import time\n    time.sleep(2)\n    proc.terminate()\n    print('Prefs launched successfully')\nexcept Exception as e:\n    print('Error:', e)\n\")"
+I1025 15:03:53.315604     649 monitor_config_manager_external.go:53] externalMonitorConfigManager: initialized with embedded config (3 monitors)
+I1025 15:03:53.315635     649 monitoring.go:401] [Sonar] Resolved active tags: [policy_guardian sonar_skip_tags] (detected surface: "")
+I1025 15:03:53.315648     649 monitoring.go:401] [Sonar] Resolved active tags: [policy_guardian sonar_skip_tags] (detected surface: "")
+I1025 15:03:53.721407     260 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected
+I1025 15:03:53.721439     260 server.go:3872] [RemoteControl] Resolved proxyServerURL: ""
+I1025 15:03:53.721445     260 experiment_manager.go:70] Experiments refreshed after login
+I1025 15:03:53.721507     260 experiment_manager.go:66] Starting experiment refresh after login
+I1025 15:03:53.721586    1002 manager.go:1455] Reloading system slash commands
+E1025 15:03:53.724810    1002 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 15:03:53.724838    1002 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+I1025 15:03:53.726203    1002 manager.go:1463] Slash commands unchanged, skipping update
+I1025 15:03:53.847247     259 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+I1025 15:03:53.872917     260 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected
+I1025 15:03:53.872935     260 server.go:3872] [RemoteControl] Resolved proxyServerURL: ""
+I1025 15:03:53.872940     260 experiment_manager.go:70] Experiments refreshed after login
+I1025 15:03:53.873170    1036 manager.go:1455] Reloading system slash commands
+E1025 15:03:53.875562    1036 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+E1025 15:03:53.875584    1036 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory
+I1025 15:03:53.877125    1036 manager.go:1463] Slash commands unchanged, skipping update
+I1025 15:03:54.850730     585 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xf64f499c3a0a3a4e ResponseID: As3dav6SI_TYjuMP17jbqAU
+I1025 15:03:55.583224     565 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x6ad4e9ce14a1d3a
+I1025 15:03:59.124726     990 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x830cd8c01c9a317f ResponseID: As3darSJEYiK3LUP_6iqoAU
+I1025 15:04:08.524899    1168 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe010f9df9168d334 ResponseID: Dc3dao-FK6Dx4t4PlOObyAw
+I1025 15:04:12.803580    1244 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x559af8fe4ed34185 ResponseID: Es3dasi2CYm3z7sPiKT4iAU
+I1025 15:04:15.367996    1297 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x984aaecb4dde7a52 ResponseID: Fc3davLVGaOK3LUP5eXysQU
+I1025 15:04:18.318766    1329 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x92a133ee7297fbff ResponseID: GM3dapXRDLjy4-EP_sKVuQU
+I1025 15:04:20.847983    1358 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x19e4d69d6f8ba8f7 ResponseID: Gs3dapuKPKaQz7sPi7qBuQw
+I1025 15:04:23.825820    1437 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x8fd46a74e4e3400c ResponseID: Hs3dasvECYCE4t4P7NHx2AU
+I1025 15:04:29.335463    1469 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd48250029212f1a4 ResponseID: Ic3dapKtIbv-z7sPx--oyQU
+I1025 15:04:35.471580    1513 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xa630a8800b2ace69 ResponseID: Js3das-aDNmcz7sPy7OjiAo
+I1025 15:04:43.117782    1592 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x91ce9d365ebde56c ResponseID: MM3darfvN9zC1_oP0pmvoAY
+I1025 15:04:49.408152    1623 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x558f2f09d1c9fd7e ResponseID: NM3datWVBajj1_oPtOv1oAY
+I1025 15:04:53.859486    1683 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xa98b7cea9780c033 ResponseID: PM3darTiB5rYz7sPk-WB6Aw
+I1025 15:04:56.631393    1717 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x4b51c7ea4184edf6 ResponseID: Ps3dauWeK-G4z7sPkLvSiAI
+I1025 15:04:59.759045    1752 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x44179ba49a23237c ResponseID: Qc3daoOXJKfA4-EPgv2aiQk
+I1025 15:05:03.796798    1796 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x1b00707d667da62d ResponseID: RM3daruaL8rU3LUPpta3uAw
+I1025 15:05:06.715040    1842 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x96c500136775f0c3 ResponseID: SM3dapjxLJ-V3LUPm8vx4AQ
+I1025 15:05:10.244728    1888 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x44a58d557b63b8e5 ResponseID: S83daoaeK6Xwz7sPlcv70Aw
+I1025 15:05:13.063509    1935 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x75b791d765a7f0a9 ResponseID: Ts3davXwMpHUg8UPtYDCkQk
+I1025 15:05:16.038111    1965 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xdabcaf0ae556fcbe ResponseID: Us3dasjfCOub3LUPgqzS6QQ
+I1025 15:05:23.714746    2012 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd442646b2073eb18 ResponseID: Vc3davG3CvTYjuMP17jbqAU
+I1025 15:05:30.490203    2090 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd3ae7674aa07bcf8 ResponseID: X83dapDjPLeL4-EPxNLYqQU
+I1025 15:05:33.747669    2064 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd9caead15a74515 ResponseID: Y83daoOgLtK83LUP_ajnkQI
+I1025 15:05:36.457292    2129 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xabbcdac0be10c346 ResponseID: Zs3dapWVJq-w3LUP3-q4iA0
+I1025 15:05:39.109434    2222 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x3c8da55c5e65c252 ResponseID: ac3daq7IEtnx4t4PqaTh4Qw
+I1025 15:05:46.678941    2253 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x25cbd496ae50813c ResponseID: a83dao22LPT04-EPhPq3yQU
+I1025 15:06:04.303713    2357 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xbe1f97d8ae2c4f7d ResponseID: es3dau-EAoPEjuMPmPWp2AU
+I1025 15:06:06.926274    2192 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x888267bd114fae7 ResponseID: hc3datOHCPTZz7sP8OHNwAw
+I1025 15:06:15.108088    2449 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x98e1638a7e01ce29 ResponseID: h83darP3MZGlg8UPnOOy0AU
+I1025 15:06:18.591093    2500 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x2f81af5c36f90237 ResponseID: j83dasGmOuzt3LUPoLvMiQI
+I1025 15:06:25.410384    2546 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xff505b8194732794 ResponseID: k83davnEG_T04-EPhPq3yQU
+I1025 15:06:31.002266    2584 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x1224f81aab3ec317 ResponseID: ms3datCHBJ-V3LUPm8vx4AQ
+I1025 15:06:37.434616    2631 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x932b5f2512182409 ResponseID: o83daoL8LLjKz7sPj7Xv0QU
+I1025 15:06:43.998243    2684 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x9bb20754c61e3bc1 ResponseID: p83dauCRAtavmNMP2faGyQY
+I1025 15:06:55.643589    2751 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x104e92693f5e5f23 ResponseID: sM3dasGhK8bCjuMP-ODamQk
+I1025 15:07:16.083592    2853 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x18ad07aeaf1084ae ResponseID: yc3darSyKdCKjuMPu8n8uAU
+I1025 15:07:21.251821    2887 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x9ca31486ff2032a6 ResponseID: zc3dav7tD6_UqfkPo_Lw6QM
+I1025 15:07:24.262985    2946 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xdbe59172710c5b8b ResponseID: 0s3daqXbBYnsz7sP1ZKw-Aw
+I1025 15:07:30.773524    2984 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x4125e9cb0a96f303 ResponseID: 1c3daqaNHtXI3LUPw7Xp6QQ
+I1025 15:07:34.100482       1 manager.go:857] CLI store manager shutting down
+I1025 15:07:34.100759       1 conversation_manager.go:1034] Stopping conversation stream
+I1025 15:07:34.100822     594 server.go:1300] Stream goroutine exited for 7c596e87-164d-4e64-9e10-eec8be2a7a60, sending completion signal
+E1025 15:07:34.102914    3094 telemetry.go:81] error recording trajectory segment analytics: Post "https://daily-cloudcode-pa.googleapis.com/v1internal:recordTrajectoryAnalytics": context canceled
+I1025 15:07:34.117202    3064 server.go:3219] Language server shutting down
+I1025 15:07:34.117230    3064 server.go:3224] Waiting for migrations to complete to prevent partial migration state...
+E1025 15:07:34.124836     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 15:07:34.124851     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 15:07:34.124854     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 15:07:34.124856     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 15:07:34.124858     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 15:07:34.124859     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 15:07:34.124861     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 15:07:34.124862     178 file_watcher.go:194] skipping empty or temp file: 
+E1025 15:07:34.124864     178 file_watcher.go:194] skipping empty or temp file: 

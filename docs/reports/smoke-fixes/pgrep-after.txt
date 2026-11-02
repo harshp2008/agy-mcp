@@ -1,0 +1,1 @@
+3455512 bash -c pgrep -af "agy|agy_mcp" > docs/reports/smoke-fixes/pgrep-after.txt || true

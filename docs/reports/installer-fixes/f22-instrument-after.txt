@@ -1,0 +1,14 @@
+Mon Oct 26 10:30:33 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python docs/reports/installer-fixes/f22_instrument.py 10
+instrumented F22 reproduction: 10 runs, 1 ms polling
+run 01: state_at_break=done usage_exists_at_done=True usage_appeared_   0.012ms_after_done race_observed=False
+run 02: state_at_break=done usage_exists_at_done=True usage_appeared_   0.010ms_after_done race_observed=False
+run 03: state_at_break=done usage_exists_at_done=True usage_appeared_   0.017ms_after_done race_observed=False
+run 04: state_at_break=done usage_exists_at_done=True usage_appeared_   0.009ms_after_done race_observed=False
+run 05: state_at_break=done usage_exists_at_done=True usage_appeared_   0.023ms_after_done race_observed=False
+run 06: state_at_break=done usage_exists_at_done=True usage_appeared_   0.018ms_after_done race_observed=False
+run 07: state_at_break=done usage_exists_at_done=True usage_appeared_   0.011ms_after_done race_observed=False
+run 08: state_at_break=done usage_exists_at_done=True usage_appeared_   0.009ms_after_done race_observed=False
+run 09: state_at_break=done usage_exists_at_done=True usage_appeared_   0.010ms_after_done race_observed=False
+run 10: state_at_break=done usage_exists_at_done=True usage_appeared_   0.011ms_after_done race_observed=False
+SUMMARY: 0/10 runs observed DONE before usage.jsonl existed

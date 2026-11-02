@@ -1,0 +1,36 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collected 359 items
+
+tests/test_audit.py .....................                                [  5%]
+tests/test_cli_log.py ...........                                        [  8%]
+tests/test_config.py ..............................                      [ 17%]
+tests/test_denial_recovery.py ...........                                [ 20%]
+tests/test_fake_agy.py .............................                     [ 28%]
+tests/test_files_modified.py ..                                          [ 28%]
+tests/test_git_scenarios.py ............                                 [ 32%]
+tests/test_gitops.py ..............                                      [ 36%]
+tests/test_jobs.py .............                                         [ 39%]
+tests/test_manager.py ..............................................     [ 52%]
+tests/test_models.py ........                                            [ 54%]
+tests/test_multiprocess_concurrency.py ..                                [ 55%]
+tests/test_parse_result.py ....................................          [ 65%]
+tests/test_recovery.py ........                                          [ 67%]
+tests/test_runner.py ............                                        [ 71%]
+tests/test_server_e2e.py .................                               [ 75%]
+tests/test_server_unit.py ...............                                [ 79%]
+tests/test_smoke.py ...                                                  [ 80%]
+tests/test_supervisor.py ..........                                      [ 83%]
+tests/test_transcript.py ...........                                     [ 86%]
+tests/test_usage.py ....                                                 [ 87%]
+tests/test_util.py ..........                                            [ 90%]
+tests/test_verify.py ...............                                     [ 94%]
+tests/test_watcher.py ......                                             [ 96%]
+tests/test_watcher_bug.py ..                                             [ 96%]
+tests/test_worktree.py ...........                                       [100%]
+
+======================= 359 passed in 132.49s (0:02:12) ========================

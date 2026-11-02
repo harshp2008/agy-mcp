@@ -1,0 +1,49 @@
+RUN 1 rc=0
+RUN 2 rc=0
+RUN 3 rc=0
+RUN 4 rc=0
+RUN 5 rc=0
+RUN 6 rc=0
+RUN 7 rc=0
+RUN 8 rc=0
+RUN 9 rc=0
+RUN 10 rc=0
+RUN 11 rc=0
+RUN 12 rc=0
+RUN 13 rc=0
+RUN 14 rc=0
+RUN 15 rc=0
+RUN 16 rc=0
+RUN 17 rc=0
+RUN 18 rc=0
+RUN 19 rc=0
+RUN 20 rc=0
+RUN 21 rc=0
+RUN 22 rc=0
+RUN 23 rc=0
+RUN 24 rc=0
+RUN 25 rc=0
+RUN 26 rc=0
+RUN 27 rc=0
+RUN 28 rc=1
+=== FAILED on run 28 ===
+        )
+    
+        deadline = time.time() + 8.0
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                break
+            time.sleep(0.3)
+    
+        st = manager.status(env.job_id)
+        assert st.state == JobState.NEEDS_REVIEW
+        job = get_job(env.job_id, manager.state_dir)
+>       assert job.review_reason == "verify_failed"
+E       assert None == 'verify_failed'
+E        +  where None = Job(job_id='9d052d51-614d-4356-996e-48f671a0c3fd', title='Verify Not Found Test', repo_path=PosixPath('/tmp/pytest-of-...27b689bc">', audit_status='passed', audit_reason=None, scratchpad_files=['PLAN.md', 'NOTES.md', 'LOG.md', 'REPORT.md']).review_reason
+
+tests/test_manager.py:550: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_manager.py::test_manager_verify_command_not_found_clean_error
+1 failed in 0.55s

@@ -1,0 +1,10 @@
+$ wc -l /tmp/ow-backup/agents_block.md
+34 /tmp/ow-backup/agents_block.md
+$ wc -l installer/agents_block.md
+43 installer/agents_block.md
+$ git diff --numstat
+11	0	docs/DECISIONS.md
+48	0	docs/ORCHESTRATION.md
+10	1	installer/agents_block.md
+10	1	installer/install.sh
+31	0	tests/test_installer_chapter.py

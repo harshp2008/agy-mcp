@@ -1,0 +1,23 @@
+{
+  "src/agy_mcp/__init__.py": "4f8ea1a7a6f37c9694574e876c80c69c189f37836af4beb4384a4b5cd37c4877",
+  "src/agy_mcp/__main__.py": "89f84c615be0940809a6e90fed3f05aa0e30b44d736ced0260c7264e36471685",
+  "src/agy_mcp/audit.py": "60fd7ef023124df42c2652f9c404acd0a413dd8afe16d4a905e3055bb9c570f4",
+  "src/agy_mcp/cli_log.py": "e87d7eeaaa6276ec25930967491784c6a2dcd08d3b940a9cf8c6e6270e5caa5e",
+  "src/agy_mcp/config.py": "c70a2692d8706d4eb48afa7978289dd8e61ff911e5629458219f5d53248030b7",
+  "src/agy_mcp/gitops.py": "8f4794b1270f46d44d735731b0c6bd2de312c5a4bbde6a8eab1ebbf3ed7ed828",
+  "src/agy_mcp/jobs.py": "39fe355bb3bdeb64d9d9c4dc62fe12794ba1815255b48fb205d987d4d1dfe17a",
+  "src/agy_mcp/manager.py": "805d9413ccb1ba6765f6bb49fd73b31a0e30ca65f595c65f247acef27b7958bb",
+  "src/agy_mcp/models.py": "686cc084df94be2e956c8f1534f54ebc62bac460805ef8eb56916be6f1b8cb8f",
+  "src/agy_mcp/parse_result.py": "a8ebaf25b6a20e321e4d24770948db82e4c7053d7898e45825f96869a6962914",
+  "src/agy_mcp/recovery.py": "815c383d1b06a71661bcc972748382b4cfc76c7504f8540492ed27fd9ed6842f",
+  "src/agy_mcp/runner.py": "e40ca478691e7410683a5ff9d4258e0afc295ce44fe45a81f7c4805b9213c760",
+  "src/agy_mcp/server.py": "bcacb7a911c11ae2af62c085034b5a1f66b73b61b9f6b58bbdcc55ce82da175e",
+  "src/agy_mcp/states.py": "97aed50102a000486f90d71ee6b0a1da31a3f59d2beff8e11f46c1fd8d6164fc",
+  "src/agy_mcp/supervisor.py": "56369416b2f99ba0d29250341d1051c0801f16f7f6571b37ec700bd3f363ed7e",
+  "src/agy_mcp/transcript.py": "464cae125af7598f33adf4dd49b360ad36b391406eaff9f245d5babd51c496bf",
+  "src/agy_mcp/usage.py": "2204671c9dca9b1abe7cce69bc917ce481a02d2c0d777c3aade1453791f46c83",
+  "src/agy_mcp/util.py": "7bb9d3cb925e42804aadca105dc05ce55954461b70a00828e432a10d258cb9fa",
+  "src/agy_mcp/verify.py": "7dc8f0d8934df13c2cdd6a0a85fe155c223527e79d70a9602e122b7d2a567673",
+  "src/agy_mcp/watcher.py": "008b7c34478ca4e4fc70a8af63f3dcb18eb77bc20aead8b0570fa75c82fc4ec4",
+  "src/agy_mcp/worktree.py": "df3e7f9ee0fdb52db7f4a2e1fea4267bb56bf82d271b059d5f4f8ba40e3b6da5"
+}

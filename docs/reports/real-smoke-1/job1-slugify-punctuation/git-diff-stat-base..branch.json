@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "~/agy-smoke-repo",
+    "diff",
+    "--stat",
+    "e4ed76409bc5ce8784d142dba2d1e80e52a490f9..agy/slugify-punctuation-90226ef0"
+  ],
+  "returncode": 0,
+  "stdout": " slug/__init__.py   | 19 ++++++++++++++++---\n tests/test_slug.py | 21 +++++++++++++++++++++\n 2 files changed, 37 insertions(+), 3 deletions(-)\n",
+  "stderr": ""
+}

@@ -1,0 +1,74 @@
+{
+  "exists": true,
+  "files": [
+    {
+      "name": "COMMIT_MSG.done.1",
+      "size": 0,
+      "is_symlink": false,
+      "content": ""
+    },
+    {
+      "name": "COMMIT_MSG.done.2",
+      "size": 0,
+      "is_symlink": false,
+      "content": ""
+    },
+    {
+      "name": "COMMIT_MSG.done.3",
+      "size": 0,
+      "is_symlink": false,
+      "content": ""
+    },
+    {
+      "name": "COMMIT_MSG.done.4",
+      "size": 0,
+      "is_symlink": false,
+      "content": ""
+    },
+    {
+      "name": "COMMIT_MSG.seen.1",
+      "size": 238,
+      "is_symlink": false,
+      "content": "Update slugify to strip punctuation, collapse separators, and trim\n\nMake slugify strip punctuation characters while preserving hyphens,\ncollapse consecutive whitespace and hyphens into a single '-', and\ntrim leading and trailing hyphens.\n"
+    },
+    {
+      "name": "COMMIT_MSG.seen.2",
+      "size": 267,
+      "is_symlink": false,
+      "content": "Add test cases for punctuation, repeated spaces, and empty input\n\nAdd comprehensive unit tests in tests/test_slug.py covering punctuation\nstripping, repeated spaces and hyphens collapsing, and empty/whitespace\ninput handling while preserving the original basic test.\n"
+    },
+    {
+      "name": "COMMIT_MSG.seen.3",
+      "size": 184,
+      "is_symlink": false,
+      "content": "Finalize documentation and report for slugify updates\n\nComplete REPORT.md, NOTES.md, and PLAN.md documenting changes to slugify,\nnew unit tests, assumptions, and verification details.\n"
+    },
+    {
+      "name": "COMMIT_MSG.seen.4",
+      "size": 283,
+      "is_symlink": false,
+      "content": "Finalize slugify implementation, test cases, and documentation\n\nUpdate slugify in slug/__init__.py to strip punctuation, collapse repeated\nseparators into '-', and trim leading/trailing hyphens. Add tests in\ntests/test_slug.py covering punctuation, repeated spaces, and empty input.\n"
+    },
+    {
+      "name": "LOG.md",
+      "size": 7,
+      "is_symlink": false
+    },
+    {
+      "name": "NOTES.md",
+      "size": 1347,
+      "is_symlink": false
+    },
+    {
+      "name": "PLAN.md",
+      "size": 746,
+      "is_symlink": false
+    },
+    {
+      "name": "REPORT.md",
+      "size": 959,
+      "is_symlink": false
+    }
+  ],
+  "worktree": "/tmp/agy-real-smoke-state-3yxa_r_u/jobs/8f3c843a-7c71-484c-acba-ddd535755749/work"
+}

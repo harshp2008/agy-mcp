@@ -1,0 +1,56 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collected 408 items
+
+tests/test_audit.py .....................                                [  5%]
+tests/test_cli_log.py ...........                                        [  7%]
+tests/test_config.py ..............................                      [ 15%]
+tests/test_denial_recovery.py ...........                                [ 17%]
+tests/test_f1.py ..                                                      [ 18%]
+tests/test_f10.py .                                                      [ 18%]
+tests/test_f11.py ..                                                     [ 19%]
+tests/test_f12.py ..                                                     [ 19%]
+tests/test_f13.py ...                                                    [ 20%]
+tests/test_f15.py .                                                      [ 20%]
+tests/test_f17.py .                                                      [ 20%]
+tests/test_f18.py ...                                                    [ 21%]
+tests/test_f2.py ...                                                     [ 22%]
+tests/test_f20.py ...                                                    [ 23%]
+tests/test_f21.py .                                                      [ 23%]
+tests/test_f23.py ....                                                   [ 24%]
+tests/test_f25.py ...                                                    [ 25%]
+tests/test_f3.py .                                                       [ 25%]
+tests/test_f4.py ..                                                      [ 25%]
+tests/test_f5.py ...                                                     [ 26%]
+tests/test_f6.py ...                                                     [ 27%]
+tests/test_f7.py ...                                                     [ 27%]
+tests/test_f9.py ....                                                    [ 28%]
+tests/test_fake_agy.py .............................                     [ 36%]
+tests/test_files_modified.py ..                                          [ 36%]
+tests/test_git_scenarios.py .............                                [ 39%]
+tests/test_gitops.py ..............                                      [ 43%]
+tests/test_jobs.py .............                                         [ 46%]
+tests/test_manager.py ..............................................     [ 57%]
+tests/test_models.py ........                                            [ 59%]
+tests/test_multiprocess_concurrency.py ..                                [ 60%]
+tests/test_parse_result.py ....................................          [ 68%]
+tests/test_policy_files.py ..                                            [ 69%]
+tests/test_recovery.py ........                                          [ 71%]
+tests/test_runner.py ............                                        [ 74%]
+tests/test_server_e2e.py .................                               [ 78%]
+tests/test_server_unit.py ...............                                [ 82%]
+tests/test_smoke.py ...                                                  [ 82%]
+tests/test_supervisor.py ...........                                     [ 85%]
+tests/test_transcript.py ...........                                     [ 88%]
+tests/test_usage.py ....                                                 [ 89%]
+tests/test_util.py ..........                                            [ 91%]
+tests/test_verify.py ...............                                     [ 95%]
+tests/test_watcher.py ......                                             [ 96%]
+tests/test_watcher_bug.py ..                                             [ 97%]
+tests/test_worktree.py ...........                                       [100%]
+
+======================== 408 passed in 92.61s (0:01:32) ========================

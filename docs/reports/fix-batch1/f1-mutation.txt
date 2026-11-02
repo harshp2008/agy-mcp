@@ -1,0 +1,104 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 2 items
+
+tests/test_f1.py FF                                                      [100%]
+
+=================================== FAILURES ===================================
+_______________ test_f1_partial_commit_kills_process_and_resumes _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-336/test_f1_partial_commit_kills_p0')
+
+    def test_f1_partial_commit_kills_process_and_resumes(tmp_path: Path) -> None:
+        """Watcher-driven needs_review(partial_commit) must kill process and persist conversation_id."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        # Pre-track a sensitive .env file in the repository
+        env_file = repo_dir / ".env"
+        env_file.write_text("SECRET=initial\n", encoding="utf-8")
+        run_git(["add", ".env"], repo_dir)
+        run_git(["commit", "-m", "Track sensitive .env"], repo_dir)
+    
+        env = manager.start(
+            prompt="Work on task __SCENARIO:hang_after_partial_commit__",
+            repo_path=str(repo_dir),
+            title="F1 Partial Commit Test",
+        )
+    
+        # Wait for needs_review
+        deadline = time.time() + 10.0
+        job = None
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                job = get_job(env.job_id, manager.state_dir)
+                break
+            time.sleep(0.1)
+    
+        assert job is not None
+        assert job.state == JobState.NEEDS_REVIEW
+        assert job.review_reason == "partial_commit"
+        assert job.pid is not None
+    
+        # Wait briefly to confirm process is killed by supervisor finalization
+        kill_deadline = time.time() + 3.0
+        while time.time() < kill_deadline and _is_alive(job.pid):
+            time.sleep(0.1)
+    
+        # CRITICAL CHECK: process must be dead
+>       assert not _is_alive(job.pid), f"PID {job.pid} is still alive after partial_commit needs_review"
+E       AssertionError: PID 3689996 is still alive after partial_commit needs_review
+E       assert not True
+E        +  where True = _is_alive(3689996)
+E        +    where 3689996 = Job(job_id='33dbf9e7-77b4-4ef1-be1d-25cd873e5fec', title='F1 Partial Commit Test', repo_path=PosixPath('/tmp/pytest-of... warnings=[], tokens=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0), schema_version=1, verify_status=None).pid
+
+tests/test_f1.py:88: AssertionError
+_____________ test_f1_invalid_commit_msg_kills_process_and_resumes _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-336/test_f1_invalid_commit_msg_kil0')
+
+    def test_f1_invalid_commit_msg_kills_process_and_resumes(tmp_path: Path) -> None:
+        """Watcher-driven needs_review(invalid_commit_message) must kill process and persist conversation_id."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+    
+        env = manager.start(
+            prompt="Work on task __SCENARIO:hang_after_invalid_commit_msg__",
+            repo_path=str(repo_dir),
+            title="F1 Invalid Commit Msg Test",
+        )
+    
+        # Wait for needs_review
+        deadline = time.time() + 10.0
+        job = None
+        while time.time() < deadline:
+            st = manager.status(env.job_id)
+            if st.state == JobState.NEEDS_REVIEW:
+                job = get_job(env.job_id, manager.state_dir)
+                break
+            time.sleep(0.1)
+    
+        assert job is not None
+        assert job.state == JobState.NEEDS_REVIEW
+        assert job.review_reason == "invalid_commit_message"
+        assert job.pid is not None
+    
+        # Wait briefly to confirm process is killed
+        kill_deadline = time.time() + 3.0
+        while time.time() < kill_deadline and _is_alive(job.pid):
+            time.sleep(0.1)
+    
+        # CRITICAL CHECK: process must be dead
+>       assert not _is_alive(job.pid), f"PID {job.pid} is still alive after invalid_commit_msg needs_review"
+E       AssertionError: PID 3690112 is still alive after invalid_commit_msg needs_review
+E       assert not True
+E        +  where True = _is_alive(3690112)
+E        +    where 3690112 = Job(job_id='006a03ea-141b-4a6d-9abd-4a4606a0cc85', title='F1 Invalid Commit Msg Test', repo_path=PosixPath('/tmp/pytes... warnings=[], tokens=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0), schema_version=1, verify_status=None).pid
+
+tests/test_f1.py:135: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f1.py::test_f1_partial_commit_kills_process_and_resumes - A...
+FAILED tests/test_f1.py::test_f1_invalid_commit_msg_kills_process_and_resumes
+============================== 2 failed in 12.45s ==============================

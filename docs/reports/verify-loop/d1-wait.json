@@ -1,0 +1,34 @@
+{
+  "job_id": "573fb879-ed9b-468a-a701-a8e8f48b3d27",
+  "state": "done",
+  "elapsed_seconds": 120.49,
+  "title": "Verify Loop D1 Calc Bugfix",
+  "branch": "agy/verify-loop-d1-calc-bugfix-7bb9ed27",
+  "base_commit": "d9c8ef517f3f47bb6064d28c26920a0ba323c678",
+  "head_commit": "2cf642b37e45948ae1d9ec8e26af1f8fba0722c0",
+  "commits_count": 2,
+  "files_modified": [
+    "src/__pycache__/calc.cpython-312.pyc",
+    "src/calc.py",
+    "tests/__pycache__/test_calc.cpython-312-pytest-9.1.1.pyc"
+  ],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [
+    "source_dirty=true",
+    "dangerous_permission_rules_present: {'permission_rules_effective': [], 'dangerous_allow_rules': [], 'warnings': []}"
+  ],
+  "tokens": {
+    "input_tokens": 298356,
+    "output_tokens": 7346,
+    "total_tokens": 305702
+  },
+  "next_actions": [
+    "Inspect result with agy_result",
+    "Review diff with agy_review",
+    "Clean up worktree with agy_cleanup"
+  ],
+  "error": null
+}

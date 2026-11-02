@@ -1,0 +1,32 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_non_regular_commit_msg_is_rejected_without_blocking ___________
+
+watcher_setup = (PosixPath('/tmp/pytest-of-<user>/pytest-1067/test_non_regular_commit_msg_is0'), PosixPath('/tmp/pytest-of-<user>/pytest...tWatcher object at 0x7b301fdb0320>, PosixPath('/tmp/pytest-of-<user>/pytest-1067/test_non_regular_commit_msg_is0/home'))
+
+    def test_non_regular_commit_msg_is_rejected_without_blocking(watcher_setup) -> None:
+        """A FIFO is rejected by lstat before any open can block the watcher."""
+        tmp_path, wt_path, job, watcher, fake_home = watcher_setup
+        fifo = wt_path / ".agy" / "COMMIT_MSG"
+        if fifo.exists() or fifo.is_symlink():
+            fifo.unlink()
+        os.mkfifo(fifo)
+    
+        result: list[tuple[bool, str | None]] = []
+        reader = threading.Thread(
+            target=lambda: result.append(validate_commit_message(fifo)),
+            daemon=True,
+        )
+        reader.start()
+        reader.join(1.0)
+        try:
+>           assert not reader.is_alive(), "validate_commit_message blocked opening a FIFO"
+E           AssertionError: validate_commit_message blocked opening a FIFO
+E           assert not True
+E            +  where True = is_alive()
+E            +    where is_alive = <Thread(Thread-1 (<lambda>), started daemon 135446620358336)>.is_alive
+
+tests/test_stale_commit_msg.py:242: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_stale_commit_msg.py::test_non_regular_commit_msg_is_rejected_without_blocking
+1 failed in 1.22s

@@ -1,0 +1,144 @@
+F.FFFF                                                                   [100%]
+=================================== FAILURES ===================================
+_________ test_invalid_commit_msg_discarded_and_resume_does_not_refail _________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_invalid_commit_msg_discar0')
+
+    def test_invalid_commit_msg_discarded_and_resume_does_not_refail(tmp_path: Path) -> None:
+        """After needs_review the stale message is renamed, so the resumed run is clean."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+        env = manager.start(
+            prompt="Work on task __SCENARIO:stale_commit_msg__",
+            repo_path=str(repo_dir),
+            title="Stale Commit Message Test",
+        )
+        _wait_for_review(manager, env.job_id)
+    
+        job = get_job(env.job_id, manager.state_dir)
+        job_dir = get_job_dir(env.job_id, manager.state_dir)
+        wt_path = Path(job.worktree_path or "")
+        assert job.review_reason == "invalid_commit_message"
+    
+        discarded = wt_path / ".agy" / "COMMIT_MSG.invalid.1"
+>       assert not (wt_path / ".agy" / "COMMIT_MSG").exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = ((PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_invalid_commit_msg_discar0/state/jobs/95bee847-71ab-404a-a833-d61282a5b3bd/work') / '.agy') / 'COMMIT_MSG').exists
+
+tests/test_stale_commit_msg.py:132: AssertionError
+___________ test_symlinked_commit_msg_link_is_renamed_not_the_target ___________
+
+watcher_setup = (PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_symlinked_commit_msg_link0'), PosixPath('/tmp/pytest-of-<user>/pytest...tWatcher object at 0x7558020bfb00>, PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_symlinked_commit_msg_link0/home'))
+
+    def test_symlinked_commit_msg_link_is_renamed_not_the_target(
+        watcher_setup,
+    ) -> None:
+        """A symlinked COMMIT_MSG entry is renamed; its target is never modified."""
+        tmp_path, wt_path, job, watcher, fake_home = watcher_setup
+        target = tmp_path / "outside_target.txt"
+        original = "SYMLINK_TARGET_" + "E" * 80 + "\n\nBody."
+        target.write_text(original, encoding="utf-8")
+        before = target.stat()
+        link = wt_path / ".agy" / "COMMIT_MSG"
+        link.symlink_to(target)
+    
+        watcher.tick(now=1000.0)
+        watcher.tick(now=1006.0)
+        watcher.tick(now=1010.0)
+        watcher.tick(now=1016.0)
+    
+        assert job.state == JobState.NEEDS_REVIEW
+        discarded = wt_path / ".agy" / "COMMIT_MSG.invalid.1"
+>       assert discarded.is_symlink()
+E       AssertionError: assert False
+E        +  where False = is_symlink()
+E        +    where is_symlink = PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_symlinked_commit_msg_link0/jobs/job_stale/work/.agy/COMMIT_MSG.invalid.1').is_symlink
+
+tests/test_stale_commit_msg.py:192: AssertionError
+_________________ test_symlinked_agy_directory_is_not_followed _________________
+
+watcher_setup = (PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_symlinked_agy_directory_i0'), PosixPath('/tmp/pytest-of-<user>/pytest...tWatcher object at 0x755801febf80>, PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_symlinked_agy_directory_i0/home'))
+
+    def test_symlinked_agy_directory_is_not_followed(watcher_setup) -> None:
+        """A symlinked ``.agy`` parent is refused; the target message is untouched."""
+        tmp_path, wt_path, job, watcher, fake_home = watcher_setup
+        outside = tmp_path / "outside_agy"
+        outside.mkdir()
+        target = outside / "COMMIT_MSG"
+        original = "F" * 80 + "\n\nBody in the symlink target."
+        target.write_text(original, encoding="utf-8")
+        before = target.stat()
+    
+        shutil.rmtree(wt_path / ".agy")
+        (wt_path / ".agy").symlink_to(outside, target_is_directory=True)
+    
+        watcher.tick(now=1000.0)
+        watcher.tick(now=1006.0)
+        watcher.tick(now=1010.0)
+        watcher.tick(now=1016.0)
+    
+>       assert job.state == JobState.RUNNING
+E       AssertionError: assert <JobState.NEE...needs_review'> == <JobState.RUNNING: 'running'>
+E         
+E         - running
+E         + needs_review
+
+tests/test_stale_commit_msg.py:217: AssertionError
+______________ test_discard_cap_is_twenty_and_last_slot_is_reused ______________
+
+watcher_setup = (PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_discard_cap_is_twenty_and0'), PosixPath('/tmp/pytest-of-<user>/pytest...tWatcher object at 0x7558020bf170>, PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_discard_cap_is_twenty_and0/home'))
+
+    def test_discard_cap_is_twenty_and_last_slot_is_reused(watcher_setup) -> None:
+        """At the cap the last slot is overwritten; no slot file is deleted."""
+        tmp_path, wt_path, job, watcher, fake_home = watcher_setup
+        agy_dir = wt_path / ".agy"
+        for n in range(1, 21):
+            (agy_dir / f"COMMIT_MSG.invalid.{n}").write_text(f"old-{n}\n", encoding="utf-8")
+    
+        (agy_dir / "COMMIT_MSG").write_text("G" * 80 + "\n\nBody.", encoding="utf-8")
+        watcher.tick(now=1000.0)
+        watcher.tick(now=1006.0)
+        watcher.tick(now=1010.0)
+        watcher.tick(now=1016.0)
+    
+        assert job.state == JobState.NEEDS_REVIEW
+>       assert not (agy_dir / "COMMIT_MSG").exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = (PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_discard_cap_is_twenty_and0/jobs/job_stale/work/.agy') / 'COMMIT_MSG').exists
+
+tests/test_stale_commit_msg.py:238: AssertionError
+________ test_discard_audit_event_has_no_message_text_or_absolute_path _________
+
+watcher_setup = (PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_discard_audit_event_has_n0'), PosixPath('/tmp/pytest-of-<user>/pytest...tWatcher object at 0x7558020bf290>, PosixPath('/tmp/pytest-of-<user>/pytest-1046/test_discard_audit_event_has_n0/home'))
+
+    def test_discard_audit_event_has_no_message_text_or_absolute_path(watcher_setup) -> None:
+        """The audit event names only a short code and the new file name."""
+        tmp_path, wt_path, job, watcher, fake_home = watcher_setup
+        secret = "LEAKME_" + "Z" * 80 + "\n\nSecret body text."
+        (wt_path / ".agy" / "COMMIT_MSG").write_text(secret, encoding="utf-8")
+    
+        watcher.tick(now=1000.0)
+        watcher.tick(now=1006.0)
+        watcher.tick(now=1010.0)
+        watcher.tick(now=1016.0)
+    
+        assert job.state == JobState.NEEDS_REVIEW
+        job_dir = get_job_dir(job.job_id, tmp_path)
+        discarded = [
+            event
+            for event in _audit_events(job_dir)
+            if event.get("event") == "commit_msg_discarded"
+        ]
+>       assert len(discarded) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/test_stale_commit_msg.py:262: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_stale_commit_msg.py::test_invalid_commit_msg_discarded_and_resume_does_not_refail
+FAILED tests/test_stale_commit_msg.py::test_symlinked_commit_msg_link_is_renamed_not_the_target
+FAILED tests/test_stale_commit_msg.py::test_symlinked_agy_directory_is_not_followed
+FAILED tests/test_stale_commit_msg.py::test_discard_cap_is_twenty_and_last_slot_is_reused
+FAILED tests/test_stale_commit_msg.py::test_discard_audit_event_has_no_message_text_or_absolute_path
+5 failed, 1 passed in 3.13s

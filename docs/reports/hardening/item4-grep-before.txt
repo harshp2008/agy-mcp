@@ -1,0 +1,14 @@
+$ grep -rn --include=*.py "run_hardened_git" src/ tests/
+src/agy_mcp/gitops.py:323:def run_hardened_git(
+
+$ grep -rn --include=*.py "read_proc_pgid" src/ tests/
+src/agy_mcp/runner.py:94:def read_proc_pgid(pid: int) -> int:
+
+$ grep -rn --include=*.py "refreshed = get_job" src/agy_mcp/manager.py
+482:            refreshed = get_job(job.job_id, self.state_dir)
+734:            refreshed = get_job(job_id, self.state_dir)
+765:        refreshed = get_job(job_id, self.state_dir)
+1037:            refreshed = get_job(job_id, self.state_dir)
+1238:        refreshed = get_job(job_id, self.state_dir)
+
+$ grep -rn --include=*.py "worktree.preflight\|audit.verify_host_path_snapshot\|audit.run_security_audit\|jobs.rebuild_daily_cap_from_audit\|jobs.prune_retained_jobs\|gitops.get_diff_stat\|gitops.get_commits_list\|gitops.has_base_moved\|util.sha256_bytes\|usage.check_daily_cap" src/agy_mcp/

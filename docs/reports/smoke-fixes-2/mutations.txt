@@ -1,0 +1,70 @@
+================================================================================
+PART G: BREAK-IT-ON-PURPOSE MUTATION REPORT
+================================================================================
+
+--- Mutation 1: denied_without_progress returns done ---
+Exit code: 1
+Raw failure output:
+  >       assert parsed.state == JobState.NEEDS_REVIEW
+  E       AssertionError: assert <JobState.DONE: 'done'> == <JobState.NEE...needs_review'>
+  tests/test_denial_recovery.py:191: AssertionError
+  =========================== short test summary info ============================
+  FAILED tests/test_denial_recovery.py::test_denied_without_progress_unit - Ass...
+
+--- Mutation 2: transcript reader ignores the one-level unquoting ---
+Exit code: 1
+Raw failure output:
+          assert len(calls) == 1
+          assert call.step == 6
+          assert call.tool == "run_command"
+          assert call.command is not None
+  >       assert unwrap_untrusted_text(call.command) == "cat README.md"
+  E       assert '"cat README.md"' == 'cat README.md'
+  tests/test_transcript.py:47: AssertionError
+  =========================== short test summary info ============================
+  FAILED tests/test_transcript.py::test_s3_real_fixture - assert '"cat README.m...
+
+--- Mutation 3: transcript reader skips path-inside-brain check ---
+Exit code: 1
+Raw failure output:
+  >       assert calls == []
+  E       assert [DeniedCall(s...summary=None)] == []
+  tests/test_transcript.py:194: AssertionError
+  =========================== short test summary info ============================
+  FAILED tests/test_transcript.py::test_safety_symlink_escape_rejected - assert...
+
+--- Mutation 4: drop rule 11 ---
+Exit code: 1
+Raw failure output:
+  >       assert (
+  E       AssertionError: assert 'Do not start subagents, research agents, browsers or any other delegated tool. They are unavailable here and will end your run. Do the work yourself with your file tools, and only read files inside the current directory.' in 'You are an autonomous coding assistant executing a task in this repository worktree.\nRules you must strictly follow:...e exactly: NEEDS_DECISION: need command `<the exact command>` | allow it, or do it another way | <your recommendation>'
+  tests/test_denial_recovery.py:63: AssertionError
+  =========================== short test summary info ============================
+  FAILED tests/test_denial_recovery.py::test_preamble_rule_11_and_rule_6 - Asse...
+
+--- Mutation 5: zero-commit-no-denial becomes needs_review ---
+Exit code: 1
+Raw failure output:
+  >       assert parsed.state == JobState.DONE
+  E       AssertionError: assert <JobState.NEE...needs_review'> == <JobState.DONE: 'done'>
+  tests/test_denial_recovery.py:168: AssertionError
+  =========================== short test summary info ============================
+  FAILED tests/test_denial_recovery.py::test_zero_commit_no_denial_done_with_warning
+
+--- Mutation 6: conftest orphan check disabled ---
+Exit code: 1
+Raw failure output:
+  [Hook Enabled (Expected Fail)]: rc=1
+      pytest.fail(f"Lingering fake_agy processes detected after test session: {lines}")
+  Failed: Lingering fake_agy processes detected after test session: ['3550258 python3 ~/Documents/GITHUB PROJECTS/agy-mcp/tests/fake_agy/agy --mode accept-edits --output-format json -p Hang __SCENARIO:hang__']
+  [Hook Disabled (Mutation)]: rc=0
+
+--- Mutation 7: step mapping off by one ---
+Exit code: 1
+Raw failure output:
+  >       assert cli_step_to_transcript_step(6) == 5
+  E       assert 6 == 5
+  tests/test_transcript.py:28: AssertionError
+  =========================== short test summary info ============================
+  FAILED tests/test_transcript.py::test_step_mapping_rule - assert 6 == 5
+

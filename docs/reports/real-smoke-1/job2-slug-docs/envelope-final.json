@@ -1,0 +1,83 @@
+{
+  "job_id": "97c5139e-ba79-49eb-b050-7a6b70de09d1",
+  "state": "done",
+  "elapsed_seconds": 264.24,
+  "title": "slug docs",
+  "branch": "agy/slug-docs-2bf72c13",
+  "base_commit": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "head_commit": "33fda9e20e144b93b0d2e3d945a7da717a350e75",
+  "commits_count": 2,
+  "files_modified": [
+    "README.md",
+    "slug/__init__.py"
+  ],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 396287,
+    "output_tokens": 17544,
+    "total_tokens": 413831
+  },
+  "next_actions": [
+    "Inspect result with agy_result",
+    "Review diff with agy_review",
+    "Clean up worktree with agy_cleanup"
+  ],
+  "error": null,
+  "usage_cost": {
+    "five_hour_pct_points": 1.35,
+    "weekly_pct_points": 0.39,
+    "measured": true,
+    "concurrent_jobs": 1,
+    "note": "single active job; quota points attributed to this job"
+  },
+  "resume_after": null,
+  "plan": {
+    "total": 3,
+    "done": 3,
+    "remaining": []
+  },
+  "facts": {
+    "commits_count": 2,
+    "files_modified_count": 2,
+    "verify": {
+      "requested": false,
+      "ran": false,
+      "passed": null,
+      "rc": null,
+      "attempts": 0
+    },
+    "audit": {
+      "status": "passed"
+    },
+    "plan": {
+      "total": 3,
+      "done": 3,
+      "remaining": 0
+    },
+    "denials": {
+      "count": 0,
+      "commands": 0,
+      "tools": 0
+    }
+  },
+  "agent_report": "<untrusted_text id=\"35851cd1c14fa757\">\n# REPORT\n\n## Done\n- Added a short docstring to `slugify` in `slug/__init__.py` describing its behavior (converting text to a slug by lowercasing and replacing spaces with hyphens).\n- Added a `Usage` section to `README.md` featuring two usage examples with input and output.\n\n## Not done / skipped\nnone\n\n## Open issues\nnone\n\n## Files changed\n- `slug/__init__.py`\n- `README.md`\n- `.agy/PLAN.md`\n- `.agy/NOTES.md`\n- `.agy/COMMIT_MSG`\n- `.agy/REPORT.md`\n\n## How verified\n- Read back `slug/__init__.py` to confirm the docstring accurately describes the behavior.\n- Read back `README.md` to confirm the section format and the presence of two distinct examples.\n- Did not run automated test suites directly as tests are handled by the wrapper verification environment.\n\n</untrusted_text id=\"35851cd1c14fa757\">",
+  "scratchpad": [
+    "PLAN.md",
+    "NOTES.md",
+    "LOG.md",
+    "REPORT.md"
+  ],
+  "verify": {
+    "requested": false,
+    "ran": false,
+    "passed": null,
+    "rc": null,
+    "duration_seconds": null,
+    "attempts": 0,
+    "last_tail": null
+  }
+}

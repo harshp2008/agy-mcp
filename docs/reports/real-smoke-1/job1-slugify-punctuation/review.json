@@ -1,0 +1,61 @@
+{
+  "job_id": "8f3c843a-7c71-484c-acba-ddd535755749",
+  "state": "done",
+  "elapsed_seconds": 352.27,
+  "title": "slugify punctuation",
+  "branch": "agy/slugify-punctuation-90226ef0",
+  "base_commit": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "head_commit": "ed3ff1f63bcfdbc23d032326a27392a0ae19612c",
+  "commits_count": 2,
+  "files_modified": [
+    "slug/__init__.py",
+    "tests/test_slug.py"
+  ],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 221140,
+    "output_tokens": 31011,
+    "total_tokens": 252151
+  },
+  "next_actions": [
+    "Inspect result with agy_result",
+    "Review diff with agy_review",
+    "Clean up worktree with agy_cleanup"
+  ],
+  "error": null,
+  "usage_cost": {
+    "five_hour_pct_points": 1.15,
+    "weekly_pct_points": 0.33,
+    "measured": true,
+    "concurrent_jobs": 1,
+    "note": "single active job; quota points attributed to this job"
+  },
+  "resume_after": null,
+  "plan": {
+    "total": 0,
+    "done": 0,
+    "remaining": []
+  },
+  "facts": {},
+  "agent_report": null,
+  "scratchpad": [],
+  "verify": {
+    "requested": true,
+    "ran": true,
+    "passed": true,
+    "rc": 0,
+    "duration_seconds": 0.215,
+    "attempts": 1,
+    "last_tail": "<untrusted_text id=\"a4ddf4892de4955d\">\n....                                                                     [100%]\n4 passed in 0.01s\n\n</untrusted_text id=\"a4ddf4892de4955d\">"
+  },
+  "merge_base": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "ahead": 2,
+  "behind": 0,
+  "base_moved": false,
+  "audit_findings": [],
+  "untrusted_diff": "<untrusted_text id=\"0108a10b6be8adc8\">\ndiff --git a/slug/__init__.py b/slug/__init__.py\nindex 1ec2524..0fa5864 100644\n--- a/slug/__init__.py\n+++ b/slug/__init__.py\n@@ -1,6 +1,19 @@\n \"\"\"Tiny slug helper.\"\"\"\n \n+import re\n+import string\n+import unicodedata\n \n-def slugify(text):\n-    \"\"\"Lowercase ``text`` and replace spaces with hyphens.\"\"\"\n-    return text.lower().replace(\" \", \"-\")\n+\n+def slugify(text: str) -> str:\n+    \"\"\"Lowercase ``text``, strip punctuation, collapse repeated separators, and trim hyphens.\"\"\"\n+    text = text.lower()\n+    # Strip punctuation (excluding '-' which serves as a separator)\n+    text = \"\".join(\n+        ch for ch in text\n+        if ch == \"-\" or (ch not in string.punctuation and not unicodedata.category(ch).startswith(\"P\"))\n+    )\n+    # Collapse repeated separators into a single '-'\n+    text = re.sub(r\"[-\\s]+\", \"-\", text)\n+    # Trim leading and trailing '-'\n+    return text.strip(\"-\")\ndiff --git a/tests/test_slug.py b/tests/test_slug.py\nindex 099a8c6..72e6e0a 100644\n--- a/tests/test_slug.py\n+++ b/tests/test_slug.py\n@@ -3,3 +3,24 @@ from slug import slugify\n \n def test_slugify_basic():\n     assert slugify(\"Hello World\") == \"hello-world\"\n+\n+\n+def test_slugify_punctuation():\n+    assert slugify(\"Hello, World!\") == \"hello-world\"\n+    assert slugify(\"What?! No way...\") == \"what-no-way\"\n+    assert slugify(\"foo: bar; baz.\") == \"foo-bar-baz\"\n+    assert slugify(\"It's a test #1\") == \"its-a-test-1\"\n+\n+\n+def test_slugify_repeated_spaces():\n+    assert slugify(\"Hello   World\") == \"hello-world\"\n+    assert slugify(\"   multiple   spaces   here   \") == \"multiple-spaces-here\"\n+    assert slugify(\"hello - world\") == \"hello-world\"\n+    assert slugify(\"hello---world\") == \"hello-world\"\n+\n+\n+def test_slugify_empty_input():\n+    assert slugify(\"\") == \"\"\n+    assert slugify(\"   \") == \"\"\n+    assert slugify(\"---\") == \"\"\n+    assert slugify(\"!@#$%^&*()\") == \"\"\n\n</untrusted_text id=\"0108a10b6be8adc8\">"
+}

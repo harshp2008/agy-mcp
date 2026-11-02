@@ -1,0 +1,23 @@
+same    src/agy_mcp/__init__.py
+same    src/agy_mcp/__main__.py
+same    src/agy_mcp/audit.py
+same    src/agy_mcp/cli_log.py
+same    src/agy_mcp/config.py
+same    src/agy_mcp/gitops.py
+same    src/agy_mcp/jobs.py
+same    src/agy_mcp/manager.py
+same    src/agy_mcp/models.py
+same    src/agy_mcp/parse_result.py
+same    src/agy_mcp/recovery.py
+same    src/agy_mcp/runner.py
+same    src/agy_mcp/server.py
+same    src/agy_mcp/states.py
+same    src/agy_mcp/supervisor.py
+same    src/agy_mcp/transcript.py
+same    src/agy_mcp/usage.py
+same    src/agy_mcp/util.py
+same    src/agy_mcp/verify.py
+same    src/agy_mcp/watcher.py
+same    src/agy_mcp/worktree.py
+
+OK: 21 files match the AST baseline (no behavior change)

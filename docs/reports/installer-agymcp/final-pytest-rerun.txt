@@ -1,0 +1,43 @@
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+............................F........................................... [ 34%]
+........................................................................ [ 46%]
+........................................................................ [ 57%]
+........................................................................ [ 69%]
+........................................................................ [ 81%]
+........................................................................ [ 92%]
+..............................................                           [100%]
+=================================== FAILURES ===================================
+_________________ test_record_usage_written_on_job_completion __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1085/test_record_usage_written_on_j0')
+
+    def test_record_usage_written_on_job_completion(tmp_path: Path) -> None:
+        """Completed job must record usage metrics into usage.jsonl without prompt or title."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+        env = manager.start(
+            prompt="__SCENARIO:success_simple__",
+            repo_path=str(repo_dir),
+            title="Usage Metrics Test Title",
+        )
+        job_id = env.job_id
+    
+        for _ in range(100):
+            j = get_job(job_id, manager.state_dir)
+            if j.state != JobState.RUNNING and j.state != JobState.QUEUED:
+                break
+            time.sleep(0.05)
+    
+        j = get_job(job_id, manager.state_dir)
+        assert j.state == JobState.DONE
+    
+        usage_file = manager.state_dir / "usage.jsonl"
+>       assert usage_file.is_file()
+E       AssertionError: assert False
+E        +  where False = is_file()
+E        +    where is_file = PosixPath('/tmp/pytest-of-<user>/pytest-1085/test_record_usage_written_on_j0/state/usage.jsonl').is_file
+
+tests/test_f22.py:201: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f22.py::test_record_usage_written_on_job_completion - Asser...
+1 failed, 621 passed in 188.02s (0:03:08)

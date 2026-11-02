@@ -1,0 +1,16 @@
+........................................................................ [ 25%]
+........................................................................ [ 50%]
+........................................................................ [ 76%]
+....................................................................     [100%]
+============================= slowest 10 durations =============================
+3.23s call     tests/test_server_e2e.py::test_server_e2e_crash_recovery_over_protocol[asyncio]
+2.67s call     tests/test_server_e2e.py::test_server_e2e_needs_decision_and_resume[asyncio]
+2.50s call     tests/test_manager.py::test_manager_auto_fix_success_second_attempt
+2.49s call     tests/test_manager.py::test_manager_auto_fix_exhaustion
+2.30s call     tests/test_manager.py::test_manager_daily_cap_enforcement
+2.26s call     tests/test_runner.py::test_runner_kill_grandchild_under_8s
+2.10s call     tests/test_manager.py::test_manager_start_asynchronous_nonblocking
+1.63s call     tests/test_server_e2e.py::test_server_e2e_happy_path[asyncio]
+1.62s call     tests/test_server_e2e.py::test_server_e2e_cancel[asyncio]
+1.61s call     tests/test_server_e2e.py::test_server_e2e_no_secrets[asyncio]
+284 passed in 75.88s (0:01:15)

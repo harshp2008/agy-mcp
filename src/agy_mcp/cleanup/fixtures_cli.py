@@ -1,0 +1,517 @@
+"""Pytest fixture-row cleaner CLI (SPEC §22).
+
+Recognises the exact temp-tree shape pytest leaves behind and removes only
+confirmed fixture records under ``--yes``. The old module path is kept as a
+re-export shim; the public surface is unchanged.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import os
+import re
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Callable, Optional
+
+from agy_mcp.cleanup.store_io import (
+    _apply_edge_protection,
+    _check_pgid_status,
+    _check_pid_status,
+    _extract_strings,
+    _has_symlinks,
+    _is_canonical_uuid,
+    _parse_iso_ts,
+    _safe_delete_job_dir,
+    _safe_json_loads,
+    _write_manifest,
+)
+
+
+def _is_pytest_temp_repo(repo_str: Any) -> tuple[bool, str]:
+    """Verify repo_path is under tempdir with pytest-of-* / pytest-N / test_*<n> / ..."""
+    if not isinstance(repo_str, str) or not repo_str.strip():
+        return False, "repo_path is missing or empty"
+    try:
+        raw_path = Path(repo_str)
+        if not raw_path.is_absolute():
+            return False, "repo_path is not absolute"
+        temp_root = Path(tempfile.gettempdir()).resolve(strict=False)
+        repo_path = raw_path.resolve(strict=False)
+    except Exception as exc:
+        return False, f"repo_path resolution failed: {exc}"
+
+    if not (repo_path != temp_root and temp_root in repo_path.parents):
+        return False, f"repo_path {repo_path} is not under temp dir {temp_root}"
+
+    rel_parts = repo_path.relative_to(temp_root).parts
+    idx_of = None
+    for i, part in enumerate(rel_parts):
+        if part.startswith("pytest-of-"):
+            idx_of = i
+            break
+    if idx_of is None:
+        return False, "repo_path missing 'pytest-of-*' component"
+
+    idx_num = None
+    for j in range(idx_of + 1, len(rel_parts)):
+        if re.match(r"^pytest-\d+$", rel_parts[j]):
+            idx_num = j
+            break
+    if idx_num is None:
+        return False, "repo_path missing 'pytest-<digits>' component after 'pytest-of-*'"
+
+    if len(rel_parts) <= idx_num + 1:
+        return False, "repo_path has no components after 'pytest-<digits>'"
+
+    # pytest creates one tmp_path per test as test_<name><counter>. Requiring it
+    # keeps a user repository that merely lives under a pytest basetemp (e.g. a
+    # real repo under a temp HOME used by the test session) out of the whitelist.
+    idx_test = None
+    for k in range(idx_num + 1, len(rel_parts)):
+        if re.match(r"^test_.*\d+$", rel_parts[k]):
+            idx_test = k
+            break
+    if idx_test is None:
+        return False, "repo_path missing pytest per-test 'test_...<n>' component"
+    if len(rel_parts) <= idx_test + 1:
+        return False, "repo_path has no components after 'test_...<n>'"
+
+    return True, "repo_path is under a pytest test temp root"
+
+
+def _pytest_basetemp(path_str: Any) -> Optional[Path]:
+    """Return the /tmp/pytest-of-*/pytest-<n> prefix of a path, if any."""
+    if not isinstance(path_str, str) or not path_str.strip():
+        return None
+    try:
+        path = Path(path_str).resolve(strict=False)
+        temp_root = Path(tempfile.gettempdir()).resolve(strict=False)
+        rel_parts = path.relative_to(temp_root).parts
+    except (OSError, ValueError):
+        return None
+    for i, part in enumerate(rel_parts):
+        if re.match(r"^pytest-\d+$", part) and any(
+            earlier.startswith("pytest-of-") for earlier in rel_parts[:i]
+        ):
+            return temp_root.joinpath(*rel_parts[: i + 1])
+    return None
+
+
+def _classify_job(
+    child: Path,
+    store_path: Path,
+    min_age_days: float,
+    now: datetime,
+) -> tuple[bool, list[str], Optional[dict[str, Any]]]:
+    """Classify a single job folder against the pytest fixture whitelist signature."""
+    c_name = child.name
+    try:
+        if child.is_symlink():
+            return False, ["job directory is a symlink"], None
+
+        if not child.is_dir():
+            return False, ["not a directory"], None
+
+        if not _is_canonical_uuid(c_name):
+            return False, ["folder name is not a canonical UUID"], None
+
+        if _has_symlinks(child):
+            return False, ["contains symlinks inside job directory"], None
+
+        job_file = child / "job.json"
+        if job_file.is_symlink():
+            return False, ["job.json is a symlink"], None
+
+        if not job_file.is_file():
+            return False, ["job.json is missing or not a regular file"], None
+
+        st = job_file.stat()
+        if st.st_size > 1024 * 1024:
+            return False, ["job.json exceeds 1 MiB limit"], None
+
+        content = job_file.read_text(encoding="utf-8")
+        data = _safe_json_loads(content)
+        if not isinstance(data, dict):
+            return False, ["job.json root is not an object"], None
+
+        if data.get("job_id") != c_name:
+            return (
+                False,
+                [f"job.json job_id ({data.get('job_id')!r}) does not match directory name"],
+                None,
+            )
+
+        state = data.get("state")
+        if state not in ("done", "failed", "cancelled"):
+            return False, [f"state {state!r} is not terminal (done, failed, cancelled)"], None
+
+        repo_path_val = data.get("repo_path")
+        store_base = _pytest_basetemp(str(store_path))
+        repo_base = _pytest_basetemp(repo_path_val)
+        if store_base is not None and store_base == repo_base:
+            return False, ["repo_path shares the store's pytest basetemp"], None
+        is_repo_ok, repo_msg = _is_pytest_temp_repo(repo_path_val)
+        if not is_repo_ok:
+            return False, [repo_msg], None
+
+        pid = data.get("pid")
+        if pid is not None:
+            should_keep, pid_reason = _check_pid_status(pid)
+            if should_keep:
+                return False, [pid_reason or f"ambiguous pid: {pid!r}"], None
+
+        pgid = data.get("pgid")
+        if pgid is not None:
+            should_keep, pgid_reason = _check_pgid_status(pgid)
+            if should_keep:
+                return False, [pgid_reason or f"ambiguous pgid: {pgid!r}"], None
+
+        updated_raw = data.get("updated_at")
+        if updated_raw is not None:
+            ts = _parse_iso_ts(updated_raw)
+            if ts is None:
+                return False, ["updated_at is not parseable timezone-aware ISO 8601"], None
+        else:
+            ts = _parse_iso_ts(data.get("created_at"))
+            if ts is None:
+                return False, ["missing or unparseable timezone-aware created_at"], None
+
+        age_seconds = (now - ts.astimezone(timezone.utc)).total_seconds()
+        min_age_seconds = min_age_days * 86400.0
+        if age_seconds < min_age_seconds:
+            return (
+                False,
+                [
+                    f"job age ({age_seconds / 86400.0:.2f} days) is less than "
+                    f"min_age_days ({min_age_days} days)"
+                ],
+                None,
+            )
+
+        cand_info = {
+            "job_id": c_name,
+            "title": str(data.get("title", "")),
+            "state": str(state),
+            "repo_path": str(repo_path_val),
+            "reasons": [
+                "fixture signature match: terminal state, pytest temp repo, "
+                "no live process, age > min_age_days"
+            ],
+        }
+        return True, cand_info["reasons"], cand_info
+    except OSError as exc:
+        return False, [f"job directory or job.json unreadable: {exc}"], None
+    except (json.JSONDecodeError, ValueError) as exc:
+        return False, [f"job.json is not valid JSON: {exc}"], None
+    except Exception as exc:
+        return False, [f"unhandled error classifying job: {exc}"], None
+
+
+def parse_args(argv: Optional[list[str]] = None) -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        prog="agy_mcp.cleanup_fixtures",
+        description="Safe, dry-run-first fixture-row lister and cleaner for agy-mcp stores.",
+    )
+    parser.add_argument(
+        "--store",
+        required=True,
+        type=str,
+        help="Path to the agy-mcp state store directory.",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        default=False,
+        help="Enable deletion of confirmed candidate fixtures (default: dry run).",
+    )
+    parser.add_argument(
+        "--min-age-days",
+        type=float,
+        default=1.0,
+        help="Minimum age in days for fixture jobs to be candidates (default: 1.0).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        default=False,
+        help="Output result as JSON only.",
+    )
+    return parser.parse_args(argv)
+
+
+def run_cleanup(
+    store_path: Path,
+    *,
+    dry_run: bool = True,
+    min_age_days: float = 1.0,
+    before_delete: Optional[Callable[[str], None]] = None,
+) -> dict[str, Any]:
+    """Execute fixture cleanup or dry-run scan against store_path."""
+    if not math.isfinite(min_age_days) or min_age_days < 0:
+        raise ValueError("min_age_days must be finite and non-negative")
+
+    store_jobs = store_path / "jobs"
+    now = datetime.now(timezone.utc)
+    candidates: dict[str, dict[str, Any]] = {}
+    kept: dict[str, list[str]] = {}
+
+    children = sorted(store_jobs.iterdir(), key=lambda p: p.name)
+    for child in children:
+        if child.name.startswith(".cleanup-manifest-"):
+            continue
+
+        is_cand, reasons, cand_info = _classify_job(child, store_path, min_age_days, now)
+        if is_cand and cand_info is not None:
+            candidates[child.name] = cand_info
+        else:
+            kept[child.name] = reasons
+
+    # Rule 7: Follow-up edge protection from kept jobs to candidate jobs.
+    # A kept record we cannot read could hide an edge to a candidate, so any
+    # such record keeps every candidate (fail closed); a symlinked or absent
+    # job directory is not a readable job record and does not block (the frozen
+    # symlinked-job-dir case must still delete its unrelated candidate).
+    all_kept_strings: list[str] = []
+    unverified_kept: list[str] = []
+    for kid in list(kept.keys()):
+        k_dir = store_jobs / kid
+        try:
+            if k_dir.is_symlink():
+                continue
+            if not k_dir.is_dir():
+                continue
+            k_file = k_dir / "job.json"
+            if k_file.is_symlink() or not k_file.is_file():
+                unverified_kept.append(kid)
+                continue
+            if k_file.stat().st_size > 1024 * 1024:
+                unverified_kept.append(kid)
+                continue
+            k_data = _safe_json_loads(k_file.read_text(encoding="utf-8"))
+            if not isinstance(k_data, dict):
+                unverified_kept.append(kid)
+                continue
+            all_kept_strings.extend(_extract_strings(k_data))
+        except Exception:
+            unverified_kept.append(kid)
+            continue
+
+    if unverified_kept and candidates:
+        reason = (
+            "cannot verify follow-up edges; unreadable kept job record(s): "
+            + ", ".join(sorted(unverified_kept)[:5])
+        )
+        for cid in list(candidates):
+            candidates.pop(cid)
+            kept[cid] = [reason]
+
+    kept_text = "\0".join(all_kept_strings)
+
+    def _candidate_strings(cid: str) -> list[str]:
+        # Best-effort: the guard must not fail the whole cleanup because a newly
+        # kept row cannot be re-read; it only means fewer strings get protected.
+        c_file = store_jobs / cid / "job.json"
+        if not c_file.is_file() or c_file.is_symlink():
+            return []
+        try:
+            c_data = _safe_json_loads(c_file.read_text(encoding="utf-8"))
+            if isinstance(c_data, dict):
+                return _extract_strings(c_data)
+        except Exception:
+            return []
+        return []
+
+    kept_text = _apply_edge_protection(
+        candidates, kept, kept_text, strings_for=_candidate_strings
+    )
+
+    candidates_list = [candidates[cid] for cid in sorted(candidates.keys())]
+    kept_list = [{"job_id": kid, "reasons": kept[kid]} for kid in sorted(kept.keys())]
+
+    deleted_ids: list[str] = []
+    failed_ids: list[str] = []
+    skipped: list[dict[str, Any]] = []
+    manifest_path_str: Optional[str] = None
+
+    if not dry_run and candidates:
+        planned_ids = sorted(candidates.keys())
+        ts_str = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        manifest_target = store_jobs / f".cleanup-manifest-{ts_str}.json"
+        _write_manifest(
+            store_jobs,
+            manifest_target,
+            {"status": "planned", "planned_ids": planned_ids},
+        )
+        manifest_path_str = str(manifest_target.resolve())
+
+        for cid in planned_ids:
+            if before_delete is not None:
+                before_delete(cid)
+
+            c_dir = store_jobs / cid
+            is_cand, reasons, _ = _classify_job(c_dir, store_path, min_age_days, now)
+            if not is_cand:
+                failed_ids.append(cid)
+                skipped.append({"job_id": cid, "reasons": reasons})
+                continue
+
+            try:
+                _safe_delete_job_dir(c_dir, cid, store_jobs)
+                deleted_ids.append(cid)
+            except Exception as exc:
+                failed_ids.append(cid)
+                skipped.append({"job_id": cid, "reasons": [f"deletion failed: {exc}"]})
+
+        manifest_status = "partial" if failed_ids else "completed"
+        _write_manifest(
+            store_jobs,
+            manifest_target,
+            {
+                "status": manifest_status,
+                "removed_ids": deleted_ids,
+                "failed_ids": failed_ids,
+            },
+        )
+        manifest_path_str = str(manifest_target.resolve())
+
+    return {
+        "store": str(store_path.resolve()),
+        "dry_run": dry_run,
+        "min_age_days": min_age_days,
+        "candidates": candidates_list,
+        "kept": kept_list,
+        "skipped": skipped,
+        "candidate_count": len(candidates_list),
+        "kept_count": len(kept_list),
+        "skipped_count": len(skipped),
+        "deleted_ids": deleted_ids,
+        "deleted_count": len(deleted_ids),
+        "failed_ids": failed_ids,
+        "manifest": manifest_path_str,
+    }
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    """CLI entry point for python -m agy_mcp.cleanup_fixtures."""
+    try:
+        args = parse_args(argv)
+    except SystemExit as exc:
+        return exc.code
+
+    if not math.isfinite(args.min_age_days) or args.min_age_days < 0:
+        sys.stderr.write("Error: --min-age-days must be finite and non-negative\n")
+        return 2
+
+    # argparse's type=Path would normalize "" to Path(".") before this check,
+    # silently turning an empty argument into the current directory (D100).
+    store_raw = args.store
+    if not str(store_raw).strip():
+        sys.stderr.write("Error: --store path cannot be empty or whitespace\n")
+        return 2
+    store_path = Path(store_raw)
+    try:
+        abs_store = Path(os.path.abspath(store_path))
+
+        if (
+            store_path.is_symlink()
+            or abs_store.is_symlink()
+            or any(p.is_symlink() for p in abs_store.parents)
+            or abs_store.resolve(strict=False) != abs_store
+        ):
+            sys.stderr.write(
+                f"Error: store path or ancestor directory is a symlink: {store_path}\n"
+            )
+            return 2
+
+        if not store_path.exists():
+            sys.stderr.write(f"Error: store path does not exist: {store_path}\n")
+            return 2
+
+        if not store_path.is_dir():
+            sys.stderr.write(f"Error: store path is not a directory: {store_path}\n")
+            return 2
+
+        store_jobs = store_path / "jobs"
+        if store_jobs.is_symlink():
+            sys.stderr.write(f"Error: store/jobs is a symlink: {store_jobs}\n")
+            return 2
+
+        if not store_jobs.exists() or not store_jobs.is_dir():
+            sys.stderr.write(f"Error: store/jobs is missing or not a directory: {store_jobs}\n")
+            return 2
+
+        try:
+            next(store_jobs.iterdir(), None)
+        except OSError as exc:
+            sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
+            return 2
+
+        home_env = os.environ.get("HOME")
+        if not home_env:
+            sys.stderr.write("Error: HOME environment variable is not set\n")
+            return 2
+
+        resolved_home = Path(home_env).resolve(strict=False)
+        resolved_store = store_path.resolve(strict=False)
+        if resolved_home not in resolved_store.parents:
+            sys.stderr.write(
+                f"Error: resolved store {resolved_store} is not contained inside "
+                f"HOME {resolved_home}\n"
+            )
+            return 2
+    except OSError as exc:
+        sys.stderr.write(f"Error: cannot access store path or ancestor directory: {exc}\n")
+        return 2
+
+    try:
+        report = run_cleanup(
+            store_path,
+            dry_run=not args.yes,
+            min_age_days=args.min_age_days,
+        )
+    except OSError as exc:
+        sys.stderr.write(f"Error: store/jobs directory unreadable: {exc}\n")
+        return 2
+    except Exception as exc:
+        sys.stderr.write(f"Unexpected internal error: {exc}\n")
+        return 1
+
+    if args.json:
+        sys.stdout.write(json.dumps(report, indent=2) + "\n")
+    else:
+        # print() is banned in src/ (ruff T20); write the human report directly.
+        write = sys.stdout.write
+        write(f"Store: {report['store']}\n")
+        write(f"Dry run: {report['dry_run']}\n")
+        write(f"Min age (days): {report['min_age_days']}\n")
+        write(f"Candidates ({report['candidate_count']}):\n")
+        for c in report["candidates"]:
+            write(f"  {c['job_id']} [{c['state']}] {c['repo_path']}\n")
+            for r in c["reasons"]:
+                write(f"    - {r}\n")
+        write(f"Kept ({report['kept_count']}):\n")
+        for k in report["kept"]:
+            write(f"  {k['job_id']}\n")
+            for r in k["reasons"]:
+                write(f"    - {r}\n")
+        if not report["dry_run"]:
+            write(f"Deleted: {report['deleted_count']}\n")
+            if report.get("skipped"):
+                write(f"Skipped/Failed ({report['skipped_count']}):\n")
+                for s in report["skipped"]:
+                    write(f"  {s['job_id']}\n")
+                    for r in s["reasons"]:
+                        write(f"    - {r}\n")
+            if report["manifest"]:
+                write(f"Manifest: {report['manifest']}\n")
+
+    if report.get("failed_ids"):
+        return 1
+
+    return 0

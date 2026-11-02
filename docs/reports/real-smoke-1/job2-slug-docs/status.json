@@ -1,0 +1,74 @@
+{
+  "job_id": "97c5139e-ba79-49eb-b050-7a6b70de09d1",
+  "state": "done",
+  "elapsed_seconds": 264.25,
+  "title": "slug docs",
+  "branch": "agy/slug-docs-2bf72c13",
+  "base_commit": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "head_commit": "33fda9e20e144b93b0d2e3d945a7da717a350e75",
+  "commits_count": 2,
+  "files_modified": [
+    "README.md",
+    "slug/__init__.py"
+  ],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 396287,
+    "output_tokens": 17544,
+    "total_tokens": 413831
+  },
+  "next_actions": [
+    "Inspect result with agy_result",
+    "Review diff with agy_review",
+    "Clean up worktree with agy_cleanup"
+  ],
+  "error": null,
+  "usage_cost": null,
+  "resume_after": null,
+  "plan": {
+    "total": 0,
+    "done": 0,
+    "remaining": []
+  },
+  "facts": {},
+  "agent_report": null,
+  "scratchpad": [],
+  "verify": {
+    "requested": false,
+    "ran": false,
+    "passed": null,
+    "rc": null,
+    "duration_seconds": null,
+    "attempts": 0,
+    "last_tail": null
+  },
+  "last_cli_log_mtime": 1792964846.5351565,
+  "last_commit_at": "2026-10-26T03:16:40+05:30",
+  "worktree_dirty": false,
+  "recent_log_tail": [
+    "I1026 03:16:37.511420    3080 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xc69f4c06d4d76ff3 ResponseID: u3jeapKTJfjpjuMPm5St0Aw",
+    "I1026 03:16:44.032547    3103 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x93ce4c9c47639d32 ResponseID: vnjeat6fGIPRqfkPi8vN0Aw",
+    "I1026 03:16:47.599932    3177 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x2f3f80a5ba9e939b ResponseID: xHjeasHCN778juMPm8-EuQw",
+    "I1026 03:16:50.862114    3218 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd9b3c5518147421d ResponseID: yHjeaqjuHZulqfkP757CsQw",
+    "I1026 03:16:54.063812    3248 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x346ac76b8a7dbda7 ResponseID: y3jearPUKorC4-EP__bOuAw",
+    "I1026 03:16:56.825408    3314 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xa0f123d897a14ab8 ResponseID: znjeapSMPMuIqfkP7M-usQw",
+    "I1026 03:17:00.100798    3342 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xf55598fc79b88b7c ResponseID: 0njeaoz2C8HCjuMPkNOEkQs",
+    "I1026 03:17:02.859611    3389 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x6ad3181de8fec33a ResponseID: 1HjeaufsO-rEg8UP5IHnuQk",
+    "I1026 03:17:05.718864    3415 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x218028870d229d35 ResponseID: 13jeauzYKY-z4-EP_9_aoAo",
+    "I1026 03:17:08.596870    3461 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xec912725386d2525 ResponseID: 2njeavuCMdKAg8UP4tm3uQo",
+    "I1026 03:17:14.404516    3494 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x636c5997c7199f80 ResponseID: 3XjeaqzaHd6GjuMPnvLviAo",
+    "I1026 03:17:20.104245    3546 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x7ee76b85ee41c9f2 ResponseID: 43jeauClEerEg8UP5IHnuQk",
+    "I1026 03:17:26.492448       1 manager.go:857] CLI store manager shutting down",
+    "I1026 03:17:26.492731       1 conversation_manager.go:1034] Stopping conversation stream",
+    "I1026 03:17:26.492779     554 server.go:1300] Stream goroutine exited for a20e9a23-3349-4da9-9321-c062be609312, sending completion signal",
+    "E1026 03:17:26.505950    3742 telemetry.go:81] error recording trajectory segment analytics: Post \"https://daily-cloudcode-pa.googleapis.com/v1internal:recordTrajectoryAnalytics\": context canceled",
+    "I1026 03:17:26.529948    3440 server.go:3219] Language server shutting down",
+    "I1026 03:17:26.529963    3440 server.go:3224] Waiting for migrations to complete to prevent partial migration state...",
+    "E1026 03:17:26.536039     194 file_watcher.go:194] skipping empty or temp file:",
+    "E1026 03:17:26.536058     194 file_watcher.go:194] skipping empty or temp file:"
+  ]
+}

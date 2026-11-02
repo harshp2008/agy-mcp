@@ -1,0 +1,2 @@
+A  docs/reports/server/git-log.txt
+A  docs/reports/server/git-status.txt

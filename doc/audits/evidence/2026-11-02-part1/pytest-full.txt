@@ -1,0 +1,57 @@
+........................................................................ [  4%]
+........................................................................ [  8%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 37%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 54%]
+........................................................................ [ 58%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 79%]
+........................................................................ [ 84%]
+........................................................................ [ 88%]
+........................................................................ [ 92%]
+........................................................................ [ 96%]
+.......................................................                  [100%]
+============================= slowest 30 durations =============================
+7.63s call     tests/test_f3.py::test_f3_cancel_during_slow_verify
+5.92s call     tests/test_f1.py::test_f1_resume_serializes_with_previous_supervisor_finalization
+5.49s call     tests/test_f1.py::test_f1_invalid_commit_msg_kills_process_and_resumes
+4.13s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[submodule-config-fifo]
+4.13s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[submodule-HEAD-fifo]
+4.13s call     tests/test_f20.py::test_f20_counters_survive_simulated_restart
+4.10s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[linked_wt-HEAD-fifo]
+4.10s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[linked_wt-commondir-fifo]
+4.10s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[bare-config-fifo]
+4.09s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[bare-HEAD-fifo]
+4.09s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[common-config-fifo]
+4.08s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[normal-HEAD-fifo]
+4.08s call     tests/test_cleanup_jobs_fixes7.py::test_r7_matrix_fails_closed[normal-config-fifo]
+3.46s call     tests/test_server_e2e.py::test_server_e2e_crash_recovery_over_protocol[asyncio]
+3.46s call     tests/test_f1.py::test_f1_partial_commit_kills_process_and_resumes
+3.29s call     tests/test_installer_chapter.py::test_second_install_is_byte_identical[generic]
+3.19s call     tests/test_installer_chapter.py::test_upgrade_reinstalls_the_package_from_source
+3.19s call     tests/test_installer_chapter.py::test_upgrade_resolves_the_new_dependency_list
+3.17s call     tests/test_installer_chapter.py::test_second_install_is_byte_identical[dsh]
+3.02s call     tests/test_installer_chapter.py::test_fresh_default_install_is_generic_and_touches_no_dsh
+2.94s call     tests/test_installer_chapter.py::test_uninstall_without_client_removes_dsh_blocks
+2.92s call     tests/test_installer_chapter.py::test_rerun_prints_upgrade_hint
+2.88s call     tests/test_installer_chapter.py::test_uninstall_removes_only_its_own_files[generic]
+2.88s call     tests/test_server_e2e.py::test_server_e2e_denial_blocked[asyncio]
+2.85s call     tests/test_installer_chapter.py::test_comment_with_brackets_does_not_block_install
+2.83s call     tests/test_installer_chapter.py::test_dsh_install_preserves_mcp_search_block_and_user_text
+2.83s call     tests/test_installer_chapter.py::test_doctor_reports_healthy_install
+2.82s call     tests/test_server_e2e.py::test_server_e2e_needs_decision_and_resume[asyncio]
+2.81s call     tests/test_installer_chapter.py::test_fresh_dsh_install_writes_every_file
+2.81s call     tests/test_installer_chapter.py::test_agy_mcp_src_with_spaces_installs
+1711 passed in 337.68s (0:05:37)
+PYTEST_EXIT=0

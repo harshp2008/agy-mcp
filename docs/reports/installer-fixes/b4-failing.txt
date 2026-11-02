@@ -1,0 +1,39 @@
+Mon Oct 26 10:46:51 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q -k generic_json
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_generic_json_is_valid_and_run_sh_is_executable ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1223/test_generic_json_is_valid_and0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1223/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_generic_json_is_valid_and_run_sh_is_executable(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        home = tmp_path / "home"
+        home.mkdir()
+        proc = _run_installer(home, tmp_path, fake_wheel)
+        assert proc.returncode == 0, _output(proc)
+    
+        payload = json.loads(
+            (_install_dir(home) / "mcp-client-config.json").read_text(encoding="utf-8")
+        )
+        server = payload["mcpServers"]["agy"]
+        command = Path(server["command"])
+        assert command.is_file()
+        assert os.access(command, os.X_OK)
+        # B4: only the standard mcpServers keys belong in the generated JSON; the
+        # 360000 ms requirement is a printed note (and documented), not a key.
+>       assert set(server) == {"command", "args", "env"}
+E       AssertionError: assert {'args', 'com...allTimeoutMs'} == {'args', 'command', 'env'}
+E         
+E         Extra items in the left set:
+E         'note'
+E         'toolCallTimeoutMs'
+E         Use -v to get more diff
+
+tests/test_installer_chapter.py:540: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_generic_json_is_valid_and_run_sh_is_executable
+1 failed, 31 deselected in 3.50s
+rc=1

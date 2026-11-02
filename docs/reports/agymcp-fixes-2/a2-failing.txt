@@ -1,0 +1,47 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_shared_envelope_fields_equal_across_wait_review_result __________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1287/test_shared_envelope_fields_eq0')
+
+    def test_shared_envelope_fields_equal_across_wait_review_result(tmp_path: Path) -> None:
+        manager, repo_dir = _manager(tmp_path)
+        env = manager.start(
+            prompt="Perform task __SCENARIO:success_with_commits__",
+            repo_path=str(repo_dir),
+            title="A2 Review Envelope Test",
+        )
+    
+        waited = manager.wait(env.job_id, seconds=10)
+        assert waited.state == JobState.DONE
+        review = manager.review(env.job_id)
+        result = manager.result(env.job_id)
+    
+        waited_dict = waited.to_dict()
+        review_dict = review.to_dict()
+        result_dict = result.to_dict()
+    
+        # The fields must be populated first: comparing empty defaults would hide
+        # the very bug this test pins.
+        assert waited_dict["plan"]["total"] > 0, waited_dict["plan"]
+        assert waited_dict["facts"], waited_dict["facts"]
+        assert waited_dict["agent_report"], waited_dict["agent_report"]
+        assert waited_dict["scratchpad"], waited_dict["scratchpad"]
+    
+        for field_name in SHARED_FIELDS:
+>           assert review_dict[field_name] == waited_dict[field_name], (
+                f"agy_review {field_name!r} differs from agy_wait"
+            )
+E           AssertionError: agy_review 'plan' differs from agy_wait
+E           assert {'total': 0, ...emaining': []} == {'total': 2, ...emaining': []}
+E             
+E             Omitting 1 identical items, use -vv to show
+E             Differing items:
+E             {'done': 0} != {'done': 2}
+E             {'total': 0} != {'total': 2}
+E             Use -v to get more diff
+
+tests/test_agymcp_fixes2_a2.py:62: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_agymcp_fixes2_a2.py::test_shared_envelope_fields_equal_across_wait_review_result
+1 failed in 0.51s

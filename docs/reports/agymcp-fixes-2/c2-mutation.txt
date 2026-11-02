@@ -1,0 +1,43 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_uninstall_flow_style_patch_prints_no_restart_hint ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1311/test_uninstall_flow_style_patc0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1311/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_uninstall_flow_style_patch_prints_no_restart_hint(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """Nothing removed on a flow-style patch must not claim a restart is needed."""
+        home = tmp_path / "home"
+        home.mkdir()
+        patch = _patch_path(home)
+        patch.parent.mkdir(parents=True)
+        patch.write_text(
+            "user_style: [a, b]\n"
+            + PATCH_BEGIN
+            + "\n"
+            + "- insert:\n"
+            + "    - id: mcp-agy\n"
+            + PATCH_END
+            + "\n",
+            encoding="utf-8",
+        )
+    
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh", "--uninstall")
+        output = _output(proc)
+        assert proc.returncode == 0, output
+        assert "it uses flow style" in output
+>       assert "restart dsh from a normal terminal to unload the server" not in output
+E       AssertionError: assert 'restart dsh...d the server' not in 'install: un...k manually\n'
+E         
+E         'restart dsh from a...o unload the server' is contained here:
+E           install: uninstalling agy-mcp (dsh)
+E             - restart dsh from a normal terminal to unload the server
+E             - kept: /tmp/pytest-of-<user>/pytest-1311/test_uninstall_flow_style_patc0/home/.config/agy-mcp/config.toml, /tmp/pytest-of-<user>/pytest-1311/test_uninstall_flow_style_patc0/home/.local/state/agy-mcp and any .bak backups
+E           install: warning: not editing /tmp/pytest-of-<user>/pytest-1311/test_uninstall_flow_style_patc0/home/.dsh/profiles/web/cordis.patch.yml: it uses flow style ([...]); remove the agy-mcp block manually
+
+tests/test_installer_chapter.py:945: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_uninstall_flow_style_patch_prints_no_restart_hint
+1 failed, 39 deselected in 0.12s

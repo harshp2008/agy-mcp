@@ -1,0 +1,68 @@
+{
+  "job_id": "a1d820d5-67ea-488d-a8aa-c6d8c9736874",
+  "state": "needs_review",
+  "elapsed_seconds": 46.71,
+  "title": "f1-runtests",
+  "branch": "agy/f1-runtests-5f741c84",
+  "base_commit": "383892f62b00c72300a5402f3b840ef70629ae9f",
+  "head_commit": "383892f62b00c72300a5402f3b840ef70629ae9f",
+  "commits_count": 0,
+  "files_modified": [],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "next_actions": [
+    "Inspect security violation with agy_review",
+    "Clean up job with agy_cleanup"
+  ],
+  "error": null,
+  "response": "<untrusted_text id=\"cf51b13acd2738fa\">\n\n</untrusted_text id=\"cf51b13acd2738fa\">",
+  "diff_stat": "",
+  "commits": [],
+  "audit_events_tail": [
+    {
+      "ts": "2026-10-25T09:31:22.976143+00:00",
+      "event": "job_created",
+      "detail": {
+        "title": "f1-runtests",
+        "model": "gemini-3.8-flash-medium",
+        "max_minutes": 240,
+        "verify": null
+      }
+    },
+    {
+      "ts": "2026-10-25T09:31:22.996958+00:00",
+      "event": "state_transition",
+      "detail": {
+        "from": "queued",
+        "to": "running",
+        "trigger": "Worktree ready, process spawned & PID confirmed"
+      }
+    },
+    {
+      "ts": "2026-10-25T09:32:08.049927+00:00",
+      "event": "audit_violation",
+      "detail": {
+        "reason": "host_path_modified"
+      }
+    },
+    {
+      "ts": "2026-10-25T09:32:09.615261+00:00",
+      "event": "state_transition",
+      "detail": {
+        "from": "running",
+        "to": "needs_review",
+        "trigger": "Process terminated with rc 1",
+        "return_code": 1,
+        "review_reason": "host_path_modified"
+      }
+    }
+  ]
+}

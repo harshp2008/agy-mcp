@@ -1,0 +1,1 @@
+PASS: no unmasked email-like token in installer/docs/test files

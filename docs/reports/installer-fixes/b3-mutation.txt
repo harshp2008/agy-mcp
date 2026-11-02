@@ -1,0 +1,42 @@
+Mon Oct 26 10:46:33 AM IST 2026
+CMD (mutation: '#' comment exemption replaced by '@'): env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q -k 'comment_with_brackets or still_refuses'
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+______________ test_comment_with_brackets_does_not_block_install _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1222/test_comment_with_brackets_doe0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1222/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_comment_with_brackets_does_not_block_install(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """A '#' comment containing [x] is not flow style and must not stop the install."""
+        home = tmp_path / "home"
+        patch = _patch_path(home)
+        patch.parent.mkdir(parents=True)
+        comment = "# keep this list [x] intact; it is a comment, not YAML flow style\n"
+        patch.write_text(comment + "user_patch: keep-me\n", encoding="utf-8")
+    
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+>       assert proc.returncode == 0, _output(proc)
+E       AssertionError: # >>> ai-stack agymcp >>>
+E         - insert:
+E             - id: mcp-agy
+E               name: '@deepseek-ai/dsh-mcp-client'
+E               config:
+E                 serverName: agy
+E                 transport: stdio
+E                 command: /tmp/pytest-of-<user>/pytest-1222/test_comment_with_brackets_doe0/home/.config/ai-stack/agymcp/run.sh
+E                 toolCallTimeoutMs: 360000
+E         # <<< ai-stack agymcp <<<
+E         1: # keep this list [x] intact; it is a comment, not YAML flow style
+E         install: error: refusing to edit /tmp/pytest-of-<user>/pytest-1222/test_comment_with_brackets_doe0/home/.dsh/profiles/web/cordis.patch.yml: it uses flow style ([...]) on the line(s) printed above; add the block printed above manually, then rerun. The file was not changed.
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['~/Documents/GITHUB PROJECTS/agy-mcp/installer/install.sh', '--client', 'dsh'], retur...e ([...]) on the line(s) printed above; add the block printed above manually, then rerun. The file was not changed.\n').returncode
+
+tests/test_installer_chapter.py:784: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_comment_with_brackets_does_not_block_install
+1 failed, 1 passed, 30 deselected in 0.13s
+rc=1

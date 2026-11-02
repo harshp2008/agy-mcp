@@ -1,0 +1,24 @@
+{
+  "job_id": "36c40d32-654c-4316-ab0b-05c6a2e57584",
+  "state": "needs_decision",
+  "elapsed_seconds": 69.19,
+  "title": "s4-decision",
+  "branch": "agy/s4-decision-4cd5d236",
+  "base_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+  "head_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+  "commits_count": 0,
+  "files_modified": [],
+  "skipped_files": [],
+  "denials": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 118106,
+    "output_tokens": 4797,
+    "total_tokens": 122903
+  },
+  "next_actions": [
+    "Resume job with decision using agy_resume",
+    "Cancel job with agy_cancel"
+  ],
+  "error": null
+}

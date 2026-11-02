@@ -1,0 +1,15 @@
+f6769ab test(server): verify break-it-on-purpose mutations and record test evidence
+8003c9f test(server): implement end-to-end MCP protocol and unit tests
+0bf65db docs(setup): document DSH configuration, safety model, and quick start
+1b869ce feat(server): implement FastMCP stdio server and tools per SPEC section 8
+ae1a382 docs(argv-fix): update test matrix and scaffold notes for argv and prompt hardening
+e26a689 fix(manager): align denial, security review reasons, and auto-fix loop per SPEC section 15
+c577b11 feat(prompt): package and format standing preamble with untrusted wrapping per SPEC section 14
+821990e test(fake_agy): enforce strict CLI validation and exact argv verification per SPEC section 10
+995d20c fix(runner): enforce strict flag ordering and forbidden flag checks per SPEC section 10
+c2c1664 docs(runtime-audit): update test matrix and scaffold notes for runtime audit
+7318268 feat(runtime-audit): harden process isolation, async provisioning, supervisor resilience, and recovery adoption
+5c67928 docs(runtime): update test matrix and scaffold notes for runtime layer
+4a45847 test(runtime): add break-it-on-purpose verification tests and snapshot persistence
+584df3c feat(manager): implement JobManager coordinating all nine MCP operations
+29ce39d feat(recovery): implement crash recovery and startup reconciliation

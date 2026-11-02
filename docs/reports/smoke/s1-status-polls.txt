@@ -1,0 +1,96 @@
+[
+  {
+    "timestamp": "2026-10-25 12:02:25",
+    "elapsed": 0.0,
+    "status": {
+      "job_id": "042e655b-96c0-4b25-a99b-6d1d515c230e",
+      "state": "queued",
+      "elapsed_seconds": 0.02,
+      "title": "s1-mathutil",
+      "branch": "agy/s1-mathutil-042e655b",
+      "base_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+      "head_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+      "commits_count": 0,
+      "files_modified": [],
+      "skipped_files": [],
+      "denials": [],
+      "warnings": [
+        "dangerous_permission_rules_present: {'permission_rules_effective': [], 'dangerous_allow_rules': [], 'warnings': []}"
+      ],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "next_actions": [
+        "Wait for execution to start with agy_wait",
+        "Check status with agy_status"
+      ],
+      "error": null,
+      "last_cli_log_mtime": 0.0,
+      "last_commit_at": null,
+      "worktree_dirty": false,
+      "recent_log_tail": []
+    }
+  },
+  {
+    "timestamp": "2026-10-25 12:02:40",
+    "elapsed": 15.0,
+    "status": {
+      "job_id": "042e655b-96c0-4b25-a99b-6d1d515c230e",
+      "state": "running",
+      "elapsed_seconds": 15.06,
+      "title": "s1-mathutil",
+      "branch": "agy/s1-mathutil-fac9e9b7",
+      "base_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+      "head_commit": "e5edf73c059557a7fa999287a2493b311432e60a",
+      "commits_count": 0,
+      "files_modified": [],
+      "skipped_files": [],
+      "denials": [],
+      "warnings": [
+        "dangerous_permission_rules_present: {'permission_rules_effective': [], 'dangerous_allow_rules': [], 'warnings': []}"
+      ],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "next_actions": [
+        "Wait for completion with agy_wait",
+        "Check status with agy_status"
+      ],
+      "error": null,
+      "last_cli_log_mtime": 1792909960.3805537,
+      "last_commit_at": "2026-10-25T12:02:25+05:30",
+      "worktree_dirty": false,
+      "recent_log_tail": [
+        "[truncated ...]",
+        "n\\\")\": invalid grant string: \"command(python3 -c \\\"\\nimport subprocess\\nout = subprocess.check_output(['gresource', 'extract', '/usr/lib/gnome-shell/libshell-14.so', '/org/gnome/shell/ui/extensionSystem.js']).decode('utf-8')\\nlines = out.splitlines()\\nfor i, line in enumerate(lines):\\n    if '_callExtensionEnable(' in line:\\n        for j in range(i+20, min(len(lines), i+40)):\\n            print(lines[j])\\n        break\\n\\\")\"",
+        "W1025 12:02:34.413615     757 permission_grant_store.go:501] ignoring invalid allow entry \"command(python3 -c \\\"\\nimport subprocess\\ntry:\\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\\n    import time\\n    time.sleep(2)\\n    proc.terminate()\\n    print('Prefs launched successfully')\\nexcept Exception as e:\\n    print('Error:', e)\\n\\\")\": invalid grant string: \"command(python3 -c \\\"\\nimport subprocess\\ntry:\\n    proc = subprocess.Popen(['gnome-extensions', 'prefs', 'adaptive-dock@harsh.patel'])\\n    import time\\n    time.sleep(2)\\n    proc.terminate()\\n    print('Prefs launched successfully')\\nexcept Exception as e:\\n    print('Error:', e)\\n\\\")\"",
+        "I1025 12:02:34.415017     757 monitor_config_manager_external.go:53] externalMonitorConfigManager: initialized with embedded config (3 monitors)",
+        "I1025 12:02:34.415050     757 monitoring.go:401] [Sonar] Resolved active tags: [policy_guardian sonar_skip_tags] (detected surface: \"\")",
+        "I1025 12:02:34.415068     757 monitoring.go:401] [Sonar] Resolved active tags: [policy_guardian sonar_skip_tags] (detected surface: \"\")",
+        "I1025 12:02:34.685120     241 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected",
+        "I1025 12:02:34.685145     241 server.go:3872] [RemoteControl] Resolved proxyServerURL: \"\"",
+        "I1025 12:02:34.685151     241 experiment_manager.go:70] Experiments refreshed after login",
+        "I1025 12:02:34.685207     241 experiment_manager.go:66] Starting experiment refresh after login",
+        "I1025 12:02:34.685202     999 manager.go:1455] Reloading system slash commands",
+        "E1025 12:02:34.688072     999 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory",
+        "E1025 12:02:34.688090     999 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory",
+        "I1025 12:02:34.689487     999 manager.go:1463] Slash commands unchanged, skipping update",
+        "I1025 12:02:34.825092     241 server.go:4169] [RemoteControl] Session toggle is off, staying disconnected",
+        "I1025 12:02:34.825120     241 server.go:3872] [RemoteControl] Resolved proxyServerURL: \"\"",
+        "I1025 12:02:34.825126     241 experiment_manager.go:70] Experiments refreshed after login",
+        "I1025 12:02:34.825396    1093 manager.go:1455] Reloading system slash commands",
+        "E1025 12:02:34.827394    1093 projects.go:204] projects store: project_store_get_standalone_read_failed: GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory",
+        "E1025 12:02:34.827415    1093 errorreport.go:224] GetProject: failed to read standalone project file: open ~/.gemini/config/projects/outside-of-project.json: no such file or directory",
+        "I1025 12:02:34.829066    1093 manager.go:1463] Slash commands unchanged, skipping update",
+        "I1025 12:02:34.907915     240 quota_manager.go:45] doRefreshQuota: starting reload (force=true)",
+        "I1025 12:02:35.782287     456 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x4c2a13d300e234e0 ResponseID: g6LdavTZGPCyjuMP_uzwwQY",
+        "I1025 12:02:36.141124     577 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x981661b019e18eb7",
+        "I1025 12:02:40.381758     988 http_helpers.go:349] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x48f608f723363a75 ResponseID: hKLdaspT5Ofj4Q_p9I_JBg"
+      ]
+    }
+  }
+]

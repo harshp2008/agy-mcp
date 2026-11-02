@@ -1,0 +1,864 @@
+diff --git a/installer/agents_block.md b/installer/agents_block.md
+index 9b49ea1..bcb5b66 100644
+--- a/installer/agents_block.md
++++ b/installer/agents_block.md
+@@ -7,10 +7,11 @@ You can hand self-contained coding work to Google's agy through the mcp__agy__ t
+ - Before delegating, call agy_usage. Do not start new jobs when the Gemini Models weekly bucket remaining is below 10% or its 5h bucket remaining is below 15%. Run at most 2 jobs at once.
+ 
+ ## Running a job
+-1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-8 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs).
++1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-8 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs). Do not pass the model parameter unless the human named one; use the server default.
+ 2. agy_wait until the state changes (it returns after at most 5 minutes; call it again). Do not poll agy_status in a loop.
+-3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. Read agent_report and plan to see what was skipped. Read the diff before accepting.
+-4. Accept = merge the job branch into an integration branch yourself (git merge --no-ff), run the project's tests, then agy_cleanup. Reject = agy_resume with specific feedback (keeping manual resumes to a small number; the cumulative max_minutes budget still applies), or discard and redo with a better prompt.
++3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. agy_review carries the same plan, facts, agent_report and scratchpad as agy_wait, so read agent_report and plan to see what was skipped. Read the diff before accepting.
++4. Accept = merge the job branch into a dedicated integration branch in the project (for example integration/<topic>), run the project's tests there, then agy_cleanup. Never merge, fast-forward or push into main/master or the repository's default branch: that is the human's decision. Record "merge integration/<topic> into main when ready" in docs/orchestrator/REPORT.md and commit docs/orchestrator/ on the integration branch, not on main. Reject = agy_resume with specific feedback (keeping manual resumes to a small number; the cumulative max_minutes budget still applies), or discard and redo with a better prompt.
++5. Never pass force=true to agy_cleanup. If agy_cleanup refuses, remove the worktree only (delete_branch false), add the job branch to NEEDS_HUMAN and continue.
+ 
+ ## States and what to do
+ - done: review as above.
+diff --git a/installer/install.sh b/installer/install.sh
+index d948e02..d07f95f 100755
+--- a/installer/install.sh
++++ b/installer/install.sh
+@@ -89,6 +89,30 @@ fi
+ agy_mcp_client() { printf '%s\n' "${AGY_MCP_CLIENT:-generic}"; }
+ agy_mcp_dry_run() { [[ "${AGY_MCP_DRY_RUN:-0}" == "1" ]]; }
+ agy_mcp_upgrade() { [[ "${AGY_MCP_UPGRADE:-0}" == "1" ]]; }
++
++# True when the venv's agy_mcp was installed in editable mode. PEP 660 editable
++# installs leave a PEP 610 direct_url.json with "editable": true inside the
++# dist-info; older setup.py develop installs leave an .egg-link or an
++# __editable__*.pth shim. A plain wheel copy has none of these, which is how
++# --upgrade can tell the two apart (C1).
++agy_mcp_is_editable_install() {
++    local venv="$1"
++    local marker=""
++    for marker in "$venv"/lib/python*/site-packages/agy_mcp-*.dist-info/direct_url.json \
++                  "$venv"/lib/python*/site-packages/agy-mcp-*.dist-info/direct_url.json; do
++        [[ -f "$marker" ]] || continue
++        if grep -Eq '"editable"[[:space:]]*:[[:space:]]*true' "$marker"; then
++            return 0
++        fi
++    done
++    if compgen -G "$venv/lib/python*/site-packages/agy_mcp.egg-link" >/dev/null; then
++        return 0
++    fi
++    if compgen -G "$venv/lib/python*/site-packages/__editable__*agy_mcp*.pth" >/dev/null; then
++        return 0
++    fi
++    return 1
++}
+ agy_mcp_conf_dir() { printf '%s\n' "${CONF_DIR:-$HOME/.config/ai-stack}"; }
+ agy_mcp_dir() { printf '%s\n' "$(agy_mcp_conf_dir)/agymcp"; }
+ agy_mcp_run_sh() { printf '%s\n' "$(agy_mcp_dir)/run.sh"; }
+@@ -341,12 +365,29 @@ agy_mcp_install_core() {
+         read -r -a extra <<< "$AGY_MCP_PIP_ARGS"
+     fi
+ 
++    local editable_install=0
++    if agy_mcp_is_editable_install "$venv"; then
++        editable_install=1
++    fi
++
+     if agy_mcp_upgrade; then
+-        # Reinstall the package itself from AGY_MCP_SRC. --no-deps keeps this a
+-        # single package replacement: the dependencies are already resolved in
+-        # the existing venv and do not need a second network round trip.
+-        note "reinstalling agy-mcp from $src (--upgrade)"
+-        agy_mcp_run env -u PYTHONPATH "$venv/bin/python" -m pip install --disable-pip-version-check --upgrade --force-reinstall --no-deps "${extra[@]}" "$src" || die "pip upgrade of '$src' failed"
++        if [[ "${AGY_MCP_EDITABLE:-0}" == "1" ]]; then
++            editable=(-e)
++        fi
++        if [[ "$editable_install" == "1" && "${AGY_MCP_EDITABLE:-0}" != "1" ]]; then
++            # An editable install already executes the source tree: reinstalling
++            # would replace the link with a normal copy and silently stop live
++            # edits from taking effect (C1).
++            note "editable install is already live; nothing to reinstall"
++        elif [[ "${AGY_MCP_EDITABLE:-0}" == "1" ]]; then
++            note "reinstalling agy-mcp from $src (--upgrade)"
++            agy_mcp_run env -u PYTHONPATH "$venv/bin/python" -m pip install --disable-pip-version-check --upgrade "${editable[@]}" "${extra[@]}" "$src" || die "pip upgrade of '$src' failed"
++        else
++            # Dependencies are deliberately re-resolved: a new version can add
++            # or raise a requirement, and --no-deps would leave the venv stale.
++            note "reinstalling agy-mcp from $src (--upgrade)"
++            agy_mcp_run env -u PYTHONPATH "$venv/bin/python" -m pip install --disable-pip-version-check --upgrade --force-reinstall "${extra[@]}" "$src" || die "pip upgrade of '$src' failed"
++        fi
+     elif [[ -x "$venv/bin/python" ]] && ! agy_mcp_dry_run && env -u PYTHONPATH "$venv/bin/python" -c 'import agy_mcp' >/dev/null 2>&1; then
+         note "agy-mcp already installed; rerun with --upgrade to reinstall from $src"
+     else
+@@ -378,10 +419,11 @@ You can hand self-contained coding work to Google's agy through the mcp__agy__ t
+ - Before delegating, call agy_usage. Do not start new jobs when the Gemini Models weekly bucket remaining is below 10% or its 5h bucket remaining is below 15%. Run at most 2 jobs at once.
+ 
+ ## Running a job
+-1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-8 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs).
++1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-8 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs). Do not pass the model parameter unless the human named one; use the server default.
+ 2. agy_wait until the state changes (it returns after at most 5 minutes; call it again). Do not poll agy_status in a loop.
+-3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. Read agent_report and plan to see what was skipped. Read the diff before accepting.
+-4. Accept = merge the job branch into an integration branch yourself (git merge --no-ff), run the project's tests, then agy_cleanup. Reject = agy_resume with specific feedback (keeping manual resumes to a small number; the cumulative max_minutes budget still applies), or discard and redo with a better prompt.
++3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. agy_review carries the same plan, facts, agent_report and scratchpad as agy_wait, so read agent_report and plan to see what was skipped. Read the diff before accepting.
++4. Accept = merge the job branch into a dedicated integration branch in the project (for example integration/<topic>), run the project's tests there, then agy_cleanup. Never merge, fast-forward or push into main/master or the repository's default branch: that is the human's decision. Record "merge integration/<topic> into main when ready" in docs/orchestrator/REPORT.md and commit docs/orchestrator/ on the integration branch, not on main. Reject = agy_resume with specific feedback (keeping manual resumes to a small number; the cumulative max_minutes budget still applies), or discard and redo with a better prompt.
++5. Never pass force=true to agy_cleanup. If agy_cleanup refuses, remove the worktree only (delete_branch false), add the job branch to NEEDS_HUMAN and continue.
+ 
+ ## States and what to do
+ - done: review as above.
+@@ -754,16 +796,18 @@ agy_mcp_has_block() {
+ }
+ 
+ # Remove this chapter's marker block from one dsh file and print what was removed.
++# Returns 0 only when the block was actually removed, so the caller never claims
++# a removal (and a restart) that did not happen (C2).
+ agy_mcp_remove_dsh_block() {
+     local file="$1"
+     local begin="$2"
+     local end="$3"
+     if ! agy_mcp_has_block "$file" "$begin"; then
+-        return 0
++        return 1
+     fi
+     if [[ -n "$(agy_mcp_flow_style_offenders "$file")" ]]; then
+         warn "not editing $file: it uses flow style ([...]); remove the agy-mcp block manually"
+-        return 0
++        return 1
+     fi
+     agy_mcp_run cp -p -- "$file" "$file.bak"
+     agy_mcp_remove_block "$file" "$begin" "$end" || true
+@@ -777,12 +821,14 @@ agy_mcp_remove_dsh_blocks() {
+     patch="$(agy_mcp_dsh_patch_path)"
+     agents="$(agy_mcp_dsh_agents_path)"
+     if agy_mcp_has_block "$patch" "$AGY_MCP_PATCH_BEGIN"; then
+-        agy_mcp_remove_dsh_block "$patch" "$AGY_MCP_PATCH_BEGIN" "$AGY_MCP_PATCH_END"
+-        removed=1
++        if agy_mcp_remove_dsh_block "$patch" "$AGY_MCP_PATCH_BEGIN" "$AGY_MCP_PATCH_END"; then
++            removed=1
++        fi
+     fi
+     if agy_mcp_has_block "$agents" "$AGY_MCP_AGENTS_BEGIN"; then
+-        agy_mcp_remove_dsh_block "$agents" "$AGY_MCP_AGENTS_BEGIN" "$AGY_MCP_AGENTS_END"
+-        removed=1
++        if agy_mcp_remove_dsh_block "$agents" "$AGY_MCP_AGENTS_BEGIN" "$AGY_MCP_AGENTS_END"; then
++            removed=1
++        fi
+     fi
+     if [[ "$removed" == "1" ]]; then
+         note "restart dsh from a normal terminal to unload the server"
+diff --git a/src/agy_mcp/manager.py b/src/agy_mcp/manager.py
+index 8776c49..28bff0e 100644
+--- a/src/agy_mcp/manager.py
++++ b/src/agy_mcp/manager.py
+@@ -62,6 +62,7 @@ from agy_mcp.models import (
+     build_result_response,
+     build_review_response,
+     build_standard_envelope,
++    standard_envelope_fields,
+ )
+ from agy_mcp.recovery import get_liveness_summary
+ from agy_mcp.runner import (
+@@ -76,6 +77,7 @@ from agy_mcp.supervisor import JobSupervisor
+ from agy_mcp.util import env_allowlist, format_fresh_prompt, format_resume_prompt
+ from agy_mcp.verify import format_fix_prompt, is_verify_allowed, verify_rejection_message
+ from agy_mcp.worktree import (
++    allocate_branch_name,
+     cleanup_worktree,
+     create_worktree,
+     find_drifted_worktrees,
+@@ -351,7 +353,10 @@ class JobManager:
+                     code="cap_exceeded",
+                 )
+ 
+-            # 8. Create Job record (queued)
++            # 8. Create Job record (queued). The branch name is allocated and
++            # persisted here, before agy_start returns, so the envelope, the
++            # provisioning thread, every later tool and git use one name (A3).
++            branch_name = allocate_branch_name(resolved_repo, title)
+             job = create_job(
+                 repo_path=resolved_repo,
+                 title=title,
+@@ -361,6 +366,7 @@ class JobManager:
+                 verify=verify,
+                 base_state_dir=self.state_dir,
+                 base_commit=base_commit_sha,
++                branch=branch_name,
+             )
+             job.source_dirty = source_dirty
+             job.warnings.extend(warnings)
+@@ -398,6 +404,7 @@ class JobManager:
+                 title=job.title,
+                 config=self.config,
+                 base_state_dir=self.state_dir,
++                branch=job.branch,
+             )
+             job.worktree_path = wt_path
+             job.branch = branch
+@@ -839,23 +846,7 @@ class JobManager:
+             recent_tail = []
+ 
+         return JobStatusResponse(
+-            job_id=envelope.job_id,
+-            state=envelope.state,
+-            elapsed_seconds=envelope.elapsed_seconds,
+-            title=envelope.title,
+-            branch=envelope.branch,
+-            base_commit=envelope.base_commit,
+-            head_commit=envelope.head_commit,
+-            commits_count=envelope.commits_count,
+-            files_modified=envelope.files_modified,
+-            skipped_files=envelope.skipped_files,
+-            denials=envelope.denials,
+-            denied_commands=envelope.denied_commands,
+-            warnings=envelope.warnings,
+-            tokens=envelope.tokens,
+-            next_actions=envelope.next_actions,
+-            error=envelope.error,
+-            verify=envelope.verify,
++            **standard_envelope_fields(envelope),
+             last_cli_log_mtime=float(liveness["last_cli_log_mtime"]),
+             last_commit_at=str(liveness["last_commit_at"]) if liveness["last_commit_at"] else None,
+             worktree_dirty=bool(liveness["worktree_dirty"]),
+diff --git a/src/agy_mcp/models.py b/src/agy_mcp/models.py
+index 39fef82..45901e7 100644
+--- a/src/agy_mcp/models.py
++++ b/src/agy_mcp/models.py
+@@ -694,6 +694,46 @@ def build_standard_envelope(
+     )
+ 
+ 
++def standard_envelope_fields(envelope: StandardEnvelope) -> dict[str, Any]:
++    """Return every ``StandardEnvelope`` field as keyword arguments.
++
++    The extended payloads (status, result, review) are dataclasses that inherit
++    the base envelope. They used to copy base fields one by one, so a newly
++    added base field silently fell back to its dataclass default (that is how
++    agy_review lost ``plan``/``facts``/``agent_report``/``scratchpad`` while
++    agy_wait returned them). Building every extended payload through this one
++    helper keeps SPEC section 8's "consistent base schema" promise in one
++    place; each builder only adds or overrides its own fields.
++    """
++    return {
++        "job_id": envelope.job_id,
++        "state": envelope.state,
++        "elapsed_seconds": envelope.elapsed_seconds,
++        "title": envelope.title,
++        "model_resolved": envelope.model_resolved,
++        "branch": envelope.branch,
++        "base_commit": envelope.base_commit,
++        "head_commit": envelope.head_commit,
++        "commits_count": envelope.commits_count,
++        "files_modified": envelope.files_modified,
++        "skipped_files": envelope.skipped_files,
++        "denials": envelope.denials,
++        "denied_commands": envelope.denied_commands,
++        "denied_tools": envelope.denied_tools,
++        "warnings": envelope.warnings,
++        "tokens": envelope.tokens,
++        "next_actions": envelope.next_actions,
++        "error": envelope.error,
++        "usage_cost": envelope.usage_cost,
++        "resume_after": envelope.resume_after,
++        "plan": envelope.plan,
++        "facts": envelope.facts,
++        "agent_report": envelope.agent_report,
++        "scratchpad": envelope.scratchpad,
++        "verify": envelope.verify,
++    }
++
++
+ @dataclass
+ class JobStatusResponse(StandardEnvelope):
+     """Extended payload for agy_status."""
+@@ -795,27 +835,9 @@ def build_result_response(
+         capped_audit_events.append(ev_copy)
+ 
+     envelope = build_standard_envelope(job, elapsed_seconds=elapsed_seconds, error=error)
++    fields = standard_envelope_fields(envelope)
+     return JobResultResponse(
+-        job_id=envelope.job_id,
+-        state=envelope.state,
+-        elapsed_seconds=envelope.elapsed_seconds,
+-        title=envelope.title,
+-        model_resolved=envelope.model_resolved,
+-        branch=envelope.branch,
+-        base_commit=envelope.base_commit,
+-        head_commit=envelope.head_commit,
+-        commits_count=envelope.commits_count,
+-        files_modified=envelope.files_modified,
+-        skipped_files=envelope.skipped_files,
+-        denials=envelope.denials,
+-        denied_commands=envelope.denied_commands,
+-        warnings=envelope.warnings,
+-        tokens=envelope.tokens,
+-        next_actions=envelope.next_actions,
+-        error=envelope.error,
+-        usage_cost=envelope.usage_cost,
+-        resume_after=envelope.resume_after,
+-        verify=envelope.verify,
++        **fields,
+         response=wrapped_response,
+         diff_stat=wrapped_diff_stat,
+         commits=capped_commits,
+@@ -873,27 +895,10 @@ def build_review_response(
+             0,
+             "Audit data is unavailable; a human must review this job before merging",
+         )
++    fields = standard_envelope_fields(envelope)
++    fields["next_actions"] = next_actions
+     return JobReviewResponse(
+-        job_id=envelope.job_id,
+-        state=envelope.state,
+-        elapsed_seconds=envelope.elapsed_seconds,
+-        title=envelope.title,
+-        model_resolved=envelope.model_resolved,
+-        branch=envelope.branch,
+-        base_commit=envelope.base_commit,
+-        head_commit=envelope.head_commit,
+-        commits_count=envelope.commits_count,
+-        files_modified=envelope.files_modified,
+-        skipped_files=envelope.skipped_files,
+-        denials=envelope.denials,
+-        denied_commands=envelope.denied_commands,
+-        warnings=envelope.warnings,
+-        tokens=envelope.tokens,
+-        next_actions=next_actions,
+-        error=envelope.error,
+-        usage_cost=envelope.usage_cost,
+-        resume_after=envelope.resume_after,
+-        verify=envelope.verify,
++        **fields,
+         merge_base=merge_base,
+         ahead=ahead,
+         behind=behind,
+diff --git a/src/agy_mcp/recovery.py b/src/agy_mcp/recovery.py
+index ff18131..620a455 100644
+--- a/src/agy_mcp/recovery.py
++++ b/src/agy_mcp/recovery.py
+@@ -243,6 +243,36 @@ def reconcile_on_startup(
+                 if resolved_model:
+                     job.model_resolved = resolved_model
+ 
++                # D68/C4 ordering: append the usage row before the recovered
++                # state becomes observable, and name the state that is about to
++                # be persisted. A reader that sees the terminal/review state in
++                # job.json therefore always finds the record.
++                try:
++                    from agy_mcp.usage import (
++                        has_usage_record_for_generation,
++                        record_usage,
++                    )
++
++                    usage_path = state_dir / "usage.jsonl"
++                    # If the finalizer died after appending its row but before
++                    # the transition was observable, this run already has a
++                    # record; appending another would count its minutes twice.
++                    if not has_usage_record_for_generation(
++                        usage_path, job.job_id, job.run_generation or 1
++                    ):
++                        tokens_dict = (
++                            job.tokens.to_dict() if hasattr(job.tokens, "to_dict") else {}
++                        )
++                        record_usage(
++                            usage_path=usage_path,
++                            job=job,
++                            duration_seconds=job.cumulative_minutes * 60.0,
++                            tokens=tokens_dict,
++                            usage_cost=job.usage_cost,
++                            state=target_state,
++                        )
++                except Exception:
++                    pass
+                 transition_job_state(
+                     job,
+                     target_state,
+@@ -250,22 +280,6 @@ def reconcile_on_startup(
+                     detail=detail,
+                     base_state_dir=state_dir,
+                 )
+-                try:
+-                    from agy_mcp.usage import record_usage
+-
+-                    usage_path = state_dir / "usage.jsonl"
+-                    tokens_dict = (
+-                        job.tokens.to_dict() if hasattr(job.tokens, "to_dict") else {}
+-                    )
+-                    record_usage(
+-                        usage_path=usage_path,
+-                        job=job,
+-                        duration_seconds=job.cumulative_minutes * 60.0,
+-                        tokens=tokens_dict,
+-                        usage_cost=job.usage_cost,
+-                    )
+-                except Exception:
+-                    pass
+                 reconciled.append(job)
+ 
+         elif job.state == JobState.QUEUED:
+diff --git a/src/agy_mcp/supervisor.py b/src/agy_mcp/supervisor.py
+index 4651fcc..9332b6c 100644
+--- a/src/agy_mcp/supervisor.py
++++ b/src/agy_mcp/supervisor.py
+@@ -155,6 +155,9 @@ class JobSupervisor:
+         self.audit_violation_reason: Optional[str] = None
+         self._stopped: bool = False
+         self._recorded_audit_events: set[tuple[str, str, Any]] = set()
++        # Set by _record_usage_before_state so _finalize_non_running_process
++        # does not append a second usage row for the same run (C4).
++        self._usage_recorded_state: Optional[JobState] = None
+ 
+         # Take or use baseline snapshot
+         from agy_mcp.audit import load_snapshot
+@@ -180,6 +183,7 @@ class JobSupervisor:
+             checkpoint_interval_seconds=self.checkpoint_interval_seconds,
+             commit_lock=self.commit_lock,
+             is_process_alive=lambda: self.runner.poll(self.handle) is None,
++            before_state_transition=self._record_usage_before_state,
+         )
+ 
+     def _handle_watcher_audit_violation(self, reason: str) -> None:
+@@ -344,29 +348,24 @@ class JobSupervisor:
+             if "report_claims_unverified" not in self.job.warnings:
+                 self.job.warnings.append("report_claims_unverified")
+ 
+-    def _finalize_non_running_process(self, current_time: float) -> JobState:
+-        """Finalize when job state has left RUNNING while process group may still be alive."""
+-        # 1. Checkpoint-commit safe dirty work (suppressed on fatal audit violation)
+-        if not self.is_audit_violated and not getattr(self, "audit_violation_reason", None):
+-            self._try_pre_kill_checkpoint()
+-
+-        # 2. Persist conversation_id (from stdout.txt or cli.log)
+-        cid = self._extract_conversation_id()
+-        if cid:
+-            self.job.conversation_id = cid
+-            save_job(self.job, self.base_state_dir)
++    def _record_usage_before_state(self, target_state: JobState) -> None:
++        """Append the usage row before a state transition becomes observable (D68/C4).
+ 
+-        # 3. Kill the process group (SIGTERM then SIGKILL) if still alive
+-        if self.runner.poll(self.handle) is None:
+-            self.runner.kill(self.handle, grace_seconds=self.grace_kill_seconds)
++        Used by paths that persist a terminal or needs_review state outside
++        _finalize_terminated_process: the watcher-driven transitions and the
++        tick-error fail-closed paths. A reader that observes the new state in
++        job.json therefore always finds the matching usage.jsonl row. The
++        record carries the state about to be persisted (D68 rule 2).
+ 
+-        # 4. Fresh final usage reading for per-job cost (D59, Item 5)
++        Idempotent per generation: ``_usage_recorded_state`` makes
++        _finalize_non_running_process skip a second append for the same run.
++        """
++        if self._usage_recorded_state is not None:
++            return
+         try:
+             self._final_usage_cost(self._fresh_usage_reading())
+         except Exception:
+             pass
+-
+-        # 5. Clean up handles
+         try:
+             from agy_mcp.usage import record_usage
+ 
+@@ -375,20 +374,69 @@ class JobSupervisor:
+                 if self.base_state_dir
+                 else self.job_dir.parent.parent
+             )
+-            usage_path = base_state / "usage.jsonl"
+             tokens_dict = (
+                 self.job.tokens.to_dict() if hasattr(self.job.tokens, "to_dict") else {}
+             )
+             record_usage(
+-                usage_path=usage_path,
++                usage_path=base_state / "usage.jsonl",
+                 job=self.job,
+                 duration_seconds=self.job.cumulative_minutes * 60.0,
+                 tokens=tokens_dict,
+                 usage_cost=self.job.usage_cost,
++                state=target_state,
+             )
++            self._usage_recorded_state = target_state
+         except Exception:
+             pass
+ 
++    def _finalize_non_running_process(self, current_time: float) -> JobState:
++        """Finalize when job state has left RUNNING while process group may still be alive."""
++        # 1. Checkpoint-commit safe dirty work (suppressed on fatal audit violation)
++        if not self.is_audit_violated and not getattr(self, "audit_violation_reason", None):
++            self._try_pre_kill_checkpoint()
++
++        # 2. Persist conversation_id (from stdout.txt or cli.log)
++        cid = self._extract_conversation_id()
++        if cid:
++            self.job.conversation_id = cid
++            save_job(self.job, self.base_state_dir)
++
++        # 3. Kill the process group (SIGTERM then SIGKILL) if still alive
++        if self.runner.poll(self.handle) is None:
++            self.runner.kill(self.handle, grace_seconds=self.grace_kill_seconds)
++
++        # 4. Usage row (D68/C4). When the transition that brought us here went
++        # through _record_usage_before_state the row already exists and must
++        # not be appended twice; otherwise append it now (cancel and other
++        # external transitions).
++        if self._usage_recorded_state is None:
++            try:
++                self._final_usage_cost(self._fresh_usage_reading())
++            except Exception:
++                pass
++            try:
++                from agy_mcp.usage import record_usage
++
++                base_state = (
++                    Path(self.base_state_dir)
++                    if self.base_state_dir
++                    else self.job_dir.parent.parent
++                )
++                usage_path = base_state / "usage.jsonl"
++                tokens_dict = (
++                    self.job.tokens.to_dict() if hasattr(self.job.tokens, "to_dict") else {}
++                )
++                record_usage(
++                    usage_path=usage_path,
++                    job=self.job,
++                    duration_seconds=self.job.cumulative_minutes * 60.0,
++                    tokens=tokens_dict,
++                    usage_cost=self.job.usage_cost,
++                )
++            except Exception:
++                pass
++
++        # 5. Clean up handles
+         self.runner.cleanup(self.handle)
+ 
+         # 5. Write audit event
+@@ -924,6 +972,7 @@ class JobSupervisor:
+                 usage_cost=self.job.usage_cost,
+                 state=final_state,
+             )
++            self._usage_recorded_state = final_state
+         except Exception:
+             pass
+ 
+@@ -971,6 +1020,7 @@ class JobSupervisor:
+                                 audit_check.fatal_reason or "audit_violation"
+                             )
+                             if self.job.state == JobState.RUNNING:
++                                self._record_usage_before_state(JobState.NEEDS_REVIEW)
+                                 transition_job_state(
+                                     job=self.job,
+                                     target_state=JobState.NEEDS_REVIEW,
+@@ -996,6 +1046,7 @@ class JobSupervisor:
+                         self.is_audit_violated = True
+                         self.audit_violation_reason = "audit_unavailable"
+                         if self.job.state == JobState.RUNNING:
++                            self._record_usage_before_state(JobState.NEEDS_REVIEW)
+                             transition_job_state(
+                                 job=self.job,
+                                 target_state=JobState.NEEDS_REVIEW,
+@@ -1024,6 +1075,7 @@ class JobSupervisor:
+                 )
+                 if consecutive_errors >= 3:
+                     if self.job.state == JobState.RUNNING:
++                        self._record_usage_before_state(JobState.FAILED)
+                         try:
+                             transition_job_state(
+                                 job=self.job,
+diff --git a/src/agy_mcp/usage.py b/src/agy_mcp/usage.py
+index 6757f34..0a09020 100644
+--- a/src/agy_mcp/usage.py
++++ b/src/agy_mcp/usage.py
+@@ -777,6 +777,10 @@ def record_usage(
+         "commits_count": job.commits_count,
+         "tokens": tokens,
+         "usage_cost": usage_cost if usage_cost is not None else job.usage_cost,
++        # Identifies the run inside a job (resume increments it). Recovery uses
++        # it to avoid appending a second row for a run whose finalizer already
++        # wrote one before crashing (D68/C4). Older rows default to 1.
++        "run_generation": int(getattr(job, "run_generation", 1) or 1),
+     }
+ 
+     line = json.dumps(record) + "\n"
+@@ -793,6 +797,43 @@ def record_usage(
+         os.close(fd)
+ 
+ 
++def has_usage_record_for_generation(
++    usage_path: Path, job_id: str, run_generation: int, max_bytes: int = 2 * 1024 * 1024
++) -> bool:
++    """True when ``usage.jsonl`` already has a row for this job run (D68/C4).
++
++    Reads at most ``max_bytes`` from the end of the append-only log. Rows that
++    predate the ``run_generation`` field are treated as generation 1, which is
++    the default generation of a fresh job.
++    """
++    if not usage_path.is_file():
++        return False
++    try:
++        with open(usage_path, "rb") as handle:
++            handle.seek(0, os.SEEK_END)
++            size = handle.tell()
++            handle.seek(max(0, size - max_bytes))
++            data = handle.read()
++    except OSError:
++        return False
++    for line in data.decode("utf-8", errors="replace").splitlines():
++        if not line.strip():
++            continue
++        try:
++            record = json.loads(line)
++        except (ValueError, TypeError):
++            continue
++        if not isinstance(record, dict) or record.get("job_id") != job_id:
++            continue
++        try:
++            generation = int(record.get("run_generation", 1) or 1)
++        except (TypeError, ValueError):
++            generation = 1
++        if generation == int(run_generation or 1):
++            return True
++    return False
++
++
+ def check_daily_cap(state_dir: Path, daily_cap: int) -> bool:
+     """Check if the count of job starts today has reached daily_jobs_cap under lock."""
+     return check_and_increment_daily_cap(state_dir, daily_cap=daily_cap)
+diff --git a/src/agy_mcp/watcher.py b/src/agy_mcp/watcher.py
+index 46c77ff..be68fab 100644
+--- a/src/agy_mcp/watcher.py
++++ b/src/agy_mcp/watcher.py
+@@ -172,9 +172,13 @@ class CommitWatcher:
+         settle_window_seconds: float = 5.0,
+         commit_lock: Optional[threading.Lock] = None,
+         is_process_alive: Optional[Callable[[], bool]] = None,
++        before_state_transition: Optional[Callable[[JobState], None]] = None,
+     ) -> None:
+         self.job = job
+         self.on_audit_violation = on_audit_violation
++        # Called immediately before this watcher persists a needs_review state.
++        # The supervisor uses it to append the usage row first (D68/C4).
++        self.before_state_transition = before_state_transition
+         self.checkpoint_interval_seconds = checkpoint_interval_seconds
+         self.home = home
+         self.base_state_dir = base_state_dir
+@@ -189,6 +193,11 @@ class CommitWatcher:
+         self.validation_failure_count: int = 0
+         self.last_checkpoint_time: Optional[float] = None
+ 
++    def _notify_before_state_transition(self) -> None:
++        """Call the supervisor hook before persisting needs_review (D68/C4)."""
++        if self.before_state_transition is not None:
++            self.before_state_transition(JobState.NEEDS_REVIEW)
++
+     def tick(self, now: Optional[float] = None) -> Optional[str]:
+         """Execute a single polling tick with settle window, validation, and commit pipeline."""
+         if self.job.state != JobState.RUNNING:
+@@ -327,6 +336,7 @@ class CommitWatcher:
+                     )
+                 except OSError:
+                     logger.warning("commit_msg_discarded_event_failed")
++                self._notify_before_state_transition()
+                 transition_job_state(
+                     self.job,
+                     JobState.NEEDS_REVIEW,
+@@ -343,6 +353,7 @@ class CommitWatcher:
+         # cannot be "cleaned up" by a commit that removes its evidence.
+         findings = audit(self.job, self.baseline_snapshot, home=self.home)
+         if findings.has_fatal:
++            self._notify_before_state_transition()
+             transition_job_state(
+                 self.job,
+                 JobState.NEEDS_REVIEW,
+@@ -373,6 +384,7 @@ class CommitWatcher:
+                     self.job.skipped_files, staging.skipped_files
+                 )
+             if staging.sensitive_partial_commit:
++                self._notify_before_state_transition()
+                 transition_job_state(
+                     self.job,
+                     JobState.NEEDS_REVIEW,
+diff --git a/src/agy_mcp/worktree.py b/src/agy_mcp/worktree.py
+index 8011bd1..a101cc6 100644
+--- a/src/agy_mcp/worktree.py
++++ b/src/agy_mcp/worktree.py
+@@ -173,6 +173,38 @@ def preflight(
+     )
+ 
+ 
++def allocate_branch_name(
++    repo_path: Path,
++    title: str,
++    id_generator: Optional[Callable[[], str]] = None,
++) -> str:
++    """Allocate a non-colliding ``agy/<slug>-<shortid>`` branch name without creating it.
++
++    Kept separate from :func:`create_worktree` so the manager can persist the
++    exact name in ``job.json`` *before* returning the agy_start envelope (A3).
++    The name used to be guessed at job creation from the job id and then
++    silently replaced by a ``secrets.token_hex(4)`` name in the provisioning
++    thread, so the start envelope and git disagreed.
++    """
++    resolved_repo = Path(repo_path).resolve(strict=True)
++    slug = derive_branch_slug(title)
++    id_gen = id_generator or (lambda: secrets.token_hex(4))
++    for _ in range(10):
++        candidate = f"agy/{slug}-{id_gen()}"
++
++        # Validate git branch ref format
++        ref_check = run_git(["check-ref-format", "--branch", candidate], resolved_repo)
++        if ref_check.returncode != 0:
++            continue
++
++        # Check for branch collision
++        exists_check = run_git(["rev-parse", "--verify", f"refs/heads/{candidate}"], resolved_repo)
++        if exists_check.returncode != 0:
++            return candidate
++
++    raise RuntimeError("Failed to allocate a non-colliding branch name after 10 attempts")
++
++
+ def create_worktree(
+     repo_path: Path,
+     job_dir: Path,
+@@ -181,8 +213,14 @@ def create_worktree(
+     timeout_seconds: Optional[int] = None,
+     base_state_dir: Optional[Path] = None,
+     id_generator: Optional[Callable[[], str]] = None,
++    branch: Optional[str] = None,
+ ) -> tuple[Path, str, str]:
+-    """Create a linked git worktree for the job with collision-resistant branch naming."""
++    """Create a linked git worktree for the job with collision-resistant branch naming.
++
++    When ``branch`` is given it is used verbatim (the manager already allocated
++    and persisted it, A3). A collision at this point fails the job instead of
++    silently renaming the branch out from under the start envelope.
++    """
+     cfg = config or Config()
+     resolved_repo = Path(repo_path).resolve(strict=True)
+ 
+@@ -201,27 +239,16 @@ def create_worktree(
+     except OSError:
+         pass
+ 
+-    # 2. Derive unique branch name
+-    slug = derive_branch_slug(title)
+-    id_gen = id_generator or (lambda: secrets.token_hex(4))
+-    branch = ""
+-    for _ in range(10):
+-        short_id = id_gen()
+-        candidate = f"agy/{slug}-{short_id}"
+-
+-        # Validate git branch ref format
+-        ref_check = run_git(["check-ref-format", "--branch", candidate], resolved_repo)
++    # 2. Use the pre-allocated name when given, otherwise allocate one now.
++    if branch is not None:
++        ref_check = run_git(["check-ref-format", "--branch", branch], resolved_repo)
+         if ref_check.returncode != 0:
+-            continue
+-
+-        # Check for branch collision
+-        exists_check = run_git(["rev-parse", "--verify", f"refs/heads/{candidate}"], resolved_repo)
+-        if exists_check.returncode != 0:
+-            branch = candidate
+-            break
+-
+-    if not branch:
+-        raise RuntimeError("Failed to allocate a non-colliding branch name after 10 attempts")
++            raise RuntimeError(f"Pre-allocated branch name is not a valid git ref: {branch!r}")
++        exists_check = run_git(["rev-parse", "--verify", f"refs/heads/{branch}"], resolved_repo)
++        if exists_check.returncode == 0:
++            raise RuntimeError(f"Pre-allocated branch '{branch}' already exists")
++    else:
++        branch = allocate_branch_name(resolved_repo, title, id_generator)
+ 
+     # 3. Provision worktree
+     worktree_path = job_dir / "work"
+@@ -353,6 +380,49 @@ def remove_worktree(
+     return freed_bytes
+ 
+ 
++def count_unmerged_commits(repo_path: Path, branch: str) -> int:
++    """Count commits reachable from ``branch`` but from neither HEAD nor any other local branch.
++
++    Reachability is the correct test, not ``base_commit..<branch>``: a job
++    branch is unmerged only when deleting it would make a commit unreachable.
++    Reachability is ancestor-closed, so a branch whose tip is reachable from
++    HEAD or from another local branch has *all* of its commits reachable and
++    is safe to delete. ``git branch -d`` only compares against HEAD (and the
++    upstream), which is why it is not used as the gate below.
++
++    Squash and cherry-pick merges create a new commit and leave the original
++    commits unreachable; such branches therefore still count as unmerged and
++    are refused without ``force=True``.
++
++    An already-missing branch returns 0 (nothing to lose). A failing git query
++    raises ``RuntimeError`` so cleanup fails closed instead of deleting blind.
++    """
++    heads = run_git(["for-each-ref", "--format=%(refname:short)", "refs/heads"], repo_path)
++    if heads.returncode != 0:
++        raise RuntimeError(
++            f"Unable to list local branches in '{repo_path}': {heads.stderr.strip()}"
++        )
++    local_branches = [line.strip() for line in heads.stdout.splitlines() if line.strip()]
++    if branch not in local_branches:
++        return 0
++
++    # Every other local branch (minus the job branch itself) is a negative
++    # revision: a commit counted by rev-list is one that no surviving ref can
++    # reach after the deletion.
++    others = [name for name in local_branches if name != branch]
++    res = run_git(["rev-list", "--count", branch, "--not", "HEAD", *others], repo_path)
++    if res.returncode != 0:
++        raise RuntimeError(
++            f"Unable to count unmerged commits on branch '{branch}': {res.stderr.strip()}"
++        )
++    try:
++        return int(res.stdout.strip() or 0)
++    except ValueError:
++        raise RuntimeError(
++            f"Unable to count unmerged commits on branch '{branch}': unexpected git output"
++        ) from None
++
++
+ def cleanup_worktree(
+     job: Job,
+     remove_worktree_flag: bool = True,
+@@ -373,19 +443,18 @@ def cleanup_worktree(
+                     f"Refusing to cleanup dirty worktree for job '{job.job_id}' without force=True"
+                 )
+ 
+-        # Check unmerged commits on branch
++        # Check unmerged commits on branch. "Unmerged" means some commit
++        # reachable from the branch is not reachable from HEAD or from any
++        # other local branch: a branch merged into an integration branch (or
++        # fast-forwarded into the default branch from a detached HEAD) is safe
++        # to delete because no commit becomes unreachable.
+         if delete_branch_flag and job.repo_path.exists():
+-            log_res = run_git(
+-                ["rev-list", "--count", f"{job.base_commit}..{job.branch}"],
+-                job.repo_path,
+-            )
+-            if log_res.returncode == 0:
+-                count = int(log_res.stdout.strip() or 0)
+-                if count > 0:
+-                    raise RuntimeError(
+-                        f"Refusing to delete branch '{job.branch}' with {count} unmerged commits "
+-                        f"without force=True"
+-                    )
++            count = count_unmerged_commits(job.repo_path, job.branch)
++            if count > 0:
++                raise RuntimeError(
++                    f"Refusing to delete branch '{job.branch}' with {count} unmerged commits "
++                    f"without force=True"
++                )
+ 
+     freed = 0
+     worktree_removed = False
+@@ -400,8 +469,10 @@ def cleanup_worktree(
+         worktree_removed = True
+ 
+     if delete_branch_flag and job.repo_path.exists():
+-        flag = "-D" if force else "-d"
+-        del_res = run_git(["branch", flag, job.branch], job.repo_path)
++        # -D is deliberate: the reachability gate above already proved that no
++        # commit is lost, and `git branch -d` would still refuse a branch that
++        # is merged into another local branch but not into HEAD.
++        del_res = run_git(["branch", "-D", job.branch], job.repo_path)
+         branch_deleted = del_res.returncode == 0
+ 
+     return JobCleanupResponse(

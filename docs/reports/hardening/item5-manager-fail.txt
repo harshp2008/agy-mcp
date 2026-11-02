@@ -1,0 +1,117 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_______________ test_provision_cancelled_kill_failure_is_audited _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-809/test_provision_cancelled_kill_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e69b888dac0>
+
+    def test_provision_cancelled_kill_failure_is_audited(
+        tmp_path: Path, monkeypatch
+    ) -> None:
+        """A kill failure during a cancelled launch appends cleanup_error, state stays cancelled."""
+        runner = LocalProcessRunner(executable=FAKE_AGY)
+        manager = JobManager(
+            config=Config(),
+            runner=runner,
+            base_state_dir=tmp_path / "state",
+            home=tmp_path,
+            settle_window_seconds=0.05,
+            poll_interval_seconds=0.05,
+        )
+        repo_dir = tmp_path / "repo"
+        make_repo(repo_dir, initial_commit=True)
+        handles, orig_kill = _install_fail_first_kill(runner, monkeypatch)
+    
+        def cancel_then_raise(job, home=None):
+            from agy_mcp.jobs import transition_job_state
+    
+            transition_job_state(
+                job,
+                JobState.CANCELLED,
+                event_trigger="simulated cancel",
+                base_state_dir=manager.state_dir,
+            )
+            raise RuntimeError(f"setup exploded under {tmp_path}")
+    
+        monkeypatch.setattr("agy_mcp.manager.take_snapshot", cancel_then_raise)
+    
+        env = manager.start(
+            prompt="Hang __SCENARIO:hang__",
+            repo_path=str(repo_dir),
+            title="Cancelled Kill Failure Test",
+        )
+        job_dir = get_job_dir(env.job_id, manager.state_dir)
+        try:
+>           poll_until(
+                lambda: any(e.get("event") == "cleanup_error" for e in _cleanup_events(job_dir))
+            )
+
+tests/test_manager.py:1280: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+predicate = <function test_provision_cancelled_kill_failure_is_audited.<locals>.<lambda> at 0x7e69b827fd80>
+timeout_seconds = 15.0, poll_interval = 0.05
+error_message = 'Timed out waiting for condition'
+
+    def poll_until(
+        predicate: Callable[[], bool],
+        timeout_seconds: float = 15.0,
+        poll_interval: float = 0.05,
+        error_message: str = "Timed out waiting for condition",
+    ) -> None:
+        deadline = time.time() + timeout_seconds
+        while time.time() < deadline:
+            if predicate():
+                return
+            time.sleep(poll_interval)
+        if not predicate():
+>           raise TimeoutError(f"{error_message} after {timeout_seconds}s")
+E           TimeoutError: Timed out waiting for condition after 15.0s
+
+tests/test_manager.py:33: TimeoutError
+_________________ test_provision_setup_failure_kill_is_audited _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-809/test_provision_setup_failure_k0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e69b8893bc0>
+
+    def test_provision_setup_failure_kill_is_audited(tmp_path: Path, monkeypatch) -> None:
+        """A kill failure during setup cleanup appends cleanup_error; outcome stays setup_failed."""
+        runner = LocalProcessRunner(executable=FAKE_AGY)
+        manager = JobManager(
+            config=Config(),
+            runner=runner,
+            base_state_dir=tmp_path / "state",
+            home=tmp_path,
+            settle_window_seconds=0.05,
+            poll_interval_seconds=0.05,
+        )
+        repo_dir = tmp_path / "repo"
+        make_repo(repo_dir, initial_commit=True)
+        _install_fail_first_kill(runner, monkeypatch)
+    
+        def fail_snapshot(job, home=None):
+            raise RuntimeError(f"snapshot exploded under {tmp_path}")
+    
+        monkeypatch.setattr("agy_mcp.manager.take_snapshot", fail_snapshot)
+    
+        env = manager.start(
+            prompt="Hang __SCENARIO:hang__",
+            repo_path=str(repo_dir),
+            title="Setup Failure Kill Test",
+        )
+        job_dir = get_job_dir(env.job_id, manager.state_dir)
+        try:
+            poll_until(
+                lambda: get_job(env.job_id, manager.state_dir).state == JobState.FAILED
+            )
+            job = get_job(env.job_id, manager.state_dir)
+            assert job.review_reason == "setup_failed"
+            events = [e for e in _cleanup_events(job_dir) if e.get("event") == "cleanup_error"]
+>           assert events
+E           assert []
+
+tests/test_manager.py:1327: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_manager.py::test_provision_cancelled_kill_failure_is_audited
+FAILED tests/test_manager.py::test_provision_setup_failure_kill_is_audited - ...
+2 failed in 15.60s

@@ -1,0 +1,63 @@
+...F                                                                     [100%]
+=================================== FAILURES ===================================
+________ test_recovery_does_not_duplicate_a_usage_row_for_the_same_run _________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1380/test_recovery_does_not_duplica0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x756c9a8ea930>
+
+    def test_recovery_does_not_duplicate_a_usage_row_for_the_same_run(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The D68 crash window: row appended, then the process dies before the state.
+    
+        Recovery must not append a second row for the same run generation, or the
+        run's duration and cumulative minutes are counted twice in usage.jsonl.
+        """
+        repo_dir = tmp_path / "repo"
+        make_repo(repo_dir, initial_commit=True)
+        state_dir = tmp_path / "state"
+        state_dir.mkdir()
+        job = create_job(
+            repo_path=repo_dir,
+            title="C4 Crash Window",
+            prompt="Execute task",
+            model="gemini-3.8-flash-medium",
+            max_minutes=60,
+            base_state_dir=state_dir,
+        )
+        job_dir = get_job_dir(job.job_id, state_dir)
+        (job_dir / "stdout.txt").write_text(
+            json.dumps({"status": "SUCCESS", "response": "recovered work"}),
+            encoding="utf-8",
+        )
+        job.state = JobState.RUNNING
+        job.pid = None
+        job.start_time = None
+        job.cumulative_minutes = 2.0
+        save_job(job, state_dir)
+        # The crashed finalizer already appended its row (D68) but died before the
+        # state transition could become observable.
+        record_usage(
+            usage_path=state_dir / "usage.jsonl",
+            job=job,
+            duration_seconds=120.0,
+            tokens={"total_tokens": 5},
+            state=JobState.DONE,
+        )
+        assert len(_usage_rows(state_dir)) == 1
+    
+        reconcile_on_startup(
+            state_dir=state_dir, runner=LocalProcessRunner(executable=FAKE_AGY), home=tmp_path
+        )
+    
+        rows = _usage_rows(state_dir)
+        assert get_job(job.job_id, state_dir).state != JobState.RUNNING
+>       assert len(rows) == 1, rows
+E       AssertionError: [{'ts': '2026-10-26T13:18:34.442197+00:00', 'job_id': '9d06ec70-f7ad-4593-9669-05f953928050', 'state': 'done', 'model'...', 'job_id': '9d06ec70-f7ad-4593-9669-05f953928050', 'state': 'needs_review', 'model': 'gemini-3.8-flash-medium', ...}]
+E       assert 2 == 1
+E        +  where 2 = len([{'ts': '2026-10-26T13:18:34.442197+00:00', 'job_id': '9d06ec70-f7ad-4593-9669-05f953928050', 'state': 'done', 'model'...', 'job_id': '9d06ec70-f7ad-4593-9669-05f953928050', 'state': 'needs_review', 'model': 'gemini-3.8-flash-medium', ...}])
+
+tests/test_agymcp_fixes2_c4.py:302: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_agymcp_fixes2_c4.py::test_recovery_does_not_duplicate_a_usage_row_for_the_same_run
+1 failed, 3 passed in 2.32s

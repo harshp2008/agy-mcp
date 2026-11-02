@@ -1,0 +1,57 @@
+2026-10-26T03:49:23+05:30
+........................................................................ [ 12%]
+........................................................................ [ 24%]
+........................................................................ [ 36%]
+........................................................................ [ 48%]
+........................................................................ [ 60%]
+......................................F................................. [ 73%]
+........................................................................ [ 85%]
+........................................................................ [ 97%]
+...............                                                          [100%]
+=================================== FAILURES ===================================
+____________________ test_runner_kill_escalates_to_sigkill _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-922/test_runner_kill_escalates_to_0')
+
+    def test_runner_kill_escalates_to_sigkill(tmp_path: Path) -> None:
+        runner = LocalProcessRunner(executable=FAKE_AGY)
+        stdout_file = tmp_path / "stdout.txt"
+        stderr_file = tmp_path / "stderr.txt"
+        log_file = tmp_path / "cli.log"
+        tmp_env_dir = tmp_path / "tmp_job"
+        tmp_env_dir.mkdir()
+    
+        env = env_allowlist(job_tmp_dir=tmp_env_dir, home=tmp_path)
+        argv = build_argv(
+            agy_binary=FAKE_AGY,
+            prompt="Hang test __SCENARIO:hang_ignore_sigterm__",
+            model="gemini-3.8-flash-medium",
+            print_timeout_seconds=60,
+            log_file=log_file,
+        )
+    
+        handle = runner.launch(
+            job_id="test-job-stubborn",
+            workdir=tmp_path,
+            args=argv,
+            env=env,
+            stdout_path=stdout_file,
+            stderr_path=stderr_file,
+        )
+    
+        time.sleep(0.05)
+        assert runner.poll(handle) is None
+    
+        # Kill with short grace period
+        runner.kill(handle, grace_seconds=0.3)
+    
+        rc = runner.poll(handle)
+        assert rc is not None
+>       assert rc == -signal.SIGKILL
+E       assert -15 == -<Signals.SIGKILL: 9>
+E        +  where <Signals.SIGKILL: 9> = signal.SIGKILL
+
+tests/test_runner.py:321: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_runner.py::test_runner_kill_escalates_to_sigkill - assert -...
+1 failed, 590 passed in 132.97s (0:02:12)

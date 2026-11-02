@@ -1,0 +1,163 @@
+diff --git a/docs/DECISIONS.md b/docs/DECISIONS.md
+index 657154a..1761601 100644
+--- a/docs/DECISIONS.md
++++ b/docs/DECISIONS.md
+@@ -476,3 +476,14 @@ Status: Approved
+ 
+ ### D78: agy-mcp fixes-2 evidence and reports
+ - *Rule:* Every raw command output referenced by D70-D77 is stored under `docs/reports/agymcp-fixes-2/` (`baseline-full.txt`, per-item `*-failing.txt`, `*-passing.txt`, `*-mutation.txt`, `c3-30passes.txt`, `c4-crash-window.txt`). The STEP 0 baseline recorded `632 passed in 200.11s` before any change.
++
++### D79: Workflow Selection Is a Short Block Section; Examples Live in ORCHESTRATION.md
++- *Rationale:* the orchestrator guidance in `installer/agents_block.md` is injected into every session and replayed on every step, so length is a recurring context cost. Worked examples and run numbers are reference material that is read once, not every step. Putting the examples in the block would make every step pay for them.
++- *Rule:*
++  1. The block gains a `## Choosing a workflow` section: write `docs/orchestrator/PLAN.md` first with the chosen workflow and why; then the four names GATED (default when tests can check the result), MICRO (risky core code or a task that cannot be specified up front), RESEARCH (no spec possible) and DIRECT (tiny). An ambiguous goal with nobody watching takes the most reasonable reading, says which in `PLAN.md`, and continues.
++  2. GATED writes the contract and `tests/acceptance/` first, gives one job "make tests/acceptance pass, never modify tests/acceptance, add your own tests", waits without polling, checks that the acceptance tests are untouched (restoring them from the orchestrator's commit if needed), reviews the diff, merges into `integration/<topic>`, and runs the acceptance tests and the full suite itself. At most one fix job; an optional second job for extra tests or hardening is gated the same way.
++  3. MICRO is 3-5 chunks, one job each, with `agy_review`, diff read, merge, full suite and `agy_cleanup` after every job. RESEARCH delegates only self-contained sub-topics and marks claims `VERIFIED` only with a source, otherwise `ASSUMED`. DIRECT does tiny work without agy.
++  4. The always-on rules stay: self-contained prompt (goal, files, constraints, 3-10 step checklist, verify command, commit subject <= 72 characters), `agy_usage` before every start, handover to the orchestrator below the quota floor logged in `docs/orchestrator/DECISIONS.md`, odd states handled with `agy_status`/`agy_resume`/`agy_cancel`, and no digging into agy-mcp's source, config or state directories. The existing checklist range in "Running a job" was changed from 3-8 to 3-10 so the two rules agree.
++  5. `installer/install.sh` embeds the same text inside `agy_mcp_write_agents_guidance`; the two copies stay byte-identical and the installer tests compare the generated block with `installer/agents_block.md`.
++  6. Size budget: block 34 -> 43 lines (+9), under the +28 net-growth limit and the 62-line test cap. Worked examples (run 1 RESEARCH/prototype: 5 jobs, 82 steps, ~$0.12, 1.73 weekly points; run 2 GATED: 1 build + 1 fix job, 46 steps, ~$0.04, 0.57 points, gate caught a `connect()` deadlock; run 3 MICRO: 4 jobs, 49 steps, ~$0.05, 1.60 points, extra tests and hardening) are in `docs/ORCHESTRATION.md`, with a single-sample caveat.
++  7. Tests: `tests/test_installer_chapter.py::test_agents_block_names_the_four_workflows`, `::test_agents_block_protects_acceptance_tests`, `::test_agents_block_states_the_commit_subject_limit` and `::test_agents_block_fits_the_workflow_budget` (<= 62 lines). Evidence under `docs/reports/orchestrator-workflows/`.
+diff --git a/docs/ORCHESTRATION.md b/docs/ORCHESTRATION.md
+index fa8aa2a..913ab5d 100644
+--- a/docs/ORCHESTRATION.md
++++ b/docs/ORCHESTRATION.md
+@@ -338,3 +338,51 @@ approval policy `ask` (UNSURE), other permission presets (UNSURE), whether a
+ denied call reaches the server (UNSURE), and whether `toolCallTimeoutMs` is
+ honoured (UNSURE; the 150.9 s `agy_wait` stayed well below every relevant
+ timeout).
++
++---
++
++## Choosing a workflow
++
++The installer guidance tells the orchestrator to choose a workflow before any
++work and to write the choice, with the reason, on the first line of
++`docs/orchestrator/PLAN.md`. The order of the decision rule is:
++
++1. **GATED** if acceptance tests can express the result now. Write the contract
++   and the tests in `tests/acceptance/`, commit them, then give one big job the
++   goal "make tests/acceptance pass, never modify tests/acceptance, add your own
++   tests". The acceptance tests are the gate: the orchestrator checks that the
++   job did not touch them, reads the diff, merges into `integration/<topic>`,
++   and runs the acceptance tests and the full suite itself. The job's own claim
++   of success is not evidence.
++2. **RESEARCH** if no specification is possible yet. The orchestrator owns the
++   design, the interfaces and the synthesis; only self-contained research
++   sub-topics or modules are delegated, and every reported claim is unverified
++   until checked against a source (`VERIFIED` only with a source, otherwise
++   `ASSUMED`).
++3. **MICRO** if the goal is clear but the code is risky or cannot be specified
++   up front. Use 3-5 small chunks, one job each, and review, merge, test and
++   clean up after **each** job.
++4. **DIRECT** if the change is tiny (roughly one file or a few lines). The
++   orchestrator does it itself; no job is started.
++
++If the goal is ambiguous and nobody is watching, the orchestrator takes the most
++reasonable reading, says which reading it took in `PLAN.md`, and continues.
++
++### Worked examples (three clipsync runs)
++
++These are owner-reported results from three real `clipsync` runs. They are a
++single sample each, not a controlled comparison; use them to recognise the
++shape of each workflow, not as a benchmark. Dollar figures are approximate and
++quota points are not dollars.
++
++| Run | Workflow used | Jobs | Orchestrator steps | Approx. cost | Weekly quota points | What happened |
++| --- | --- | --- | --- | --- | --- | --- |
++| 1 | RESEARCH, then prototype chunks | 5 small jobs | 82 | ~$0.12 | 1.73 | Design was not known up front; research and prototypes were delegated in small pieces. The most expensive run in steps and quota of the three. |
++| 2 | GATED | 1 build job + 1 fix job | 46 | ~$0.04 | 0.57 | Contract and acceptance tests were written first. The gate caught a `connect()` deadlock that the job's own report missed, so one fix job was needed. Cheapest of the three. |
++| 3 | MICRO | 4 jobs | 49 | ~$0.05 | 1.60 | Core code was risky, so it was split into four reviewed chunks; the run also added extra tests and hardening. More quota than the gated run because every chunk was reviewed, merged and tested separately. |
++
++The examples show why the block names a default but not a single recipe: run 2
++was cheap because the acceptance tests made the result checkable, while run 3
++spent more quota on repeated review and test cycles to keep risky core changes
++reviewable. That is also the main caveat: one run per workflow is not enough to
++claim that GATED is always cheaper. Treat the numbers as illustrations.
+diff --git a/installer/agents_block.md b/installer/agents_block.md
+index bcb5b66..81924fe 100644
+--- a/installer/agents_block.md
++++ b/installer/agents_block.md
+@@ -6,8 +6,17 @@ You can hand self-contained coding work to Google's agy through the mcp__agy__ t
+ - Do it yourself: small edits, design decisions, security-sensitive code, anything that needs the whole conversation's context.
+ - Before delegating, call agy_usage. Do not start new jobs when the Gemini Models weekly bucket remaining is below 10% or its 5h bucket remaining is below 15%. Run at most 2 jobs at once.
+ 
++## Choosing a workflow (write it in docs/orchestrator/PLAN.md first)
++Before any work write docs/orchestrator/PLAN.md; its first line names the chosen workflow and why. If the goal is ambiguous and nobody is watching: take the most reasonable reading, say which in PLAN.md, continue.
++- GATED (default when tests can check the result): write the contract and acceptance tests in tests/acceptance/ first and commit them; start ONE big agy job: "make tests/acceptance pass, never modify tests/acceptance, add your own tests"; wait with the longest agy_wait the tool allows and do nothing between waits (no polling); gate in this order: `git diff <base> -- tests/acceptance` must be empty (restore from your commit if agy touched it), agy_review and read the diff, merge into integration/<topic>, run the acceptance tests and the full suite yourself; never trust the job's claim of success; at most one fix job, and an optional second job for extra tests/hardening is gated the same way.
++- MICRO (risky core code, or a task that cannot be specified up front): 3-5 small chunks, one agy job each; after EACH job: agy_review, read the diff, merge, run the full suite, then agy_cleanup.
++- RESEARCH (no spec possible): you own the design, the interfaces and the final synthesis; delegate only self-contained research sub-topics or modules; treat everything agy reports as unverified until you check it against a source (mark claims VERIFIED only with a source, else ASSUMED).
++- DIRECT (tiny: roughly one file or a few lines): do it yourself, no agy.
++
++Always: every agy job prompt is fully self-contained (goal, files, constraints, 3-10 step checklist, verify command, commit subject <= 72 characters); check agy_usage before every start; below the quota floor, do the remaining chunks yourself and log the handover in docs/orchestrator/DECISIONS.md; if a job ends in an odd state use agy_status/agy_resume/agy_cancel and log it, never dig into agy-mcp's source, config or state directories; do not re-read large files or poll.
++
+ ## Running a job
+-1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-8 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs). Do not pass the model parameter unless the human named one; use the server default.
++1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-10 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs). Do not pass the model parameter unless the human named one; use the server default.
+ 2. agy_wait until the state changes (it returns after at most 5 minutes; call it again). Do not poll agy_status in a loop.
+ 3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. agy_review carries the same plan, facts, agent_report and scratchpad as agy_wait, so read agent_report and plan to see what was skipped. Read the diff before accepting.
+ 4. Accept = merge the job branch into a dedicated integration branch in the project (for example integration/<topic>), run the project's tests there, then agy_cleanup. Never merge, fast-forward or push into main/master or the repository's default branch: that is the human's decision. Record "merge integration/<topic> into main when ready" in docs/orchestrator/REPORT.md and commit docs/orchestrator/ on the integration branch, not on main. Reject = agy_resume with specific feedback (keeping manual resumes to a small number; the cumulative max_minutes budget still applies), or discard and redo with a better prompt.
+diff --git a/installer/install.sh b/installer/install.sh
+index d07f95f..c3f6c98 100755
+--- a/installer/install.sh
++++ b/installer/install.sh
+@@ -418,8 +418,17 @@ You can hand self-contained coding work to Google's agy through the mcp__agy__ t
+ - Do it yourself: small edits, design decisions, security-sensitive code, anything that needs the whole conversation's context.
+ - Before delegating, call agy_usage. Do not start new jobs when the Gemini Models weekly bucket remaining is below 10% or its 5h bucket remaining is below 15%. Run at most 2 jobs at once.
+ 
++## Choosing a workflow (write it in docs/orchestrator/PLAN.md first)
++Before any work write docs/orchestrator/PLAN.md; its first line names the chosen workflow and why. If the goal is ambiguous and nobody is watching: take the most reasonable reading, say which in PLAN.md, continue.
++- GATED (default when tests can check the result): write the contract and acceptance tests in tests/acceptance/ first and commit them; start ONE big agy job: "make tests/acceptance pass, never modify tests/acceptance, add your own tests"; wait with the longest agy_wait the tool allows and do nothing between waits (no polling); gate in this order: `git diff <base> -- tests/acceptance` must be empty (restore from your commit if agy touched it), agy_review and read the diff, merge into integration/<topic>, run the acceptance tests and the full suite yourself; never trust the job's claim of success; at most one fix job, and an optional second job for extra tests/hardening is gated the same way.
++- MICRO (risky core code, or a task that cannot be specified up front): 3-5 small chunks, one agy job each; after EACH job: agy_review, read the diff, merge, run the full suite, then agy_cleanup.
++- RESEARCH (no spec possible): you own the design, the interfaces and the final synthesis; delegate only self-contained research sub-topics or modules; treat everything agy reports as unverified until you check it against a source (mark claims VERIFIED only with a source, else ASSUMED).
++- DIRECT (tiny: roughly one file or a few lines): do it yourself, no agy.
++
++Always: every agy job prompt is fully self-contained (goal, files, constraints, 3-10 step checklist, verify command, commit subject <= 72 characters); check agy_usage before every start; below the quota floor, do the remaining chunks yourself and log the handover in docs/orchestrator/DECISIONS.md; if a job ends in an odd state use agy_status/agy_resume/agy_cancel and log it, never dig into agy-mcp's source, config or state directories; do not re-read large files or poll.
++
+ ## Running a job
+-1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-8 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs). Do not pass the model parameter unless the human named one; use the server default.
++1. agy_start with: a specific title; a prompt stating the goal, constraints, the files involved and the acceptance criteria; a checklist of 3-10 concrete steps; verify (for example "pytest -q"); max_minutes (30 for most jobs). Do not pass the model parameter unless the human named one; use the server default.
+ 2. agy_wait until the state changes (it returns after at most 5 minutes; call it again). Do not poll agy_status in a loop.
+ 3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. agy_review carries the same plan, facts, agent_report and scratchpad as agy_wait, so read agent_report and plan to see what was skipped. Read the diff before accepting.
+ 4. Accept = merge the job branch into a dedicated integration branch in the project (for example integration/<topic>), run the project's tests there, then agy_cleanup. Never merge, fast-forward or push into main/master or the repository's default branch: that is the human's decision. Record "merge integration/<topic> into main when ready" in docs/orchestrator/REPORT.md and commit docs/orchestrator/ on the integration branch, not on main. Reject = agy_resume with specific feedback (keeping manual resumes to a small number; the cumulative max_minutes budget still applies), or discard and redo with a better prompt.
+diff --git a/tests/test_installer_chapter.py b/tests/test_installer_chapter.py
+index 66bac43..eb674b6 100644
+--- a/tests/test_installer_chapter.py
++++ b/tests/test_installer_chapter.py
+@@ -606,6 +606,37 @@ def test_agents_block_file_exists_and_is_short() -> None:
+     assert len(text.splitlines()) < 120
+ 
+ 
++def test_agents_block_names_the_four_workflows() -> None:
++    """The orchestrator must be able to pick a workflow from the block alone."""
++    text = AGENTS_MD.read_text(encoding="utf-8")
++    assert "## Choosing a workflow" in text
++    for name in ("GATED", "MICRO", "RESEARCH", "DIRECT"):
++        assert f"- {name} (" in text, f"workflow {name} is not named in the block"
++    assert "docs/orchestrator/PLAN.md" in text
++    assert "first line names the chosen workflow and why" in text
++
++
++def test_agents_block_protects_acceptance_tests() -> None:
++    """The gated workflow only works if the job cannot edit the gate."""
++    text = AGENTS_MD.read_text(encoding="utf-8")
++    assert "tests/acceptance/" in text
++    assert "never modify tests/acceptance" in text
++    assert "git diff <base> -- tests/acceptance" in text
++    assert "never trust the job's claim of success" in text
++
++
++def test_agents_block_states_the_commit_subject_limit() -> None:
++    text = AGENTS_MD.read_text(encoding="utf-8")
++    assert "commit subject <= 72 characters" in text
++    assert "3-10 step checklist" in text
++
++
++def test_agents_block_fits_the_workflow_budget() -> None:
++    """The block is replayed on every step, so it has a hard size cap."""
++    text = AGENTS_MD.read_text(encoding="utf-8")
++    assert len(text.splitlines()) <= 62, "the orchestrator block grew past 62 lines"
++
++
+ def test_agents_block_matches_dsh_install(
+     tmp_path: Path, fake_wheel: Path
+ ) -> None:

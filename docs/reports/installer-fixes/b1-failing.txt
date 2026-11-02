@@ -1,0 +1,77 @@
+Mon Oct 26 10:40:37 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q -k upgrade
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+________________________ test_rerun_prints_upgrade_hint ________________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1209/test_rerun_prints_upgrade_hint0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1209/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_rerun_prints_upgrade_hint(tmp_path: Path, fake_wheel: Path) -> None:
+        """A second run must say how to reinstall instead of silently skipping pip."""
+        home = tmp_path / "home"
+        home.mkdir()
+        first = _run_installer(home, tmp_path, fake_wheel)
+        assert first.returncode == 0, _output(first)
+    
+        second = _run_installer(home, tmp_path, fake_wheel)
+        assert second.returncode == 0, _output(second)
+        output = _output(second)
+>       assert "agy-mcp already installed" in output
+E       AssertionError: assert 'agy-mcp already installed' in 'install: agy-mcp core install\n  - agy found: /tmp/pytest-of-<user>/pytest-1209/test_rerun_prints_upgrade_hint0/bin/ag...t the client tool-call timeout to at least 360000 ms: agy_wait blocks for up to 300 s and the client needs headroom.\n'
+
+tests/test_installer_chapter.py:653: AssertionError
+_______________ test_upgrade_reinstalls_the_package_from_source ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1209/test_upgrade_reinstalls_the_pa0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1209/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_upgrade_reinstalls_the_package_from_source(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        """--upgrade must really replace the installed package with AGY_MCP_SRC."""
+        home = tmp_path / "home"
+        home.mkdir()
+        first = _run_installer(home, tmp_path, fake_wheel)
+        assert first.returncode == 0, _output(first)
+        assert _installed_agy_mcp_version(home) == "0.0.0"
+    
+        newer = tmp_path / "agy_mcp-0.0.1-py3-none-any.whl"
+        _build_fake_wheel(newer, version="0.0.1")
+        proc = _run_installer(
+            home,
+            tmp_path,
+            newer,
+            "--upgrade",
+            extra={"AGY_MCP_SRC": str(newer)},
+        )
+>       assert proc.returncode == 0, _output(proc)
+E       AssertionError: install: error: unknown option '--upgrade'; try --help
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['~/Documents/GITHUB PROJECTS/agy-mcp/installer/install.sh', '--upgrade'], returncode=1, stdout='', stderr="install: error: unknown option '--upgrade'; try --help\n").returncode
+
+tests/test_installer_chapter.py:677: AssertionError
+________________ test_upgrade_is_documented_in_help_and_dry_run ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1209/test_upgrade_is_documented_in_0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1209/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_upgrade_is_documented_in_help_and_dry_run(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        home = tmp_path / "home"
+        home.mkdir()
+        help_proc = _run_installer(home, tmp_path, fake_wheel, "--help")
+        assert help_proc.returncode == 0, _output(help_proc)
+>       assert "--upgrade" in help_proc.stdout
+E       assert '--upgrade' in 'Usage: installer/install.sh [options]\n\n  --client dsh|generic   Target client. Default: generic (no dsh files).\n  ...default: generic. DSH registration is opt-in with\n--client dsh. Use --dry-run first if you want to see every write.\n'
+E        +  where 'Usage: installer/install.sh [options]\n\n  --client dsh|generic   Target client. Default: generic (no dsh files).\n  ...default: generic. DSH registration is opt-in with\n--client dsh. Use --dry-run first if you want to see every write.\n' = CompletedProcess(args=['~/Documents/GITHUB PROJECTS/agy-mcp/installer/install.sh', '--help'], returncode=0, ...eric. DSH registration is opt-in with\n--client dsh. Use --dry-run first if you want to see every write.\n", stderr='').stdout
+
+tests/test_installer_chapter.py:689: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_rerun_prints_upgrade_hint - Asse...
+FAILED tests/test_installer_chapter.py::test_upgrade_reinstalls_the_package_from_source
+FAILED tests/test_installer_chapter.py::test_upgrade_is_documented_in_help_and_dry_run
+3 failed, 23 deselected in 6.42s
+rc=1

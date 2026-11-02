@@ -1,0 +1,160 @@
+=== ORPHAN PROCESS MONITOR LOG ===
+
+--- File: tests/test_audit.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_cli_log.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_config.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_denial_recovery.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_fake_agy.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_files_modified.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_git_scenarios.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_gitops.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_jobs.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_manager.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_models.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_multiprocess_concurrency.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_parse_result.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_recovery.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_runner.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_server_e2e.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_server_unit.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_smoke.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_supervisor.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_transcript.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_usage.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_util.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_verify.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_watcher.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_watcher_bug.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+--- File: tests/test_worktree.py ---
+Processes BEFORE (0):
+Pytest exit code: 0
+Processes AFTER (0):
+No orphans detected.
+
+=== SUMMARY ===
+No culprit test files found. All test files exited cleanly.

@@ -1,0 +1,1 @@
+__SCENARIO:success_with_commits__ Add user authentication

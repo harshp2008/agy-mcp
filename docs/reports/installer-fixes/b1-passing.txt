@@ -1,0 +1,5 @@
+Mon Oct 26 10:41:00 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest tests/test_installer_chapter.py -q -k upgrade
+...                                                                      [100%]
+3 passed, 23 deselected in 6.81s
+rc=0

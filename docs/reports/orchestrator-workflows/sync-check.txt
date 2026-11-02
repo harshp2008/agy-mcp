@@ -1,0 +1,4 @@
+$ python check embedded == file
+True
+$ bash -n installer/install.sh
+OK

@@ -1,0 +1,282 @@
+{
+  "cases": [
+    {
+      "code": "invalid_input",
+      "message": "bad thing"
+    },
+    {
+      "code": "internal_error",
+      "message": "An internal error occurred",
+      "job_id": "550e8400-e29b-41d4-a716-446655440000"
+    },
+    {
+      "code": "repo_not_found",
+      "message": "Repository path does not exist: /tmp/x",
+      "title": "My job"
+    },
+    {
+      "code": "prompt_too_large",
+      "message": "Prompt too big",
+      "job_id": "550e8400-e29b-41d4-a716-446655440000",
+      "title": "Big"
+    },
+    {
+      "code": "",
+      "message": ""
+    },
+    {
+      "code": "invalid_input",
+      "message": "unicode - \u00fcn\u00efcode \u2713",
+      "job_id": "J",
+      "title": "\u00dcn\u00efcode"
+    }
+  ],
+  "payloads": [
+    {
+      "job_id": "",
+      "state": "failed",
+      "elapsed_seconds": 0.0,
+      "title": "",
+      "branch": "",
+      "base_commit": "",
+      "head_commit": "",
+      "commits_count": 0,
+      "files_modified": [],
+      "skipped_files": [],
+      "denials": [],
+      "denied_commands": [],
+      "warnings": [],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "next_actions": [],
+      "error": {
+        "code": "invalid_input",
+        "message": "bad thing"
+      },
+      "verify": {
+        "requested": false,
+        "ran": false,
+        "passed": null,
+        "rc": null,
+        "duration_seconds": null,
+        "attempts": 0,
+        "last_tail": null,
+        "status": null,
+        "timed_out": false,
+        "killed_by_timeout": false,
+        "command": null,
+        "timeout_seconds": null,
+        "cause": null,
+        "next_action": null
+      }
+    },
+    {
+      "job_id": "550e8400-e29b-41d4-a716-446655440000",
+      "state": "failed",
+      "elapsed_seconds": 0.0,
+      "title": "",
+      "branch": "",
+      "base_commit": "",
+      "head_commit": "",
+      "commits_count": 0,
+      "files_modified": [],
+      "skipped_files": [],
+      "denials": [],
+      "denied_commands": [],
+      "warnings": [],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "next_actions": [],
+      "error": {
+        "code": "internal_error",
+        "message": "An internal error occurred"
+      },
+      "verify": {
+        "requested": false,
+        "ran": false,
+        "passed": null,
+        "rc": null,
+        "duration_seconds": null,
+        "attempts": 0,
+        "last_tail": null,
+        "status": null,
+        "timed_out": false,
+        "killed_by_timeout": false,
+        "command": null,
+        "timeout_seconds": null,
+        "cause": null,
+        "next_action": null
+      }
+    },
+    {
+      "job_id": "",
+      "state": "failed",
+      "elapsed_seconds": 0.0,
+      "title": "My job",
+      "branch": "",
+      "base_commit": "",
+      "head_commit": "",
+      "commits_count": 0,
+      "files_modified": [],
+      "skipped_files": [],
+      "denials": [],
+      "denied_commands": [],
+      "warnings": [],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "next_actions": [],
+      "error": {
+        "code": "repo_not_found",
+        "message": "Repository path does not exist: /tmp/x"
+      },
+      "verify": {
+        "requested": false,
+        "ran": false,
+        "passed": null,
+        "rc": null,
+        "duration_seconds": null,
+        "attempts": 0,
+        "last_tail": null,
+        "status": null,
+        "timed_out": false,
+        "killed_by_timeout": false,
+        "command": null,
+        "timeout_seconds": null,
+        "cause": null,
+        "next_action": null
+      }
+    },
+    {
+      "job_id": "550e8400-e29b-41d4-a716-446655440000",
+      "state": "failed",
+      "elapsed_seconds": 0.0,
+      "title": "Big",
+      "branch": "",
+      "base_commit": "",
+      "head_commit": "",
+      "commits_count": 0,
+      "files_modified": [],
+      "skipped_files": [],
+      "denials": [],
+      "denied_commands": [],
+      "warnings": [],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "next_actions": [],
+      "error": {
+        "code": "prompt_too_large",
+        "message": "Prompt too big"
+      },
+      "verify": {
+        "requested": false,
+        "ran": false,
+        "passed": null,
+        "rc": null,
+        "duration_seconds": null,
+        "attempts": 0,
+        "last_tail": null,
+        "status": null,
+        "timed_out": false,
+        "killed_by_timeout": false,
+        "command": null,
+        "timeout_seconds": null,
+        "cause": null,
+        "next_action": null
+      }
+    },
+    {
+      "job_id": "",
+      "state": "failed",
+      "elapsed_seconds": 0.0,
+      "title": "",
+      "branch": "",
+      "base_commit": "",
+      "head_commit": "",
+      "commits_count": 0,
+      "files_modified": [],
+      "skipped_files": [],
+      "denials": [],
+      "denied_commands": [],
+      "warnings": [],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "next_actions": [],
+      "error": {
+        "code": "",
+        "message": ""
+      },
+      "verify": {
+        "requested": false,
+        "ran": false,
+        "passed": null,
+        "rc": null,
+        "duration_seconds": null,
+        "attempts": 0,
+        "last_tail": null,
+        "status": null,
+        "timed_out": false,
+        "killed_by_timeout": false,
+        "command": null,
+        "timeout_seconds": null,
+        "cause": null,
+        "next_action": null
+      }
+    },
+    {
+      "job_id": "J",
+      "state": "failed",
+      "elapsed_seconds": 0.0,
+      "title": "\u00dcn\u00efcode",
+      "branch": "",
+      "base_commit": "",
+      "head_commit": "",
+      "commits_count": 0,
+      "files_modified": [],
+      "skipped_files": [],
+      "denials": [],
+      "denied_commands": [],
+      "warnings": [],
+      "tokens": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      },
+      "next_actions": [],
+      "error": {
+        "code": "invalid_input",
+        "message": "unicode - \u00fcn\u00efcode \u2713"
+      },
+      "verify": {
+        "requested": false,
+        "ran": false,
+        "passed": null,
+        "rc": null,
+        "duration_seconds": null,
+        "attempts": 0,
+        "last_tail": null,
+        "status": null,
+        "timed_out": false,
+        "killed_by_timeout": false,
+        "command": null,
+        "timeout_seconds": null,
+        "cause": null,
+        "next_action": null
+      }
+    }
+  ]
+}

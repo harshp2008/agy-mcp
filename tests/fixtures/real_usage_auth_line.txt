@@ -1,0 +1,1 @@
+applyAuthResult: email=REDACTED@example.com, authMethod=consumer

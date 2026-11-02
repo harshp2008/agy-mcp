@@ -1,0 +1,91 @@
+.FF..FF.F                                                                [100%]
+=================================== FAILURES ===================================
+____________________ test_agents_block_matches_dsh_install _____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1300/test_agents_block_matches_dsh_0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1300/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_agents_block_matches_dsh_install(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        expected = AGENTS_MD.read_text(encoding="utf-8")
+        home = tmp_path / "home"
+        home.mkdir()
+        proc = _run_installer(home, tmp_path, fake_wheel, "--client", "dsh")
+        assert proc.returncode == 0, _output(proc)
+    
+        agents_text = _agents_path(home).read_text(encoding="utf-8")
+        generated = _block_between(agents_text, AGENTS_BEGIN, AGENTS_END)
+>       assert generated == expected
+E       AssertionError: assert '# Coding job...d continue.\n' == '# Coding job...d continue.\n'
+E         
+E         Skipping 1028 identical leading characters in diff, use -v to show
+E         - ost jobs).
+E         + ost jobs). Do not pass the model parameter unless the human named one; use the server default.
+E           2. agy_wait until the state changes (it returns after at most 5 minutes; call it again). Do not poll agy_status in a loop.
+E         - 3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. Read agent_report and plan to see what was skipped. Read the diff before accepting.
+E         - 4. Accept = merge the job branch into an integration branch yourself (git me...
+E         
+E         ...Full output truncated (24 lines hidden), use '-vv' to show
+
+tests/test_installer_chapter.py:588: AssertionError
+__________________ test_agents_block_matches_generic_install ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-1300/test_agents_block_matches_gene0')
+fake_wheel = PosixPath('/tmp/pytest-of-<user>/pytest-1300/wheel0/agy_mcp-0.0.0-py3-none-any.whl')
+
+    def test_agents_block_matches_generic_install(
+        tmp_path: Path, fake_wheel: Path
+    ) -> None:
+        expected = AGENTS_MD.read_text(encoding="utf-8")
+        home = tmp_path / "home"
+        home.mkdir()
+        proc = _run_installer(home, tmp_path, fake_wheel)
+        assert proc.returncode == 0, _output(proc)
+        generated = (_install_dir(home) / "orchestrator-guidance.md").read_text(
+            encoding="utf-8"
+        )
+>       assert generated == expected
+E       AssertionError: assert '# Coding job...d continue.\n' == '# Coding job...d continue.\n'
+E         
+E         Skipping 1028 identical leading characters in diff, use -v to show
+E         - ost jobs).
+E         + ost jobs). Do not pass the model parameter unless the human named one; use the server default.
+E           2. agy_wait until the state changes (it returns after at most 5 minutes; call it again). Do not poll agy_status in a loop.
+E         - 3. When done: agy_review. Trust the wrapper's facts, audit_findings and verify result, not the agent's own report. Read agent_report and plan to see what was skipped. Read the diff before accepting.
+E         - 4. Accept = merge the job branch into an integration branch yourself (git me...
+E         
+E         ...Full output truncated (24 lines hidden), use '-vv' to show
+
+tests/test_installer_chapter.py:602: AssertionError
+_____________ test_agents_block_states_the_integration_branch_rule _____________
+
+    def test_agents_block_states_the_integration_branch_rule() -> None:
+        text = AGENTS_MD.read_text(encoding="utf-8")
+>       assert "dedicated integration branch" in text
+E       assert 'dedicated integration branch' in "# Coding jobs with agy (mcp__agy__ tools)\nYou can hand self-contained coding work to Google's agy through the mcp__a...HUMAN items remain. Never loop on a failing job. If something is unclear, make the safe choice, log it and continue.\n"
+
+tests/test_installer_chapter.py:779: AssertionError
+__________________ test_agents_block_never_uses_force_cleanup __________________
+
+    def test_agents_block_never_uses_force_cleanup() -> None:
+        text = AGENTS_MD.read_text(encoding="utf-8")
+>       assert "Never pass force=true to agy_cleanup" in text
+E       assert 'Never pass force=true to agy_cleanup' in "# Coding jobs with agy (mcp__agy__ tools)\nYou can hand self-contained coding work to Google's agy through the mcp__a...HUMAN items remain. Never loop on a failing job. If something is unclear, make the safe choice, log it and continue.\n"
+
+tests/test_installer_chapter.py:788: AssertionError
+_______________ test_agents_block_uses_the_server_default_model ________________
+
+    def test_agents_block_uses_the_server_default_model() -> None:
+        text = AGENTS_MD.read_text(encoding="utf-8")
+>       assert "Do not pass the model parameter unless the human named one" in text
+E       assert 'Do not pass the model parameter unless the human named one' in "# Coding jobs with agy (mcp__agy__ tools)\nYou can hand self-contained coding work to Google's agy through the mcp__a...HUMAN items remain. Never loop on a failing job. If something is unclear, make the safe choice, log it and continue.\n"
+
+tests/test_installer_chapter.py:805: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_installer_chapter.py::test_agents_block_matches_dsh_install
+FAILED tests/test_installer_chapter.py::test_agents_block_matches_generic_install
+FAILED tests/test_installer_chapter.py::test_agents_block_states_the_integration_branch_rule
+FAILED tests/test_installer_chapter.py::test_agents_block_never_uses_force_cleanup
+FAILED tests/test_installer_chapter.py::test_agents_block_uses_the_server_default_model
+5 failed, 4 passed, 27 deselected in 5.44s

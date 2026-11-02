@@ -1,0 +1,29 @@
+{
+  "job_id": "573fb879-ed9b-468a-a701-a8e8f48b3d27",
+  "state": "queued",
+  "elapsed_seconds": 0.0,
+  "title": "Verify Loop D1 Calc Bugfix",
+  "branch": "agy/verify-loop-d1-calc-bugfix-573fb879",
+  "base_commit": "d9c8ef517f3f47bb6064d28c26920a0ba323c678",
+  "head_commit": "d9c8ef517f3f47bb6064d28c26920a0ba323c678",
+  "commits_count": 0,
+  "files_modified": [],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [
+    "source_dirty=true",
+    "dangerous_permission_rules_present: {'permission_rules_effective': [], 'dangerous_allow_rules': [], 'warnings': []}"
+  ],
+  "tokens": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "next_actions": [
+    "Wait for execution to start with agy_wait",
+    "Check status with agy_status"
+  ],
+  "error": null
+}

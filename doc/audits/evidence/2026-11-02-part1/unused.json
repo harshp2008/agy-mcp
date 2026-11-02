@@ -1,0 +1,1751 @@
+{
+ "unused": [
+  {
+   "module": "src/agy_mcp/cleanup_fixtures.py",
+   "kind": "func",
+   "name": "_is_pid_alive",
+   "line": 241,
+   "refs": {},
+   "total_refs": 0
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_is_worktree_registered",
+   "line": 866,
+   "refs": {},
+   "total_refs": 0
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "const",
+   "name": "MAX_SCRATCHPAD_FILES",
+   "line": 33,
+   "refs": {},
+   "total_refs": 0
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "clear_usage_cache",
+   "line": 803,
+   "refs": {},
+   "total_refs": 0
+  },
+  {
+   "module": "src/agy_mcp/worktree.py",
+   "kind": "const",
+   "name": "DANGEROUS_RULE_PREFIXES",
+   "line": 34,
+   "refs": {},
+   "total_refs": 0
+  }
+ ],
+ "same_module_only": [
+  {
+   "module": "src/agy_mcp/audit.py",
+   "kind": "class",
+   "name": "HostPathClass",
+   "line": 31,
+   "refs": {
+    "src/agy_mcp/audit.py": 8
+   },
+   "total_refs": 8
+  },
+  {
+   "module": "src/agy_mcp/audit.py",
+   "kind": "const",
+   "name": "MAX_APPEND_TOLERANT_BYTES",
+   "line": 39,
+   "refs": {
+    "src/agy_mcp/audit.py": 4
+   },
+   "total_refs": 4
+  },
+  {
+   "module": "src/agy_mcp/audit.py",
+   "kind": "func",
+   "name": "classify_host_path",
+   "line": 42,
+   "refs": {
+    "src/agy_mcp/audit.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/audit.py",
+   "kind": "const",
+   "name": "MAX_SNAPSHOT_BYTES",
+   "line": 139,
+   "refs": {
+    "src/agy_mcp/audit.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/audit.py",
+   "kind": "class",
+   "name": "HostPathAuditResult",
+   "line": 220,
+   "refs": {
+    "src/agy_mcp/audit.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/audit.py",
+   "kind": "func",
+   "name": "check_host_path_snapshot",
+   "line": 227,
+   "refs": {
+    "src/agy_mcp/audit.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cleanup_fixtures.py",
+   "kind": "const",
+   "name": "MAX_JSON_DEPTH",
+   "line": 24,
+   "refs": {
+    "src/agy_mcp/cleanup_fixtures.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/cleanup_fixtures.py",
+   "kind": "func",
+   "name": "_raise_on_duplicate_keys",
+   "line": 27,
+   "refs": {
+    "src/agy_mcp/cleanup_fixtures.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_fixtures.py",
+   "kind": "func",
+   "name": "_check_json_depth",
+   "line": 37,
+   "refs": {
+    "src/agy_mcp/cleanup_fixtures.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_fixtures.py",
+   "kind": "func",
+   "name": "_is_pytest_temp_repo",
+   "line": 67,
+   "refs": {
+    "src/agy_mcp/cleanup_fixtures.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_fixtures.py",
+   "kind": "func",
+   "name": "_pytest_basetemp",
+   "line": 119,
+   "refs": {
+    "src/agy_mcp/cleanup_fixtures.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cleanup_fixtures.py",
+   "kind": "func",
+   "name": "_get_kernel_pid_max",
+   "line": 164,
+   "refs": {
+    "src/agy_mcp/cleanup_fixtures.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cleanup_fixtures.py",
+   "kind": "func",
+   "name": "_classify_job",
+   "line": 308,
+   "refs": {
+    "src/agy_mcp/cleanup_fixtures.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "normalize_repo_path",
+   "line": 34,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 5
+   },
+   "total_refs": 5
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "const",
+   "name": "MAX_GIT_METADATA_SIZE",
+   "line": 50,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "const",
+   "name": "_HEX_SHA_RE",
+   "line": 51,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "const",
+   "name": "_CONFIG_SECTION_RE",
+   "line": 52,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "const",
+   "name": "_CONFIG_VAR_RE",
+   "line": 53,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_read_git_metadata_file",
+   "line": 56,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 9
+   },
+   "total_refs": 9
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_validate_git_head_file",
+   "line": 153,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_validate_git_config_file",
+   "line": 185,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_validate_git_packed_refs_file",
+   "line": 255,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "const",
+   "name": "_GIT_DIR_MARKERS",
+   "line": 313,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_has_git_dir_markers",
+   "line": 323,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_validate_git_dir",
+   "line": 335,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_validate_full_git_dir",
+   "line": 348,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 5
+   },
+   "total_refs": 5
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_collect_kept_strings",
+   "line": 998,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cleanup_jobs.py",
+   "kind": "func",
+   "name": "_list_projects",
+   "line": 1458,
+   "refs": {
+    "src/agy_mcp/cleanup_jobs.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cli_log.py",
+   "kind": "const",
+   "name": "MAX_CLI_LOG_READ_BYTES",
+   "line": 20,
+   "refs": {
+    "src/agy_mcp/cli_log.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cli_log.py",
+   "kind": "const",
+   "name": "MAX_CLI_LOG_HEAD_BYTES",
+   "line": 23,
+   "refs": {
+    "src/agy_mcp/cli_log.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cli_log.py",
+   "kind": "const",
+   "name": "CLI_LOG_ANCHOR_BYTES",
+   "line": 26,
+   "refs": {
+    "src/agy_mcp/cli_log.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/cli_log.py",
+   "kind": "const",
+   "name": "_UUID_PART",
+   "line": 28,
+   "refs": {
+    "src/agy_mcp/cli_log.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cli_log.py",
+   "kind": "const",
+   "name": "_REAL_LOG_PREFIX",
+   "line": 34,
+   "refs": {
+    "src/agy_mcp/cli_log.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cli_log.py",
+   "kind": "const",
+   "name": "CREATED_CONVERSATION_RE",
+   "line": 37,
+   "refs": {
+    "src/agy_mcp/cli_log.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/cli_log.py",
+   "kind": "const",
+   "name": "RESUMING_CONVERSATION_RE",
+   "line": 40,
+   "refs": {
+    "src/agy_mcp/cli_log.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/cli_log.py",
+   "kind": "const",
+   "name": "MODEL_ALIAS_RE",
+   "line": 228,
+   "refs": {
+    "src/agy_mcp/cli_log.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/config.py",
+   "kind": "func",
+   "name": "_validate_config_dict",
+   "line": 88,
+   "refs": {
+    "src/agy_mcp/config.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "const",
+   "name": "SENSITIVE_FILENAME_EXACT",
+   "line": 22,
+   "refs": {
+    "src/agy_mcp/gitops.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "const",
+   "name": "SENSITIVE_EXTENSIONS",
+   "line": 23,
+   "refs": {
+    "src/agy_mcp/gitops.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "const",
+   "name": "SENSITIVE_PREFIXES",
+   "line": 24,
+   "refs": {
+    "src/agy_mcp/gitops.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "const",
+   "name": "SENSITIVE_ALLOWED_EXCEPTIONS",
+   "line": 25,
+   "refs": {
+    "src/agy_mcp/gitops.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "const",
+   "name": "POLICY_FILENAMES",
+   "line": 26,
+   "refs": {
+    "src/agy_mcp/gitops.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "const",
+   "name": "DEFAULT_JUNK_PATHSPECS",
+   "line": 130,
+   "refs": {
+    "src/agy_mcp/gitops.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "func",
+   "name": "is_build_artifact",
+   "line": 162,
+   "refs": {
+    "src/agy_mcp/gitops.py": 4
+   },
+   "total_refs": 4
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "func",
+   "name": "get_hardened_git_env",
+   "line": 265,
+   "refs": {
+    "src/agy_mcp/gitops.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "func",
+   "name": "_resolve_index_lock_path",
+   "line": 330,
+   "refs": {
+    "src/agy_mcp/gitops.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "func",
+   "name": "parse_porcelain_z",
+   "line": 399,
+   "refs": {
+    "src/agy_mcp/gitops.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "const",
+   "name": "MAX_WRAPPER_SUBJECT_CHARS",
+   "line": 656,
+   "refs": {
+    "src/agy_mcp/gitops.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "const",
+   "name": "WRAPPER_SUBJECT_FALLBACK",
+   "line": 657,
+   "refs": {
+    "src/agy_mcp/gitops.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "func",
+   "name": "sanitize_commit_body",
+   "line": 691,
+   "refs": {
+    "src/agy_mcp/gitops.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "func",
+   "name": "write_wrapper_commit_msg",
+   "line": 744,
+   "refs": {
+    "src/agy_mcp/gitops.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/gitops.py",
+   "kind": "func",
+   "name": "find_most_recent_commit_msg",
+   "line": 808,
+   "refs": {
+    "src/agy_mcp/gitops.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/jobs.py",
+   "kind": "const",
+   "name": "MAX_JOB_FILE_BYTES",
+   "line": 180,
+   "refs": {
+    "src/agy_mcp/jobs.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/manager.py",
+   "kind": "const",
+   "name": "UUID_PATTERN",
+   "line": 96,
+   "refs": {
+    "src/agy_mcp/manager.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/models.py",
+   "kind": "const",
+   "name": "CURRENT_SCHEMA_VERSION",
+   "line": 27,
+   "refs": {
+    "src/agy_mcp/models.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/models.py",
+   "kind": "func",
+   "name": "_optional_int",
+   "line": 65,
+   "refs": {
+    "src/agy_mcp/models.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/models.py",
+   "kind": "func",
+   "name": "get_effective_verify_envelope",
+   "line": 594,
+   "refs": {
+    "src/agy_mcp/models.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/models.py",
+   "kind": "func",
+   "name": "get_plan_envelope",
+   "line": 682,
+   "refs": {
+    "src/agy_mcp/models.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/models.py",
+   "kind": "func",
+   "name": "build_facts",
+   "line": 707,
+   "refs": {
+    "src/agy_mcp/models.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/models.py",
+   "kind": "func",
+   "name": "_error_with_untrusted_first_line",
+   "line": 757,
+   "refs": {
+    "src/agy_mcp/models.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/parse_result.py",
+   "kind": "func",
+   "name": "_extract_agy_duration",
+   "line": 94,
+   "refs": {
+    "src/agy_mcp/parse_result.py": 5
+   },
+   "total_refs": 5
+  },
+  {
+   "module": "src/agy_mcp/runner.py",
+   "kind": "const",
+   "name": "FORBIDDEN_FLAGS",
+   "line": 24,
+   "refs": {
+    "src/agy_mcp/runner.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/runner.py",
+   "kind": "const",
+   "name": "VALID_MODES",
+   "line": 30,
+   "refs": {
+    "src/agy_mcp/runner.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/runner.py",
+   "kind": "const",
+   "name": "VALID_OUTPUT_FORMATS",
+   "line": 31,
+   "refs": {
+    "src/agy_mcp/runner.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/runner.py",
+   "kind": "func",
+   "name": "read_proc_stat_field",
+   "line": 61,
+   "refs": {
+    "src/agy_mcp/runner.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "const",
+   "name": "MAX_STATE_NOTES_BYTES",
+   "line": 31,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "const",
+   "name": "MAX_PLAN_ITEM_TITLE_CHARS",
+   "line": 32,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "const",
+   "name": "DEFAULT_CHECKLIST",
+   "line": 37,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "const",
+   "name": "NOTES_HEADER",
+   "line": 42,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "class",
+   "name": "ScratchFile",
+   "line": 61,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 16
+   },
+   "total_refs": 16
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "const",
+   "name": "_PLAN_ITEM_RE",
+   "line": 77,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "const",
+   "name": "_PLAN_NUMBER_PREFIX_RE",
+   "line": 78,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "func",
+   "name": "_single_line",
+   "line": 81,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 9
+   },
+   "total_refs": 9
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "func",
+   "name": "_cap_bytes",
+   "line": 86,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 6
+   },
+   "total_refs": 6
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "func",
+   "name": "normalize_checklist",
+   "line": 125,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "func",
+   "name": "build_plan_content",
+   "line": 141,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "func",
+   "name": "_no_follow_dir",
+   "line": 217,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/scratchpad.py",
+   "kind": "const",
+   "name": "_COPY_LIMITS",
+   "line": 327,
+   "refs": {
+    "src/agy_mcp/scratchpad.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/server.py",
+   "kind": "const",
+   "name": "_MANAGER",
+   "line": 35,
+   "refs": {
+    "src/agy_mcp/server.py": 7
+   },
+   "total_refs": 7
+  },
+  {
+   "module": "src/agy_mcp/server.py",
+   "kind": "func",
+   "name": "get_manager",
+   "line": 38,
+   "refs": {
+    "src/agy_mcp/server.py": 10
+   },
+   "total_refs": 10
+  },
+  {
+   "module": "src/agy_mcp/server.py",
+   "kind": "func",
+   "name": "_sanitize_path_leak",
+   "line": 102,
+   "refs": {
+    "src/agy_mcp/server.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/states.py",
+   "kind": "class",
+   "name": "StateTransition",
+   "line": 41,
+   "refs": {
+    "src/agy_mcp/states.py": 17
+   },
+   "total_refs": 17
+  },
+  {
+   "module": "src/agy_mcp/supervisor.py",
+   "kind": "const",
+   "name": "MAX_EARLY_CONVERSATION_SCAN_BYTES",
+   "line": 71,
+   "refs": {
+    "src/agy_mcp/supervisor.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/supervisor.py",
+   "kind": "const",
+   "name": "MAX_STDOUT_PAYLOAD_BYTES",
+   "line": 74,
+   "refs": {
+    "src/agy_mcp/supervisor.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/supervisor.py",
+   "kind": "func",
+   "name": "_classify_tool_kind",
+   "line": 109,
+   "refs": {
+    "src/agy_mcp/supervisor.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/transcript.py",
+   "kind": "const",
+   "name": "UUID_REGEX",
+   "line": 18,
+   "refs": {
+    "src/agy_mcp/transcript.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/transcript.py",
+   "kind": "const",
+   "name": "MAX_TRANSCRIPT_FILE_SIZE",
+   "line": 23,
+   "refs": {
+    "src/agy_mcp/transcript.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/transcript.py",
+   "kind": "const",
+   "name": "TAIL_READ_SIZE",
+   "line": 24,
+   "refs": {
+    "src/agy_mcp/transcript.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/transcript.py",
+   "kind": "const",
+   "name": "MAX_ENTRIES",
+   "line": 25,
+   "refs": {
+    "src/agy_mcp/transcript.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/transcript.py",
+   "kind": "const",
+   "name": "MAX_FIELD_BYTES",
+   "line": 26,
+   "refs": {
+    "src/agy_mcp/transcript.py": 4
+   },
+   "total_refs": 4
+  },
+  {
+   "module": "src/agy_mcp/transcript.py",
+   "kind": "class",
+   "name": "DeniedCall",
+   "line": 30,
+   "refs": {
+    "src/agy_mcp/transcript.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/transcript.py",
+   "kind": "func",
+   "name": "_unquote_once",
+   "line": 72,
+   "refs": {
+    "src/agy_mcp/transcript.py": 4
+   },
+   "total_refs": 4
+  },
+  {
+   "module": "src/agy_mcp/transcript.py",
+   "kind": "func",
+   "name": "_log_unreadable",
+   "line": 246,
+   "refs": {
+    "src/agy_mcp/transcript.py": 7
+   },
+   "total_refs": 7
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "GROUP_GEMINI",
+   "line": 31,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "GROUP_CLAUDE_GPT",
+   "line": 32,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "USAGE_PROMPT",
+   "line": 34,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "USAGE_TIMEOUT_SECONDS",
+   "line": 35,
+   "refs": {
+    "src/agy_mcp/usage.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "USAGE_CACHE_TTL_SECONDS",
+   "line": 36,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "MAX_USAGE_STREAM_BYTES",
+   "line": 37,
+   "refs": {
+    "src/agy_mcp/usage.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "_APPLY_AUTH_RE",
+   "line": 39,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "_WINDOW_WEEKLY",
+   "line": 42,
+   "refs": {
+    "src/agy_mcp/usage.py": 5
+   },
+   "total_refs": 5
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "_WINDOW_FIVE_HOUR",
+   "line": 43,
+   "refs": {
+    "src/agy_mcp/usage.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_parse_iso_utc",
+   "line": 76,
+   "refs": {
+    "src/agy_mcp/usage.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_format_utc",
+   "line": 89,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_reset_seconds",
+   "line": 93,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_bucket",
+   "line": 99,
+   "refs": {
+    "src/agy_mcp/usage.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_parse_structured_groups",
+   "line": 108,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_normalize_label",
+   "line": 147,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_parse_text_groups",
+   "line": 156,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_cross_check",
+   "line": 194,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_load_json_output",
+   "line": 261,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_fraction_for",
+   "line": 413,
+   "refs": {
+    "src/agy_mcp/usage.py": 4
+   },
+   "total_refs": 4
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "QUOTA_ESTIMATE_BASIS",
+   "line": 489,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_is_non_negative_number",
+   "line": 492,
+   "refs": {
+    "src/agy_mcp/usage.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "const",
+   "name": "_DEFAULT_USAGE_CACHE",
+   "line": 605,
+   "refs": {
+    "src/agy_mcp/usage.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_account_dict",
+   "line": 608,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "_unavailable_reading",
+   "line": 615,
+   "refs": {
+    "src/agy_mcp/usage.py": 7
+   },
+   "total_refs": 7
+  },
+  {
+   "module": "src/agy_mcp/usage.py",
+   "kind": "func",
+   "name": "read_usage_once",
+   "line": 654,
+   "refs": {
+    "src/agy_mcp/usage.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/util.py",
+   "kind": "const",
+   "name": "_RE_API_KEY",
+   "line": 196,
+   "refs": {
+    "src/agy_mcp/util.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/util.py",
+   "kind": "const",
+   "name": "_RE_BEARER",
+   "line": 197,
+   "refs": {
+    "src/agy_mcp/util.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/util.py",
+   "kind": "const",
+   "name": "_RE_GITHUB_PAT",
+   "line": 198,
+   "refs": {
+    "src/agy_mcp/util.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/util.py",
+   "kind": "const",
+   "name": "_RE_GITHUB_PAT_NEW",
+   "line": 199,
+   "refs": {
+    "src/agy_mcp/util.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/util.py",
+   "kind": "const",
+   "name": "_RE_KEY_ASSIGNMENT",
+   "line": 200,
+   "refs": {
+    "src/agy_mcp/util.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/util.py",
+   "kind": "const",
+   "name": "_RE_PRIVATE_KEY",
+   "line": 203,
+   "refs": {
+    "src/agy_mcp/util.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "VERIFY_TIMEOUT_RC",
+   "line": 25,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "VERIFY_EXCERPT_LINES",
+   "line": 26,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "VERIFY_EXCERPT_LINE_CHARS",
+   "line": 27,
+   "refs": {
+    "src/agy_mcp/verify.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "FORBIDDEN_VERIFY_SHELLS",
+   "line": 29,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "PYTEST_DISALLOWED_FLAGS",
+   "line": 33,
+   "refs": {
+    "src/agy_mcp/verify.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "PYTEST_DISALLOWED_PREFIXES",
+   "line": 45,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "RUFF_DISALLOWED_FLAGS",
+   "line": 47,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "RUFF_DISALLOWED_PREFIXES",
+   "line": 52,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "GO_DISALLOWED_FLAGS",
+   "line": 54,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "GO_DISALLOWED_PREFIXES",
+   "line": 61,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_allowlist_entry_tokens",
+   "line": 64,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_is_python_m_pytest",
+   "line": 76,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_validate_tool_args",
+   "line": 86,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_identify_tool",
+   "line": 141,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_is_path_outside",
+   "line": 159,
+   "refs": {
+    "src/agy_mcp/verify.py": 6
+   },
+   "total_refs": 6
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_check_token_path",
+   "line": 196,
+   "refs": {
+    "src/agy_mcp/verify.py": 5
+   },
+   "total_refs": 5
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_validate_pytest_args",
+   "line": 214,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_validate_ruff_args",
+   "line": 227,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_validate_cargo_args",
+   "line": 240,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_validate_go_args",
+   "line": 278,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_validate_npm_args",
+   "line": 291,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "const",
+   "name": "NODE_TEST_FORBIDDEN_CHARS",
+   "line": 295,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_validate_node_test_args",
+   "line": 313,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_validate_other_args",
+   "line": 341,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_process_group_alive",
+   "line": 462,
+   "refs": {
+    "src/agy_mcp/verify.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "_terminate_process_group",
+   "line": 474,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "verify_tail_lines",
+   "line": 686,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/verify.py",
+   "kind": "func",
+   "name": "extract_failing_tests",
+   "line": 742,
+   "refs": {
+    "src/agy_mcp/verify.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "const",
+   "name": "MAX_DISCARDED_COMMIT_MSGS",
+   "line": 40,
+   "refs": {
+    "src/agy_mcp/watcher.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "const",
+   "name": "MAX_SUBJECT_CHARS",
+   "line": 41,
+   "refs": {
+    "src/agy_mcp/watcher.py": 4
+   },
+   "total_refs": 4
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_is_real_agy_dir",
+   "line": 44,
+   "refs": {
+    "src/agy_mcp/watcher.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_next_invalid_msg_slot",
+   "line": 63,
+   "refs": {
+    "src/agy_mcp/watcher.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_validate_message_text",
+   "line": 146,
+   "refs": {
+    "src/agy_mcp/watcher.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_read_commit_message",
+   "line": 170,
+   "refs": {
+    "src/agy_mcp/watcher.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_truncate_subject_at_word",
+   "line": 230,
+   "refs": {
+    "src/agy_mcp/watcher.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_first_line_has_control_char",
+   "line": 241,
+   "refs": {
+    "src/agy_mcp/watcher.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_write_all",
+   "line": 246,
+   "refs": {
+    "src/agy_mcp/watcher.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_fsync_parent_dir",
+   "line": 256,
+   "refs": {
+    "src/agy_mcp/watcher.py": 2
+   },
+   "total_refs": 2
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_atomic_replace_text",
+   "line": 270,
+   "refs": {
+    "src/agy_mcp/watcher.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_preserve_rejected_message",
+   "line": 335,
+   "refs": {
+    "src/agy_mcp/watcher.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/watcher.py",
+   "kind": "func",
+   "name": "_actionable_commit_error",
+   "line": 365,
+   "refs": {
+    "src/agy_mcp/watcher.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/worktree.py",
+   "kind": "func",
+   "name": "ensure_local_exclude",
+   "line": 274,
+   "refs": {
+    "src/agy_mcp/worktree.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/worktree.py",
+   "kind": "func",
+   "name": "count_unmerged_commits",
+   "line": 383,
+   "refs": {
+    "src/agy_mcp/worktree.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/worktree.py",
+   "kind": "func",
+   "name": "is_dangerous_allow_rule",
+   "line": 486,
+   "refs": {
+    "src/agy_mcp/worktree.py": 1
+   },
+   "total_refs": 1
+  },
+  {
+   "module": "src/agy_mcp/worktree.py",
+   "kind": "const",
+   "name": "MAX_PERMISSION_CONFIG_BYTES",
+   "line": 559,
+   "refs": {
+    "src/agy_mcp/worktree.py": 3
+   },
+   "total_refs": 3
+  },
+  {
+   "module": "src/agy_mcp/worktree.py",
+   "kind": "func",
+   "name": "_read_permission_config_file",
+   "line": 562,
+   "refs": {
+    "src/agy_mcp/worktree.py": 1
+   },
+   "total_refs": 1
+  }
+ ],
+ "counts": {
+  "defs": 410,
+  "unused": 5,
+  "same_module_only": 170
+ }
+}

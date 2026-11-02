@@ -1,0 +1,22 @@
+
+In installer/install.sh line 330:
+        printf 'HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"\n'
+               ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 332:
+        printf 'source "$HERE/env"\n'
+               ^--------------------^ SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 334:
+            printf 'exec "$HERE/venv/bin/agy-mcp" --agy-binary "$AGY_MCP_AGY_BINARY" --config "$AGY_MCP_CONFIG" --state-dir "$AGY_MCP_STATE_DIR"\n'
+                   ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 336:
+            printf 'exec "$HERE/venv/bin/python" -m agy_mcp --agy-binary "$AGY_MCP_AGY_BINARY" --config "$AGY_MCP_CONFIG" --state-dir "$AGY_MCP_STATE_DIR"\n'
+                   ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2016 -- Expressions don't expand in singl...

@@ -1,0 +1,29 @@
+Mon Oct 26 10:48:25 AM IST 2026
+CMD: /tmp/sc/bin/shellcheck --version && /tmp/sc/bin/shellcheck installer/install.sh
+ShellCheck - shell script analysis tool
+version: 0.11.0
+license: GNU General Public License, version 3
+website: https://www.shellcheck.net
+
+In installer/install.sh line 306:
+        printf 'HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"\n'
+               ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 308:
+        printf 'source "$HERE/env"\n'
+               ^--------------------^ SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 310:
+            printf 'exec "$HERE/venv/bin/agy-mcp" --agy-binary "$AGY_MCP_AGY_BINARY" --config "$AGY_MCP_CONFIG" --state-dir "$AGY_MCP_STATE_DIR"\n'
+                   ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+
+In installer/install.sh line 312:
+            printf 'exec "$HERE/venv/bin/python" -m agy_mcp --agy-binary "$AGY_MCP_AGY_BINARY" --config "$AGY_MCP_CONFIG" --state-dir "$AGY_MCP_STATE_DIR"\n'
+                   ^-- SC2016 (info): Expressions don't expand in single quotes, use double quotes for that.
+
+For more information:
+  https://www.shellcheck.net/wiki/SC2016 -- Expressions don't expand in singl...
+shellcheck rc=1

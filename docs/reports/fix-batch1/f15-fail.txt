@@ -1,0 +1,57 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+rootdir: ~/Documents/GITHUB PROJECTS/agy-mcp
+configfile: pyproject.toml
+plugins: anyio-4.15.1
+collected 1 item
+
+tests/test_f15.py F                                                      [100%]
+
+=================================== FAILURES ===================================
+______________ test_f15_sensitive_dirty_cancel_commits_count_zero ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-369/test_f15_sensitive_dirty_cance0')
+
+    def test_f15_sensitive_dirty_cancel_commits_count_zero(tmp_path: Path) -> None:
+        """A dirty worktree containing only sensitive untracked files must not increment commits_count on cancel."""
+        manager, repo_dir = _setup_manager_and_repo(tmp_path)
+        state_dir = tmp_path / "state"
+    
+        env = manager.start(
+            prompt="Long job __SCENARIO:hang__",
+            repo_path=str(repo_dir),
+            title="Sensitive Dirty Cancel Job",
+        )
+    
+        # Wait until running
+        for _ in range(50):
+            j = get_job(env.job_id, state_dir)
+            if j.state == JobState.RUNNING and j.worktree_path and j.worktree_path.is_dir():
+                break
+            time.sleep(0.05)
+    
+        assert j.state == JobState.RUNNING
+        assert j.commits_count == 0
+        orig_base_commit = j.base_commit
+    
+        # Create only a sensitive file (.env) in worktree
+        env_file = j.worktree_path / ".env"
+        env_file.write_text("SUPER_SECRET_KEY=abcdef123456\n")
+    
+        # Cancel the running job
+        manager.cancel(env.job_id)
+    
+        refreshed = get_job(env.job_id, state_dir)
+        assert refreshed.state == JobState.CANCELLED
+        # commits_count must stay 0 because checkpoint_commit returned None
+>       assert refreshed.commits_count == 0, (
+            f"Expected commits_count to be 0 when checkpoint_commit returns None, got {refreshed.commits_count}"
+        )
+E       AssertionError: Expected commits_count to be 0 when checkpoint_commit returns None, got 1
+E       assert 1 == 0
+E        +  where 1 = Job(job_id='6030e2d4-5df3-4228-bdce-44870089ed4c', title='Sensitive Dirty Cancel Job', repo_path=PosixPath('/tmp/pytes... warnings=[], tokens=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0), schema_version=1, verify_status=None).commits_count
+
+tests/test_f15.py:70: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_f15.py::test_f15_sensitive_dirty_cancel_commits_count_zero
+============================== 1 failed in 1.15s ===============================

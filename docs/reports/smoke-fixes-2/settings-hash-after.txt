@@ -1,0 +1,2 @@
+fc58bd6133bc37c97d2674100c811e9fc04bf895fb54189aa4e763c0315d9798  ~/.gemini/antigravity-cli/settings.json
+9d86ba621b4d272559fc3ed90886ba2220c5d63ce09368c156e208cf06dd6e50  ~/.gemini/config/config.json

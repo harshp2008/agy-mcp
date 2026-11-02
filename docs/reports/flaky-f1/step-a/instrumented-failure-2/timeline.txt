@@ -1,0 +1,146 @@
++   0.024s start      attempt=1
++   0.086s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=create_job:155 <- start:331 <- main:114 <- <module>:195
++   0.091s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=start:343 <- main:114 <- <module>:195
++   0.095s observe    state=queued reason=None gen=1 pid=None conv=None
++   0.143s save_job   thread=Thread-1 (_provision_and_launch) state=queued reason=None gen=1 pid=None conv=None stack=_provision_and_launch:427 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++   0.176s save_job   thread=Thread-1 (_provision_and_launch) state=running reason=None gen=1 pid=120878 conv=None stack=transition_job_state:317 <- _provision_and_launch:445 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++   0.178s observe    state=running reason=None gen=1 pid=120878 conv=None
++   4.191s save_job   thread=Thread-2 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=120878 conv=None stack=transition_job_state:317 <- _process_settled_commit_msg:191 <- tick:155 <- tick:478 <- run_loop:950
++   4.195s observe    state=needs_review reason=invalid_commit_message gen=1 pid=120878 conv=None
++   4.199s save_job   thread=Thread-2 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=120878 conv=conv-invalid-msg-001 stack=_finalize_non_running_process:357 <- tick:482 <- run_loop:950 <- _run_supervisor:542 <- run:1010
++   4.203s observe    state=needs_review reason=invalid_commit_message gen=1 pid=120878 conv=conv-invalid-msg-001
++   4.204s resume-call job_id=df42ddcc-6a92-4b32-98f8-ca3d15f933bc
++   4.211s save_job   thread=MainThread state=running reason=None gen=2 pid=120986 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- resume:1387 <- main:154 <- <module>:195
++   4.214s resume-return state=running
++   4.215s observe    state=running reason=None gen=2 pid=120986 conv=conv-invalid-msg-001
++   4.294s save_job   thread=Thread-2 (_run_supervisor) state=running reason=None gen=2 pid=120986 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++   5.270s save_job   thread=Thread-3 (_run_supervisor) state=done reason=None gen=2 pid=120986 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- _finalize_terminated_process:893 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++   5.274s observe    state=done reason=None gen=2 pid=120986 conv=conv-invalid-msg-001
++   5.274s save_job   thread=Thread-3 (_run_supervisor) state=done reason=None gen=2 pid=120986 conv=conv-invalid-msg-001 stack=record_job_execution_time:333 <- _finalize_terminated_process:903 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++   5.281s save_job   thread=Thread-3 (_run_supervisor) state=done reason=None gen=2 pid=120986 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++   5.320s wait-return state=done job_state=done reason=None
++   5.321s start      attempt=2
++   5.392s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=create_job:155 <- start:331 <- main:114 <- <module>:195
++   5.397s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=start:343 <- main:114 <- <module>:195
++   5.403s observe    state=queued reason=None gen=1 pid=None conv=None
++   5.449s save_job   thread=Thread-4 (_provision_and_launch) state=queued reason=None gen=1 pid=None conv=None stack=_provision_and_launch:427 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++   5.470s save_job   thread=Thread-4 (_provision_and_launch) state=running reason=None gen=1 pid=121038 conv=None stack=transition_job_state:317 <- _provision_and_launch:445 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++   5.474s observe    state=running reason=None gen=1 pid=121038 conv=None
++   9.541s save_job   thread=Thread-5 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121038 conv=None stack=transition_job_state:317 <- _process_settled_commit_msg:191 <- tick:155 <- tick:478 <- run_loop:950
++   9.545s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121038 conv=None
++   9.547s save_job   thread=Thread-5 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121038 conv=conv-invalid-msg-001 stack=_finalize_non_running_process:357 <- tick:482 <- run_loop:950 <- _run_supervisor:542 <- run:1010
++   9.552s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121038 conv=conv-invalid-msg-001
++   9.607s resume-call job_id=7f7fdb73-d57f-464a-a7e7-e82ac3a0c729
++   9.637s save_job   thread=MainThread state=running reason=None gen=2 pid=121141 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- resume:1387 <- main:154 <- <module>:195
++   9.641s resume-return state=running
++   9.642s observe    state=running reason=None gen=2 pid=121141 conv=conv-invalid-msg-001
++   9.649s save_job   thread=Thread-5 (_run_supervisor) state=running reason=None gen=2 pid=121141 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  10.723s save_job   thread=Thread-6 (_run_supervisor) state=done reason=None gen=2 pid=121141 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- _finalize_terminated_process:893 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  10.725s observe    state=done reason=None gen=2 pid=121141 conv=conv-invalid-msg-001
++  10.726s save_job   thread=Thread-6 (_run_supervisor) state=done reason=None gen=2 pid=121141 conv=conv-invalid-msg-001 stack=record_job_execution_time:333 <- _finalize_terminated_process:903 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  10.732s save_job   thread=Thread-6 (_run_supervisor) state=done reason=None gen=2 pid=121141 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  10.748s wait-return state=done job_state=done reason=None
++  10.750s start      attempt=3
++  10.843s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=create_job:155 <- start:331 <- main:114 <- <module>:195
++  10.848s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=start:343 <- main:114 <- <module>:195
++  10.853s observe    state=queued reason=None gen=1 pid=None conv=None
++  10.902s save_job   thread=Thread-7 (_provision_and_launch) state=queued reason=None gen=1 pid=None conv=None stack=_provision_and_launch:427 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  10.946s save_job   thread=Thread-7 (_provision_and_launch) state=running reason=None gen=1 pid=121182 conv=None stack=transition_job_state:317 <- _provision_and_launch:445 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  10.949s observe    state=running reason=None gen=1 pid=121182 conv=None
++  15.010s save_job   thread=Thread-8 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121182 conv=None stack=transition_job_state:317 <- _process_settled_commit_msg:191 <- tick:155 <- tick:478 <- run_loop:950
++  15.016s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121182 conv=None
++  15.016s save_job   thread=Thread-8 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121182 conv=conv-invalid-msg-001 stack=_finalize_non_running_process:357 <- tick:482 <- run_loop:950 <- _run_supervisor:542 <- run:1010
++  15.019s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121182 conv=conv-invalid-msg-001
++  15.053s resume-call job_id=5a4b5db1-de37-4012-ab21-7c8bcb089a93
++  15.114s save_job   thread=MainThread state=running reason=None gen=2 pid=121284 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- resume:1387 <- main:154 <- <module>:195
++  15.119s observe    state=running reason=None gen=2 pid=121284 conv=conv-invalid-msg-001
++  15.120s save_job   thread=Thread-8 (_run_supervisor) state=running reason=None gen=2 pid=121284 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  15.122s resume-return state=running
++  15.253s save_job   thread=Thread-9 (_run_supervisor) state=done reason=None gen=2 pid=121284 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- _finalize_terminated_process:893 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  15.256s save_job   thread=Thread-9 (_run_supervisor) state=done reason=None gen=2 pid=121284 conv=conv-invalid-msg-001 stack=record_job_execution_time:333 <- _finalize_terminated_process:903 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  15.257s observe    state=done reason=None gen=2 pid=121284 conv=conv-invalid-msg-001
++  15.263s save_job   thread=Thread-9 (_run_supervisor) state=done reason=None gen=2 pid=121284 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  15.274s wait-return state=done job_state=done reason=None
++  15.276s start      attempt=4
++  15.400s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=create_job:155 <- start:331 <- main:114 <- <module>:195
++  15.405s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=start:343 <- main:114 <- <module>:195
++  15.409s observe    state=queued reason=None gen=1 pid=None conv=None
++  15.454s save_job   thread=Thread-10 (_provision_and_launch) state=queued reason=None gen=1 pid=None conv=None stack=_provision_and_launch:427 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  15.525s save_job   thread=Thread-10 (_provision_and_launch) state=running reason=None gen=1 pid=121317 conv=None stack=transition_job_state:317 <- _provision_and_launch:445 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  15.529s observe    state=running reason=None gen=1 pid=121317 conv=None
++  19.644s save_job   thread=Thread-11 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121317 conv=None stack=transition_job_state:317 <- _process_settled_commit_msg:191 <- tick:155 <- tick:478 <- run_loop:950
++  19.646s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121317 conv=None
++  19.650s save_job   thread=Thread-11 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121317 conv=conv-invalid-msg-001 stack=_finalize_non_running_process:357 <- tick:482 <- run_loop:950 <- _run_supervisor:542 <- run:1010
++  19.653s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121317 conv=conv-invalid-msg-001
++  19.726s resume-call job_id=4e34a4c7-c0ac-43c2-bbd2-8b5d2a28204c
++  19.806s save_job   thread=MainThread state=running reason=None gen=2 pid=121433 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- resume:1387 <- main:154 <- <module>:195
++  19.810s save_job   thread=Thread-11 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121317 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  19.811s observe    state=running reason=None gen=2 pid=121433 conv=conv-invalid-msg-001
++  19.811s resume-return state=running
++  19.814s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121317 conv=conv-invalid-msg-001
++  19.863s wait-return state=needs_review job_state=needs_review reason=invalid_commit_message
++  19.866s final      job_json state=needs_review reason=invalid_commit_message gen=1 pid=121317 conv=conv-invalid-msg-001
++  19.868s start      attempt=5
++  19.974s save_job   thread=Thread-12 (_run_supervisor) state=done reason=None gen=2 pid=121433 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- _finalize_terminated_process:893 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  19.980s save_job   thread=Thread-12 (_run_supervisor) state=done reason=None gen=2 pid=121433 conv=conv-invalid-msg-001 stack=record_job_execution_time:333 <- _finalize_terminated_process:903 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  19.982s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=create_job:155 <- start:331 <- main:114 <- <module>:195
++  19.991s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=start:343 <- main:114 <- <module>:195
++  19.991s save_job   thread=Thread-12 (_run_supervisor) state=done reason=None gen=2 pid=121433 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  19.997s observe    state=queued reason=None gen=1 pid=None conv=None
++  20.044s save_job   thread=Thread-13 (_provision_and_launch) state=queued reason=None gen=1 pid=None conv=None stack=_provision_and_launch:427 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  20.124s save_job   thread=Thread-13 (_provision_and_launch) state=running reason=None gen=1 pid=121465 conv=None stack=transition_job_state:317 <- _provision_and_launch:445 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  20.129s observe    state=running reason=None gen=1 pid=121465 conv=None
++  24.212s save_job   thread=Thread-14 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121465 conv=None stack=transition_job_state:317 <- _process_settled_commit_msg:191 <- tick:155 <- tick:478 <- run_loop:950
++  24.218s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121465 conv=None
++  24.218s save_job   thread=Thread-14 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121465 conv=conv-invalid-msg-001 stack=_finalize_non_running_process:357 <- tick:482 <- run_loop:950 <- _run_supervisor:542 <- run:1010
++  24.221s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121465 conv=conv-invalid-msg-001
++  24.307s save_job   thread=Thread-14 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121465 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  24.323s resume-call job_id=ff236eef-d2e2-4c6b-a396-e9a140b60efc
++  24.330s save_job   thread=MainThread state=running reason=None gen=2 pid=121573 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- resume:1387 <- main:154 <- <module>:195
++  24.334s resume-return state=running
++  24.334s observe    state=running reason=None gen=2 pid=121573 conv=conv-invalid-msg-001
++  25.414s save_job   thread=Thread-15 (_run_supervisor) state=done reason=None gen=2 pid=121573 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- _finalize_terminated_process:893 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  25.417s observe    state=done reason=None gen=2 pid=121573 conv=conv-invalid-msg-001
++  25.417s save_job   thread=Thread-15 (_run_supervisor) state=done reason=None gen=2 pid=121573 conv=conv-invalid-msg-001 stack=record_job_execution_time:333 <- _finalize_terminated_process:903 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  25.423s save_job   thread=Thread-15 (_run_supervisor) state=done reason=None gen=2 pid=121573 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  25.441s wait-return state=done job_state=done reason=None
++  25.442s start      attempt=6
++  25.503s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=create_job:155 <- start:331 <- main:114 <- <module>:195
++  25.508s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=start:343 <- main:114 <- <module>:195
++  25.514s observe    state=queued reason=None gen=1 pid=None conv=None
++  25.563s save_job   thread=Thread-16 (_provision_and_launch) state=queued reason=None gen=1 pid=None conv=None stack=_provision_and_launch:427 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  25.587s save_job   thread=Thread-16 (_provision_and_launch) state=running reason=None gen=1 pid=121607 conv=None stack=transition_job_state:317 <- _provision_and_launch:445 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  25.593s observe    state=running reason=None gen=1 pid=121607 conv=None
++  29.613s save_job   thread=Thread-17 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121607 conv=None stack=transition_job_state:317 <- _process_settled_commit_msg:191 <- tick:155 <- tick:478 <- run_loop:950
++  29.619s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121607 conv=None
++  29.620s save_job   thread=Thread-17 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121607 conv=conv-invalid-msg-001 stack=_finalize_non_running_process:357 <- tick:482 <- run_loop:950 <- _run_supervisor:542 <- run:1010
++  29.625s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121607 conv=conv-invalid-msg-001
++  29.714s save_job   thread=Thread-17 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121607 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  29.720s resume-call job_id=e6c883f3-28b4-4f0f-a4d3-3c265c7d9ee4
++  29.727s save_job   thread=MainThread state=running reason=None gen=2 pid=121710 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- resume:1387 <- main:154 <- <module>:195
++  29.731s resume-return state=running
++  29.733s observe    state=running reason=None gen=2 pid=121710 conv=conv-invalid-msg-001
++  30.792s save_job   thread=Thread-18 (_run_supervisor) state=done reason=None gen=2 pid=121710 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- _finalize_terminated_process:893 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  30.794s observe    state=done reason=None gen=2 pid=121710 conv=conv-invalid-msg-001
++  30.795s save_job   thread=Thread-18 (_run_supervisor) state=done reason=None gen=2 pid=121710 conv=conv-invalid-msg-001 stack=record_job_execution_time:333 <- _finalize_terminated_process:903 <- tick:491 <- run_loop:950 <- _run_supervisor:542
++  30.801s save_job   thread=Thread-18 (_run_supervisor) state=done reason=None gen=2 pid=121710 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  30.837s wait-return state=done job_state=done reason=None
++  30.838s start      attempt=7
++  30.914s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=create_job:155 <- start:331 <- main:114 <- <module>:195
++  30.919s save_job   thread=MainThread state=queued reason=None gen=1 pid=None conv=None stack=start:343 <- main:114 <- <module>:195
++  30.926s observe    state=queued reason=None gen=1 pid=None conv=None
++  30.973s save_job   thread=Thread-19 (_provision_and_launch) state=queued reason=None gen=1 pid=None conv=None stack=_provision_and_launch:427 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  31.014s save_job   thread=Thread-19 (_provision_and_launch) state=running reason=None gen=1 pid=121744 conv=None stack=transition_job_state:317 <- _provision_and_launch:445 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  31.018s observe    state=running reason=None gen=1 pid=121744 conv=None
++  35.029s save_job   thread=Thread-20 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121744 conv=None stack=transition_job_state:317 <- _process_settled_commit_msg:191 <- tick:155 <- tick:478 <- run_loop:950
++  35.033s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121744 conv=None
++  35.036s save_job   thread=Thread-20 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121744 conv=conv-invalid-msg-001 stack=_finalize_non_running_process:357 <- tick:482 <- run_loop:950 <- _run_supervisor:542 <- run:1010
++  35.040s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121744 conv=conv-invalid-msg-001
++  35.133s resume-call job_id=c4e0a7fa-2183-4ad6-a3a8-ce5fe51453d3
++  35.155s save_job   thread=MainThread state=running reason=None gen=2 pid=121866 conv=conv-invalid-msg-001 stack=transition_job_state:317 <- resume:1387 <- main:154 <- <module>:195
++  35.158s save_job   thread=Thread-20 (_run_supervisor) state=needs_review reason=invalid_commit_message gen=1 pid=121744 conv=conv-invalid-msg-001 stack=_retain_scratchpad:619 <- _run_supervisor:548 <- run:1010 <- _bootstrap_inner:1073 <- _bootstrap:1030
++  35.159s observe    state=running reason=None gen=2 pid=121866 conv=conv-invalid-msg-001
++  35.161s resume-return state=running
++  35.162s observe    state=needs_review reason=invalid_commit_message gen=1 pid=121744 conv=conv-invalid-msg-001
++  35.212s wait-return state=needs_review job_state=needs_review reason=invalid_commit_message
++  35.214s final      job_json state=needs_review reason=invalid_commit_message gen=1 pid=121744 conv=conv-invalid-msg-001

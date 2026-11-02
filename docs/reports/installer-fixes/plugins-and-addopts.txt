@@ -1,0 +1,50 @@
+Mon Oct 26 10:27:42 AM IST 2026
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest --version
+
+pytest 9.1.1
+
+CMD: grep addopts pyproject.toml
+42:testpaths = ["tests"]
+45:addopts = "-p no:launch_testing -p no:ament_flake8 -p no:ament_copyright -p no:launch_ros -p no:ament_xmllint -p no:ament_pep257 -p no:ament_lint"
+
+CMD: env -u PYTHONPATH .venv/bin/python -m pytest --trace-config --collect-only -q tests/test_util.py 2>&1 | grep -i 'plugin\|random\|order' | head -40
+PLUGIN registered: <_pytest.config.PytestPluginManager object at 0x7c596cdc7bc0>
+PLUGIN registered: <_pytest.config.Config object at 0x7c596b4e75c0>
+PLUGIN registered: <module '_pytest.mark' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/mark/__init__.py'>
+PLUGIN registered: <module '_pytest.main' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/main.py'>
+PLUGIN registered: <module '_pytest.runner' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/runner.py'>
+PLUGIN registered: <module '_pytest.fixtures' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/fixtures.py'>
+PLUGIN registered: <module '_pytest.helpconfig' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/helpconfig.py'>
+PLUGIN registered: <module '_pytest.python' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/python.py'>
+PLUGIN registered: <module '_pytest.terminal' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/terminal.py'>
+PLUGIN registered: <module '_pytest.debugging' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/debugging.py'>
+PLUGIN registered: <module '_pytest.unittest' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/unittest.py'>
+PLUGIN registered: <module '_pytest.capture' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/capture.py'>
+PLUGIN registered: <module '_pytest.skipping' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/skipping.py'>
+PLUGIN registered: <module '_pytest.legacypath' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/legacypath.py'>
+PLUGIN registered: <module '_pytest.tmpdir' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/tmpdir.py'>
+PLUGIN registered: <module '_pytest.monkeypatch' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/monkeypatch.py'>
+PLUGIN registered: <module '_pytest.recwarn' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/recwarn.py'>
+PLUGIN registered: <module '_pytest.pastebin' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/pastebin.py'>
+PLUGIN registered: <module '_pytest.assertion' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/assertion/__init__.py'>
+PLUGIN registered: <module '_pytest.junitxml' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/junitxml.py'>
+PLUGIN registered: <module '_pytest.doctest' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/doctest.py'>
+PLUGIN registered: <module '_pytest.cacheprovider' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/cacheprovider.py'>
+PLUGIN registered: <module '_pytest.setuponly' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/setuponly.py'>
+PLUGIN registered: <module '_pytest.setupplan' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/setupplan.py'>
+PLUGIN registered: <module '_pytest.stepwise' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/stepwise.py'>
+PLUGIN registered: <module '_pytest.unraisableexception' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/unraisableexception.py'>
+PLUGIN registered: <module '_pytest.threadexception' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/threadexception.py'>
+PLUGIN registered: <module '_pytest.warnings' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/warnings.py'>
+PLUGIN registered: <module '_pytest.logging' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/logging.py'>
+PLUGIN registered: <module '_pytest.reports' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/reports.py'>
+PLUGIN registered: <module '_pytest.faulthandler' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/faulthandler.py'>
+PLUGIN registered: <module '_pytest.subtests' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/_pytest/subtests.py'>
+PLUGIN registered: <module 'anyio.pytest_plugin' from '~/Documents/GITHUB PROJECTS/agy-mcp/.venv/lib/python3.12/site-packages/anyio/pytest_plugin.py'>
+PLUGIN registered: <CaptureManager _method='fd' _global_capturing=<MultiCapture out=<FDCapture 1 oldfd=5 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=6 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> err=<FDCapture 2 oldfd=7 _state='suspended' tmpfile=<_io.TextIOWrapper name="<_io.FileIO name=8 mode='rb+' closefd=True>" mode='r+' encoding='utf-8'>> in_=<FDCapture 0 oldfd=3 _state='started' tmpfile=<_io.TextIOWrapper name='/dev/null' mode='r' encoding='utf-8'>> _state='suspended' _in_suspended=False> _capture_fixture=None>
+PLUGIN registered: <module 'conftest' from '~/Documents/GITHUB PROJECTS/agy-mcp/tests/conftest.py'>
+PLUGIN registered: <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=0>
+PLUGIN registered: <_pytest.cacheprovider.LFPlugin object at 0x7c596af7fe90>
+PLUGIN registered: <_pytest.cacheprovider.NFPlugin object at 0x7c596b52a0c0>
+PLUGIN registered: <class '_pytest.legacypath.LegacyTmpdirPlugin'>
+PLUGIN registered: <_pytest.terminal.TerminalReporter object at 0x7c596a6ac380>

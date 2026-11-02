@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "~/agy-smoke-repo",
+    "log",
+    "--oneline",
+    "e4ed76409bc5ce8784d142dba2d1e80e52a490f9..agy/slugify-punctuation-90226ef0"
+  ],
+  "returncode": 0,
+  "stdout": "ed3ff1f Add test cases for punctuation, repeated spaces, and empty input\ne49c923 Update slugify to strip punctuation, collapse separators, and trim\n",
+  "stderr": ""
+}

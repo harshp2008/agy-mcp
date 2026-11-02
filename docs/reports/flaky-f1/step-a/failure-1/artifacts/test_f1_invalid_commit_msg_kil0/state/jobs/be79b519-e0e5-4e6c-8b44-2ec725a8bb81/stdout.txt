@@ -1,0 +1,1 @@
+{"conversation_id": "conv-invalid-msg-001", "status": "SUCCESS", "response": "Resumed and finished after invalid commit message review", "usage": {"input_tokens": 100, "output_tokens": 50, "total_tokens": 150}}

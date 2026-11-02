@@ -1,0 +1,68 @@
+{
+  "job_id": "97c5139e-ba79-49eb-b050-7a6b70de09d1",
+  "state": "queued",
+  "elapsed_seconds": 0.0,
+  "title": "slug docs",
+  "branch": "agy/slug-docs-97c5139e",
+  "base_commit": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "head_commit": "e4ed76409bc5ce8784d142dba2d1e80e52a490f9",
+  "commits_count": 0,
+  "files_modified": [],
+  "skipped_files": [],
+  "denials": [],
+  "denied_commands": [],
+  "denied_tools": [],
+  "warnings": [],
+  "tokens": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0
+  },
+  "next_actions": [
+    "Wait for execution to start with agy_wait",
+    "Check status with agy_status"
+  ],
+  "error": null,
+  "usage_cost": null,
+  "resume_after": null,
+  "plan": {
+    "total": 0,
+    "done": 0,
+    "remaining": []
+  },
+  "facts": {
+    "commits_count": 0,
+    "files_modified_count": 0,
+    "verify": {
+      "requested": false,
+      "ran": false,
+      "passed": null,
+      "rc": null,
+      "attempts": 0
+    },
+    "audit": {
+      "status": "not_run"
+    },
+    "plan": {
+      "total": 0,
+      "done": 0,
+      "remaining": 0
+    },
+    "denials": {
+      "count": 0,
+      "commands": 0,
+      "tools": 0
+    }
+  },
+  "agent_report": null,
+  "scratchpad": [],
+  "verify": {
+    "requested": false,
+    "ran": false,
+    "passed": null,
+    "rc": null,
+    "duration_seconds": null,
+    "attempts": 0,
+    "last_tail": null
+  }
+}

@@ -1,0 +1,82 @@
+BURNER_PIDS: 3875567 3875568 3875569 3875570
+=== Load Iteration 1 ===
+.                                                                        [100%]
+1 passed in 0.61s
+Load Iteration 1: PASSED
+=== Load Iteration 2 ===
+.                                                                        [100%]
+1 passed in 0.69s
+Load Iteration 2: PASSED
+=== Load Iteration 3 ===
+.                                                                        [100%]
+1 passed in 0.68s
+Load Iteration 3: PASSED
+=== Load Iteration 4 ===
+.                                                                        [100%]
+1 passed in 0.63s
+Load Iteration 4: PASSED
+=== Load Iteration 5 ===
+.                                                                        [100%]
+1 passed in 0.68s
+Load Iteration 5: PASSED
+=== Load Iteration 6 ===
+.                                                                        [100%]
+1 passed in 0.73s
+Load Iteration 6: PASSED
+=== Load Iteration 7 ===
+.                                                                        [100%]
+1 passed in 0.68s
+Load Iteration 7: PASSED
+=== Load Iteration 8 ===
+.                                                                        [100%]
+1 passed in 0.55s
+Load Iteration 8: PASSED
+=== Load Iteration 9 ===
+.                                                                        [100%]
+1 passed in 0.67s
+Load Iteration 9: PASSED
+=== Load Iteration 10 ===
+.                                                                        [100%]
+1 passed in 0.74s
+Load Iteration 10: PASSED
+=== Load Iteration 11 ===
+.                                                                        [100%]
+1 passed in 0.67s
+Load Iteration 11: PASSED
+=== Load Iteration 12 ===
+.                                                                        [100%]
+1 passed in 0.67s
+Load Iteration 12: PASSED
+=== Load Iteration 13 ===
+.                                                                        [100%]
+1 passed in 0.67s
+Load Iteration 13: PASSED
+=== Load Iteration 14 ===
+.                                                                        [100%]
+1 passed in 0.81s
+Load Iteration 14: PASSED
+=== Load Iteration 15 ===
+.                                                                        [100%]
+1 passed in 0.67s
+Load Iteration 15: PASSED
+=== Load Iteration 16 ===
+.                                                                        [100%]
+1 passed in 0.67s
+Load Iteration 16: PASSED
+=== Load Iteration 17 ===
+.                                                                        [100%]
+1 passed in 0.67s
+Load Iteration 17: PASSED
+=== Load Iteration 18 ===
+.                                                                        [100%]
+1 passed in 0.80s
+Load Iteration 18: PASSED
+=== Load Iteration 19 ===
+.                                                                        [100%]
+1 passed in 0.67s
+Load Iteration 19: PASSED
+=== Load Iteration 20 ===
+.                                                                        [100%]
+1 passed in 0.88s
+Load Iteration 20: PASSED
+Killing CPU burner PIDs: 3875567 3875568 3875569 3875570

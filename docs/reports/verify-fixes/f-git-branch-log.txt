@@ -1,0 +1,2 @@
+dd61508 (agy/verify-fixes-part-f-price-rounding-5688b6a2) Implement calculate_price with ROUND_HALF_UP decimal rounding
+1c3ea6b (HEAD -> main) Initial commit with price stub and tests
