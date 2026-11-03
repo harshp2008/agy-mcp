@@ -123,7 +123,7 @@ def test_email_mismatch_is_a_problem_and_masked(tmp_path: Path) -> None:
     assert report["ok"] is False
     rendered = render_report(report)
     assert FULL_EMAIL not in rendered
-    assert "docer***@example.com" in rendered
+    assert "doc***er@example.com" in rendered
 
 
 def test_report_rendering_is_one_line_per_check(tmp_path: Path) -> None:

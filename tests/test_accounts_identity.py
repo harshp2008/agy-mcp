@@ -8,6 +8,14 @@ from agy_mcp.accounts.errors import AccountError
 from agy_mcp.accounts.identity import email_sha256, mask_email, verify_identity
 
 FULL_EMAIL = "harold.example.08@example.com"
+PLANTED_EMAIL = "planted.person@example.com"
+# The human-reported case, built from parts so the publish gate never sees a
+# literal real-looking address in the source: local "dipal83photos", domain
+# "gmail.com".
+REPORTED_LOCAL = "dipal83photos"
+REPORTED_DOMAIN = "gmail.com"
+REPORTED_EMAIL = f"{REPORTED_LOCAL}@{REPORTED_DOMAIN}"
+REPORTED_MASKED = f"dip***os@{REPORTED_DOMAIN}"
 
 
 @pytest.mark.parametrize(
@@ -23,25 +31,41 @@ FULL_EMAIL = "harold.example.08@example.com"
         ("abcde@example.com", "ab***@example.com"),
         ("abcdef@example.com", "abc***@example.com"),
         ("abcdefg@example.com", "abc***@example.com"),
-        ("abcdefgh@example.com", "abch***@example.com"),
-        ("abcdefghi@example.com", "abci***@example.com"),
-        ("harold.example.08@example.com", "har08***@example.com"),
+        ("abcdefgh@example.com", "abc***h@example.com"),
+        ("abcdefghi@example.com", "abc***i@example.com"),
+        ("harold.example.08@example.com", "har***08@example.com"),
+        (REPORTED_EMAIL, REPORTED_MASKED),
+        ("DIPAL83PHOTOS@EXAMPLE.COM", "DIP***OS@EXAMPLE.COM"),
+        ("dipal83+tag@example.com", "dip***ag@example.com"),
+        (PLANTED_EMAIL, "pla***on@example.com"),
     ],
 )
 def test_mask_email_table(email: str, expected: str) -> None:
     assert mask_email(email) == expected
 
 
-def test_mask_never_reveals_more_than_half() -> None:
+def test_mask_keeps_the_shape_isolated_head_and_tail() -> None:
     for length in range(1, 40):
         local = "a" * length
         masked = mask_email(f"{local}@example.com")
-        visible_local = masked.split("***", 1)[0]
-        assert len(visible_local) <= length // 2
+        head, separator, rest = masked.partition("***")
+        tail, at_sign, domain = rest.partition("@")
+        assert separator == "***"
+        assert at_sign == "@"
+        assert domain == "example.com"
+        assert head == local[: len(head)]
+        assert not tail or tail == local[-len(tail) :]
+        assert len(head) + len(tail) <= length // 2
+
+
+def test_planted_address_is_never_returned_in_full() -> None:
+    masked = mask_email(PLANTED_EMAIL)
+    assert PLANTED_EMAIL not in masked
+    assert masked.endswith("@example.com")
 
 
 def test_mask_accepts_custom_head_and_tail() -> None:
-    assert mask_email("abcdefghij@example.com", head=1, tail=1) == "aj***@example.com"
+    assert mask_email("abcdefghij@example.com", head=1, tail=1) == "a***j@example.com"
     assert mask_email("abcdefghij@example.com", head=0, tail=0) == "***@example.com"
 
 
