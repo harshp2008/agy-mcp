@@ -43,6 +43,18 @@ logged-in second HOME authenticates to a different account with independent
 quota. A real `/usage` on account-b succeeded and showed a different email local
 part and different percentages from the primary.
 
+### Found in live use (2026-11-03)
+
+The human test found that the wrapper's own scheduler probe did not apply this
+rule. `get_usage(home=<account home>)` swapped only `HOME`, so the probe for a
+non-default account still reached the ambient session bus and authenticated as
+the primary login; `agy_start(account="account-b")` then failed closed with
+`account_identity_mismatch`. The doctor passed because its probe passed the dead
+D-Bus as an override, and the fake agy ignored D-Bus so no test caught it. Every
+agy spawn for a non-default account now builds its env with
+`accounts/env.py:build_account_env`; the audit and the guard test are in
+[05-usage-env-bug.md](../audits/2026-11-03-multi-account/05-usage-env-bug.md).
+
 ### Quota shape
 
 `agy -p "/usage"` returns one JSON object whose `response` is four tab-separated

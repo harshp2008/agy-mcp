@@ -70,6 +70,21 @@ recordings remain a bare argv list per line.
 | `usage_auth_required` | Stderr `not logged in to agy` | 1 |
 | `usage_hang` | Sleeps forever (for timeout/process-group tests) | (killed) |
 
+## Child-env probe and keyring simulation
+
+Touch `$HOME/.fake_agy_env_probe` to make every spawn record the environment it
+was launched with. `env-probe.json` keeps the last entry (`HOME`,
+`DBUS_SESSION_BUS_ADDRESS`, `argv`, `cwd`) and `env-probe.jsonl` appends one
+entry per spawn, so a test can separate the `/usage` probes from the job launch
+without sleeping.
+
+`.fake_agy_keyring_email` simulates the desktop SecretService keyring: it is
+honoured only when `DBUS_SESSION_BUS_ADDRESS` is **not**
+`unix:path=/dev/null`. A probe that forgets the dead address therefore reports
+the keyring email, which reproduces the live leak (human test 2026-11-03) and is
+caught as `account_identity_mismatch`. `.fake_agy_email` remains the account's
+own address.
+
 ## Sources
 
 - `tests/fake_agy/agy` — fake agy binary mock implementation.

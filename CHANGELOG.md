@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **Fix: every non-default account's `/usage` probe now uses the isolated child
+  env.** The scheduler's probe ran without the dead D-Bus override, so agy
+  authenticated through the desktop keyring as the primary login and a
+  second-account `agy_start` failed closed with `account_identity_mismatch`
+  (`human test 2026-11-03`). The at-launch reading, the preflight quota guard and
+  the supervisor's final quota/cost reading had the same flaw; all now use
+  `accounts/env.py:build_account_env` through `usage.get_usage(account=...)`.
+  The default account's env is unchanged. An AST guard rejects a future spawn
+  that bypasses the builder. Audit:
+  `doc/audits/2026-11-03-multi-account/05-usage-env-bug.md`.
 - **Multi-account support.** `[[accounts]]` in `config.toml` adds Google accounts
   the user legitimately owns; each runs with its own `HOME` and a dead D-Bus so
   it cannot reach the desktop keyring. Jobs are pinned to an account, scheduled

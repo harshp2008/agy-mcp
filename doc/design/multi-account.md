@@ -95,7 +95,13 @@ job records and logs).
   `HOME` is the account home. PATH/LANG/TMPDIR and the git overrides are
   unchanged. The default account gets exactly today's env (no D-Bus key), so the
   single-account path is byte-identical. XDG variables are not passed: agy
-  resolves its state under the overridden `HOME`.
+  resolves its state under the overridden `HOME`. **Every** agy spawn for a
+  non-default account goes through this builder: job launch and resume, the
+  scheduler's `/usage` probe, the at-launch reading, the preflight quota guard,
+  the supervisor's final quota/cost reading and the doctor probe. Passing only
+  `home=` to `get_usage` is not isolation: the probe sees the ambient desktop
+  keyring and authenticates as the primary (human test 2026-11-03, audit
+  [05-usage-env-bug](../audits/2026-11-03-multi-account/05-usage-env-bug.md)).
 - **Worktree preflight.** The worktree stays in the real user's filesystem. The
   HOME containment check uses the **invoking user's real home**, not the account
   home; an account home is never added to `allowed_workdir_roots`. The minimal

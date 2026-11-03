@@ -18,6 +18,7 @@ its open questions, then the phase-by-phase implementation reports. Start with
 | [02-code-map.md](02-code-map.md) | File:line table of env, HOME, state, usage, worktree, installer touchpoints |
 | [03-experiments.md](03-experiments.md) | What the fake agy supports and what the real-agy experiments showed |
 | [04-implementation-review.md](04-implementation-review.md) | What was built, deviations, residual risks, unverified items |
+| [05-usage-env-bug.md](05-usage-env-bug.md) | Which agy spawn bypassed the per-account env in live use, and the guard against a repeat |
 
 ## Evidence
 

@@ -769,6 +769,7 @@ Append-only record of architectural, security, and design decisions across agy-m
   2. Worktree preflight and host-path audit use the invoking user's real home; an account home is never added to `allowed_workdir_roots`. Repositories outside the real home still require an explicit `allowed_workdir_roots` entry.
   3. Account homes are mode 0700 and hold agy's file token; the wrapper never reads token, keyring or cookie material.
 - *Tests:* env builder (D-Bus set only for non-default, no leak), preflight with a redirected account home, single-account equivalence.
+- *Correction (2026-11-03):* The rule was not applied to every agy spawn. The scheduler's `/usage` probe passed only `home=`, so it reached the ambient desktop bus and authenticated as the primary login (`human test 2026-11-03`); the at-launch, preflight-guard and supervisor final readings had the same flaw. `usage.get_usage`/`read_usage_once` now take the `AccountConfig` and build the child env only through `accounts/env.py:build_account_env`, and an AST guard rejects a future spawn that bypasses it. Audit: `doc/audits/2026-11-03-multi-account/05-usage-env-bug.md`.
 
 ### D105: Shared state store with per-account caps and reservations
 - *Rationale:* Job ids, recovery, cleanup and `agy_list` already assume one store; splitting it per account would split the concurrency lock and duplicate recovery. Per-account caps are counters, not stores.

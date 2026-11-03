@@ -55,12 +55,13 @@ table changes and `scripts/check_docs.py` fails until this page is refreshed.
 
 ## Child-only variable
 
-`DBUS_SESSION_BUS_ADDRESS` is **set, not read**, by the wrapper. Every
-non-default `[[accounts]]` account's child env and doctor `/usage` probe gets
-`unix:path=/dev/null`, which forces agy to use the file token under that
-account's own `HOME` instead of the host SecretService keyring (D104). The
-implicit default account's env does not contain the key, so it is byte-identical
-to the pre-multi-account environment.
+`DBUS_SESSION_BUS_ADDRESS` is **set, not read**, by the wrapper. Every agy spawn
+for a non-default `[[accounts]]` account — job launch and resume, the scheduler
+and doctor `/usage` probes, the at-launch reading, the preflight quota guard and
+the supervisor's final quota/cost reading — gets `unix:path=/dev/null`, which
+forces agy to use the file token under that account's own `HOME` instead of the
+host SecretService keyring (D104). The implicit default account's env does not
+contain the key, so it is byte-identical to the pre-multi-account environment.
 
 ## Not input variables
 

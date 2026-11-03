@@ -160,6 +160,15 @@ as a problem and makes the doctor exit 1. Emails are masked; the full address is
 never printed. With no `[[accounts]]` the check is a single healthy
 "single-account install" line, so an existing install is unaffected.
 
+The doctor's probe, the account scheduler's `/usage` probe and the readings the
+supervisor takes at launch and at finalization all run with the same isolated
+child environment as the job itself (`HOME` plus
+`DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null`). Before 2026-11-03 the
+scheduler probe did not, so a second-account start could fail with
+`account_identity_mismatch` even though the job's own environment was correct.
+The fix is recorded in
+[the usage-env audit](../audits/2026-11-03-multi-account/05-usage-env-bug.md).
+
 The same module can be run directly:
 
 ```bash
