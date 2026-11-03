@@ -24,6 +24,7 @@ Personal paths and email were normalized for publication (user home directories 
 | 2026-11-02 | Part 2b — Target documentation structure and findings map | `Status: current` | Designed target documentation tree across `using/`, `design/`, `findings-and-experiments/`, `audits/`, `project/`, `reference/`. | [2026-11-02-part2b-target-structure.md](2026-11-02-part2b-target-structure.md) |
 | 2026-11-02 | Part 2c — Coverage matrix: "everything has to be documented" | `Status: current` | Verified reference coverage for error codes, environment variables, MCP tools, and job fields. | [2026-11-02-part2c-coverage.md](2026-11-02-part2c-coverage.md) |
 | 2026-11-02 | Part 2d — Documentation conventions and migration plan | `Status: current` | Defined documentation conventions, style rules, automated gates, and step-by-step phased migration plan. | [2026-11-02-part2d-migration.md](2026-11-02-part2d-migration.md) |
+| 2026-11-03 | Multi-account support — progress, baseline, investigation, experiments and review | `Status: current` | Phase-by-phase record for running agy jobs across legitimate accounts with quota-aware scheduling and conversation transfer. | [2026-11-03-multi-account/README.md](2026-11-03-multi-account/README.md) |
 
 ## Where Evidence Lives
 

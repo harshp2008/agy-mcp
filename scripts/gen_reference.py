@@ -91,7 +91,8 @@ def config_fields() -> list[dict[str, str]]:
     """Return one row per user-settable key in :class:`agy_mcp.config.Config`.
 
     ``unknown_keys`` is a load-time report field, not a config key (SPEC §18),
-    so it is excluded; the result is 27 keys including ``timezone``.
+    so it is excluded; the result is 29 keys including ``timezone``,
+    ``accounts`` and ``max_accounts``.
     """
     from agy_mcp.config import Config
 

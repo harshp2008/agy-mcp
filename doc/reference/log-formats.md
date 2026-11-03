@@ -31,6 +31,9 @@ The event names are generated from the `event="..."` literals in
 <!-- BEGIN GENERATED: audit-events -->
 | Event | Emitted in |
 |---|---|
+| `account_rejected` | `manager.py` |
+| `account_selected` | `jobs.py` |
+| `account_verified` | `manager.py` |
 | `audit_error_during_tick_error` | `supervisor.py` |
 | `audit_violation` | `supervisor.py` |
 | `checkpoint_rejected` | `watcher.py` |
@@ -57,6 +60,16 @@ The event names are generated from the `event="..."` literals in
 | `verify_finished` | `supervisor.py` |
 | `verify_started` | `supervisor.py` |
 <!-- END GENERATED: audit-events -->
+
+`account_selected` and `account_verified` are written when a job is created on a
+registry account; `account_rejected` is written once per account the scheduler
+could not use (at most five). Their details carry the registry `name`, the
+machine-readable reason and a **masked** email only, never the full address.
+`conversation_transferred` records a successful db copy (conversation id, size,
+source and target account); `handoff_summary` records the fallback, with
+`fallback_reason` carrying one of the `account_transfer_*` codes. Those two event
+names are passed through a variable, so the generated table above does not list
+them.
 
 | Event | Meaning |
 |---|---|
@@ -108,10 +121,14 @@ persisted, so a reader that sees the new state in `job.json` finds the row
 | `quota_estimate` | The token-based estimate object, or `null` when no total could be determined. |
 | `run_generation` | The run number inside the job (resume increments it; older rows count as 1). |
 | `wall_clock_seconds` | Alias of `duration_seconds`, kept for the run record. |
+| `account` | Optional. The registry name of the account that ran the job, present **only** when a registry is configured (D107). |
+| `masked_email` | Optional. The masked account email; present only with `account`, never the full address. |
 
-The row never contains a prompt, title, branch, repository path or code.
-Recovery does not append a second row for a run whose finalizer already wrote
-one (`has_usage_record_for_generation`).
+The row never contains a prompt, title, branch, repository path, code or a full
+email address. Recovery does not append a second row for a run whose finalizer
+already wrote one (`has_usage_record_for_generation`). Without a registry the
+`account`/`masked_email` keys are absent, so the row is byte-identical to the
+single-account record.
 
 ## `server.log`
 
@@ -148,6 +165,7 @@ treated as untrusted data. The file format itself belongs to agy.
   `state_transition` detail.
 - `src/agy_mcp/models.py` — `AuditEvent`, `TokenUsage`.
 - `src/agy_mcp/usage.py` — `record_usage` and the `usage.jsonl` fields.
+- `src/agy_mcp/accounts/pools.py` — the typed per-account pool/window view behind `account`.
 - `src/agy_mcp/server.py` — the `server.log` format and handlers.
 - `src/agy_mcp/supervisor.py` — the audit event call sites and `verify_tail.txt`.
 - `src/agy_mcp/watcher.py`, `src/agy_mcp/gitops.py`, `src/agy_mcp/recovery.py`,

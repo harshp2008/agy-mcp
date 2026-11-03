@@ -1,0 +1,8 @@
+# Baseline pytest runs, 2026-11-03, HEAD dd3b1fe, Python 3.12.3
+# Both run with: env -u PYTHONPATH .venv/bin/python -m pytest -q
+
+## Serial
+1823 passed in 342.35s (0:05:42)
+
+## Parallel (-n 4)
+1823 passed in 127.52s (0:02:07)

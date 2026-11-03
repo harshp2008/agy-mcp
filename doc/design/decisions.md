@@ -1,4 +1,4 @@
-# Architectural and security decisions: D1–D101
+# Architectural and security decisions: D1–D114
 
 Status: current
 Audience: maintainers, contributors
@@ -742,9 +742,118 @@ Append-only record of architectural, security, and design decisions across agy-m
   4. `is_dangerous_allow_rule()` now flags `uv`/`uvx`; the deleted constant listed `uv` while the live check did not. Detection is warning-only, so over-blocking is the safe direction (D7).
 - *Tests:* `test_frozen_manifest.py`, `tests/cleanup/test_load_job_json.py`, `tests/cleanup/test_edge_protection.py`, `test_server_error_envelope.py`, `test_server_wrappers_snapshot.py`, `tests/verify/test_dangerous_allow_rules.py`; the frozen cleanup suite and differential harness are unchanged and green.
 
+---
+
+## Multi-account Decisions (D102–D114)
+
+### D102: Multi-account registry and implicit default account
+- *Rationale:* Accounts must be declarative, validated and testable, and adding the feature must not change a single-account install. A `[[accounts]]` list in the existing config file is the smallest source of truth; one implicit `default` account preserves today's behavior exactly.
+- *Rule:*
+  1. `[[accounts]]` entries carry `name`, `home`, optional `pool`, `enabled`, `max_concurrent_jobs`, `expires_at` and `expected_email`/`expected_email_sha256`; `max_accounts` (default 5) caps the list. Unknown/duplicate names and invalid homes fail closed with stable codes.
+  2. The implicit `default` account always exists (today's real home, no isolation override) and is not declarable or disableable; `[[accounts]]` entries are additional, the total is `1 + len(accounts)` and is tested for 1, 2 and 5 total accounts, including accounts sharing a `pool`.
+  3. Accounts sharing a `pool` label are one quota bucket; the CLI exposes no sharing identifier, so sharing is operator-declared only.
+- *Tests:* registry validation matrix (1/2/5, duplicates, pools, bad homes, limit), single-account equivalence class.
+
+### D103: Email masking and identity verification
+- *Rationale:* An account email is identifying; logs, job records and MCP responses must never carry the full value, yet the wrapper must be able to prove the selected account is the expected one.
+- *Rule:*
+  1. One `mask_email(email, head=3, tail=2)` helper reveals at most `head` leading and `tail` trailing local-part characters and never more than half the local part; 1–2 characters are fully masked.
+  2. The full email parsed from `applyAuthResult` stays in memory only. Verification compares the full value with `expected_email` or its SHA-256 with `expected_email_sha256`; the masked string is never compared.
+  3. `job.json`, audit logs, `usage.jsonl` and MCP envelopes carry the registry name and masked email only. A mismatch is `account_identity_mismatch`; a missing auth line is `account_identity_unknown` (blocked only when an expectation is configured).
+- *Tests:* mask table (short/long local parts), planted-full-email grep over new outputs, verification mismatch/unknown.
+
+### D104: Per-account isolation environment and real-home worktree preflight
+- *Rationale:* Human testing 2026-11-03 proved that overriding `HOME` alone leaks the host keyring and that `HOME` plus a dead D-Bus isolates a second login. Worktrees, however, stay in the user's real filesystem.
+- *Rule:*
+  1. Every non-default account runs with its own `HOME` and `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null`; the default account keeps exactly today's env (no D-Bus key).
+  2. Worktree preflight and host-path audit use the invoking user's real home; an account home is never added to `allowed_workdir_roots`. Repositories outside the real home still require an explicit `allowed_workdir_roots` entry.
+  3. Account homes are mode 0700 and hold agy's file token; the wrapper never reads token, keyring or cookie material.
+- *Tests:* env builder (D-Bus set only for non-default, no leak), preflight with a redirected account home, single-account equivalence.
+
+### D105: Shared state store with per-account caps and reservations
+- *Rationale:* Job ids, recovery, cleanup and `agy_list` already assume one store; splitting it per account would split the concurrency lock and duplicate recovery. Per-account caps are counters, not stores.
+- *Rule:*
+  1. One state root; the account name is a job field. Per-account daily-cap files are `daily_cap.<name>.json`/`.lock`; the default account keeps the historical unsuffixed names.
+  2. Global `max_concurrent_jobs`/`daily_jobs_cap` still apply; each account also has `max_concurrent_jobs` and the global daily cap. The count, increment and reservation are taken under one `concurrency_lock`.
+  3. A running job reserves its estimated cost against its account until finalization; the scheduler subtracts reservations.
+- *Tests:* per-account cap matrix, reservation release on terminal states, default-account file names unchanged.
+
+### D106: Per-account permission policy parity
+- *Rationale:* Human testing 2026-11-03 showed a fresh account auto-denying a command tool because headless mode cannot prompt; the wrapper's safety assumes the policy under `HOME`. A weaker account policy is a security regression.
+- *Rule:*
+  1. A new account receives a copy of the primary's `$HOME/.gemini/config/config.json` in the **manual recipe**, never by a silent runtime write.
+  2. Before every start on an account, the wrapper verifies the file exists, parses, and its normalized `permissions.allow` set equals the primary's. Missing or drifted policy refuses the start (`account_permission_policy_missing`/`account_permission_policy_drift`); `--doctor` reports the same.
+  3. The wrapper never mutates or weakens an account policy at runtime.
+- *Tests:* parity pass/drift/missing, doctor reporting, no write into an account home.
+
+### D107: Per-account usage pools, cache key and usage-log attribution
+- *Rationale:* Two accounts can have wildly different remaining quota and resets; a cache keyed by binary returns account A's quota for B, and unattributed rows cannot be audited.
+- *Rule:*
+  1. `/usage` is parsed per account into both pools and both windows (`remaining_fraction`, `reset_time`); failures are soft and recorded with a reason.
+  2. The cache key includes the account name/home and binary. The default account keeps the old key shape.
+  3. `usage.jsonl` adds `account` (registry name) and `masked_email` only when a registry is configured; rows and the no-registry path stay byte-identical.
+  4. Only scheduling candidates are refreshed, with a short max age (default 60 s); one failed account never blocks a start that has another usable account.
+- *Tests:* per-account cache isolation, malformed/missing/not-signed-in, additive log fields, single-account log equality.
+
+### D108: Quota-aware account scheduler
+- *Rationale:* Selecting by remaining quota alone wastes quota that is about to expire and starts jobs that cannot finish; the decision must be pure, deterministic and tunable.
+- *Rule:*
+  1. Cost = `tokens_per_minute (default 35300) × min(max_minutes, expected_minutes (default 30)) × coefficient (0.011 5 h / 0.0031 weekly)`, optionally refined from history; it is a heuristic, never a fact.
+  2. An account is eligible only if enabled, identity/policy/model verified, under its concurrency cap after reservations, with five-hour remaining ≥ floor (default 15%) and both windows ≥ cost × safety factor (default 1.5).
+  3. Ranking score = `weekly_remaining / hours_to_weekly_reset` plus an `expires_at` boost within 168 h; ties by lower load, then oldest use, then name. The clock is injected.
+  4. With no eligible account the result is `quota_exhausted` with the earliest plausible `resume_after`; the job keeps the existing state and there is no fallback to another tool.
+- *Tests:* table-driven filter/ranking/reservations, the worked example, N=1/2/5, shared pool, deterministic ties.
+
+### D109: Background priority and burn-before-expiry
+- *Rationale:* Some accounts have quota that will expire unused; normal jobs still need a hard fit.
+- *Rule:*
+  1. `priority` is `normal` (default) or `background`, accepted by `agy_start` and stored on the job.
+  2. Background jobs relax the cost filter when the longest wait until all relevant windows of the pool are usable again is ≤ `burn_horizon_minutes` (default 90); burn-eligible accounts rank before merely-strict ones, then by nearest binding reset, then the smallest remaining quota.
+  3. A background job may not take an account's last free slot while a normal job is queued for it. Paused time does not count against `cumulative_minutes` (verified in code), so no budget change is made.
+- *Tests:* burn eligibility boundary, worked example, anti-starvation, background tie-breaks.
+
+### D110: Job pinning fields additive without a schema bump
+- *Rationale:* `account`/`priority`/transfer links must persist, but old records and frozen cleaner fixtures must stay valid and single-account `job.json` must not change.
+- *Rule:*
+  1. Job gains optional `account`, `priority`, `transferred_from`, `transferred_to`; `from_dict` defaults them.
+  2. `to_dict` emits `account`/`priority` only when they differ from the single-account default and emits transfer fields only when set. `CURRENT_SCHEMA_VERSION` stays 1 (the cleaner ignores unknown keys and old fixtures unchanged).
+  3. Resume, auto-fix, plan nudge and follow-up always stay on the pinned account.
+- *Tests:* old-record round-trip byte equality, new-field round-trip, cleaner fixtures unchanged, pinned resume/auto-fix.
+
+### D111: Conversation transfer by db copy with a lock, and summary handoff
+- *Rationale:* Phase 1 proved one `conversations/<id>.db` carries a multi-turn, tool-using conversation to another account, and that a missing id silently starts fresh. Copying must therefore be verified and locked, with a factual fallback.
+- *Rule:*
+  1. Transfer triggers when the pinned account's wait exceeds `handoff_min_wait_minutes` (default 120) or the caller sets `allow_handoff=True`; the target must be eligible.
+  2. Copy only the conversation `db` while no process uses it, after a SQLite header check and a source-existence check; resume with `--conversation <id>` on the target. Hold a per-conversation lock so one id is never on two accounts at once; keep the source until the new run finishes.
+  3. If the target is also exhausted, or the db is missing/corrupt/locked, continue the **same job** with a summary handoff run built from wrapper facts only (goal/constraints, plan done/remaining, branch, git log/diff stat, capped delimited report excerpt, verify command). Reuse the worktree/branch, WIP-commit dirty work first, and record `transferred_from`/`transferred_to` as account names.
+  4. A shared or symlinked conversation store is explicitly unsupported (SQLite contention, desktop app, cleaner conflicts).
+- *Tests:* copy success, corrupt/locked db, missing id, B also exhausted, id collision, repo changed, concurrent-use lock, handoff prompt bounds.
+
+### D112: Cleaner compatibility with new job fields
+- *Rationale:* The cleaner is frozen and must stay correct without being edited.
+- *Rule:*
+  1. New job fields are optional and are ignored by the cleaner's fail-closed `job.json` loader; the 13 frozen files and `tests/frozen.sha256` stay untouched.
+  2. Serialization stays conditional, so old fixtures and default-account records are byte-identical; the cleaner needs no per-account logic.
+- *Tests:* the frozen cleanup suite, `tests/test_cleanup_fixtures.py`, and a byte-equality test for a default-account job record.
+
+### D113: Installer and doctor are read-only for accounts
+- *Rationale:* The wrapper must never touch credentials; the installer already refuses risky actions and the doctor is a read-only health check.
+- *Rule:*
+  1. The manual recipe is documented and may be printed; the installer never logs in/out, never runs `agy auth`, and never writes an account home except a policy copy the human explicitly requests.
+  2. `--doctor` parses the registry, checks home existence/mode 0700, policy parity, expected email (via a short isolated `/usage` with a timeout), and isolation env, printing masked emails only; any problem exits 1.
+- *Tests:* installer-style hermetic doctor tests (healthy, missing home, mode, policy drift, email mismatch), no-login/no-write assertions.
+
+### D114: Legitimacy and terms-of-service boundary
+- *Rationale:* Quota-sharing across accounts can violate a provider's terms if abused; the feature must be a selector among the user's own logins, not an account factory.
+- *Rule:*
+  1. Accounts must be ones the user legitimately owns; the registry is a selection list, not a credential store.
+  2. The wrapper never creates accounts, never automates sign-up, and never accepts credentials in prompts or config.
+  3. Adding an account is a human login performed outside the wrapper; the wrapper only runs jobs on the resulting login and never reads or copies a token, keyring entry or cookie.
+- *Tests:* documentation review; no credential-access code path.
+
 ## Sources
 
-- `src/agy_mcp/` — codebase architecture and implementations corresponding to D1–D101.
+- `src/agy_mcp/` — codebase architecture and implementations corresponding to D1–D114.
 - `tests/` — automated test suites validating architectural and security decisions.
 
 

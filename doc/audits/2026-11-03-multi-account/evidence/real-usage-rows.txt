@@ -1,0 +1,27 @@
+## /usage primary (exit 0)
+response:
+Gemini Models	Weekly Limit Remaining	59%	2026-11-03T21:12:09Z
+Gemini Models	Five Hour Limit Remaining	96%	2026-11-03T18:07:57Z
+Claude and GPT models	Weekly Limit Remaining	50%	2026-11-08T17:06:56Z
+Claude and GPT models	Five Hour Limit Remaining	100%	2026-11-03T19:15:04Z
+groups:
+  Gemini Models
+    weekly: remaining_fraction=0.5868039131164551 reset_time=2026-11-03T21:12:09Z
+    5h: remaining_fraction=0.9584106802940369 reset_time=2026-11-03T18:07:57Z
+  Claude and GPT models
+    weekly: remaining_fraction=0.496967613697052 reset_time=2026-11-08T17:06:56Z
+    5h: remaining_fraction=1 reset_time=2026-11-03T19:15:04Z
+
+## /usage account-b (exit 0)
+response:
+Gemini Models	Weekly Limit Remaining	88%	2026-11-08T09:54:57Z
+Gemini Models	Five Hour Limit Remaining	100%	2026-11-03T18:56:46Z
+Claude and GPT models	Weekly Limit Remaining	49%	2026-11-08T17:55:18Z
+Claude and GPT models	Five Hour Limit Remaining	100%	2026-11-03T19:15:23Z
+groups:
+  Gemini Models
+    weekly: remaining_fraction=0.882286548614502 reset_time=2026-11-08T09:54:57Z
+    5h: remaining_fraction=0.9996196627616882 reset_time=2026-11-03T18:56:46Z
+  Claude and GPT models
+    weekly: remaining_fraction=0.49078279733657837 reset_time=2026-11-08T17:55:18Z
+    5h: remaining_fraction=1 reset_time=2026-11-03T19:15:23Z

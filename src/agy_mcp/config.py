@@ -18,6 +18,9 @@ if sys.version_info >= (3, 11):
 else:
     import tomli as tomllib  # type: ignore[no-redef]
 
+from agy_mcp.accounts.errors import AccountError
+from agy_mcp.accounts.registry import AccountConfig, parse_accounts
+
 # Real agy loads its shared permission config from this path under HOME. The
 # literal path stays in config.py so the transcript-reading scope guard stays
 # tight; worktree.inspect_permission_rules imports the constant (D63).
@@ -82,6 +85,19 @@ class Config:
     )
     agy_home: str = "~/.gemini/antigravity-cli"
     timezone: Optional[str] = None
+    # Additional accounts; the implicit "default" account always exists and is
+    # not configurable, so this list is everything beyond the primary login.
+    accounts: list[AccountConfig] = field(default_factory=list)
+    max_accounts: int = 5
+    # Multi-account scheduler thresholds (D108/D109). Heuristics, not facts.
+    account_cost_tokens_per_minute: int = 35300
+    account_cost_expected_minutes: int = 30
+    account_cost_safety_factor: float = 1.5
+    account_five_hour_floor_pct: float = 15.0
+    account_burn_horizon_minutes: int = 90
+    account_handoff_min_wait_minutes: int = 120
+    account_usage_max_age_seconds: int = 60
+    account_expires_boost_horizon_hours: int = 168
     unknown_keys: list[str] = field(default_factory=list)
 
 
@@ -90,6 +106,18 @@ def _validate_config_dict(data: dict[str, Any]) -> tuple[dict[str, Any], list[st
     defaults = Config()
     validated: dict[str, Any] = {}
     unknown_keys: list[str] = []
+
+    # Validate max_accounts before the main loop: the accounts validator needs
+    # it even when the TOML lists accounts before max_accounts.
+    raw_max_accounts = data.get("max_accounts", defaults.max_accounts)
+    if isinstance(raw_max_accounts, bool) or not isinstance(raw_max_accounts, int):
+        raise ConfigError(
+            f"Expected int for 'max_accounts', got {type(raw_max_accounts).__name__}: "
+            f"{raw_max_accounts!r}"
+        )
+    if raw_max_accounts < 1 or raw_max_accounts > 32:
+        raise ConfigError(f"'max_accounts' must be between 1 and 32, got {raw_max_accounts}")
+    max_accounts_value = int(raw_max_accounts)
 
     known_keys = {
         "max_concurrent_jobs",
@@ -119,6 +147,16 @@ def _validate_config_dict(data: dict[str, Any]) -> tuple[dict[str, Any], list[st
         "claim_phrases",
         "agy_home",
         "timezone",
+        "accounts",
+        "max_accounts",
+        "account_cost_tokens_per_minute",
+        "account_cost_expected_minutes",
+        "account_cost_safety_factor",
+        "account_five_hour_floor_pct",
+        "account_burn_horizon_minutes",
+        "account_handoff_min_wait_minutes",
+        "account_usage_max_age_seconds",
+        "account_expires_boost_horizon_hours",
     }
 
     for key, val in data.items():
@@ -260,6 +298,58 @@ def _validate_config_dict(data: dict[str, Any]) -> tuple[dict[str, Any], list[st
                         f"Expected string or list of strings in 'verify_allowlist', got {item!r}"
                     )
             validated[key] = normalized_verify_allowlist
+
+        elif key == "max_accounts":
+            validated[key] = max_accounts_value
+
+        elif key in (
+            "account_cost_tokens_per_minute",
+            "account_cost_expected_minutes",
+        ):
+            if isinstance(val, bool) or not isinstance(val, int):
+                raise ConfigError(f"Expected int for '{key}', got {type(val).__name__}: {val!r}")
+            if val < 1:
+                raise ConfigError(f"'{key}' must be >= 1, got {val}")
+            validated[key] = val
+
+        elif key in (
+            "account_burn_horizon_minutes",
+            "account_handoff_min_wait_minutes",
+            "account_usage_max_age_seconds",
+            "account_expires_boost_horizon_hours",
+        ):
+            if isinstance(val, bool) or not isinstance(val, int):
+                raise ConfigError(f"Expected int for '{key}', got {type(val).__name__}: {val!r}")
+            if val < 0:
+                raise ConfigError(f"'{key}' must be >= 0, got {val}")
+            validated[key] = val
+
+        elif key == "account_cost_safety_factor":
+            if isinstance(val, bool) or not isinstance(val, (int, float)):
+                raise ConfigError(
+                    f"Expected number (float/int) for '{key}', got {type(val).__name__}: {val!r}"
+                )
+            factor = float(val)
+            if factor < 1.0:
+                raise ConfigError(f"'{key}' must be >= 1.0, got {factor}")
+            validated[key] = factor
+
+        elif key == "account_five_hour_floor_pct":
+            if isinstance(val, bool) or not isinstance(val, (int, float)):
+                raise ConfigError(
+                    f"Expected number (float/int) for '{key}', got {type(val).__name__}: {val!r}"
+                )
+            pct_val = float(val)
+            if pct_val < 0.0 or pct_val > 100.0:
+                raise ConfigError(f"'{key}' must be between 0 and 100, got {pct_val}")
+            validated[key] = pct_val
+
+        elif key == "accounts":
+            try:
+                validated[key] = parse_accounts(val, max_accounts_value)
+            except AccountError as exc:
+                # AccountError messages are already value-safe (masked email).
+                raise ConfigError(f"Invalid [[accounts]] configuration: {exc.message}") from exc
 
         elif key == "agy_home":
             if not isinstance(val, str) or not val.strip():

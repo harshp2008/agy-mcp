@@ -1,9 +1,10 @@
 """Usage/quota parsing, reading, caching, cost and the usage log (D59).
 
 Owns the fail-soft `/usage` parser, the temp-directory `/usage` invocation,
-email masking, the 60 s in-memory cache, low-quota/threshold helpers, per-job
-cost deltas, auth/quota interruption detection and the append-only
-``usage.jsonl`` record. It must never persist an unmasked email, never let a
+email masking, the 60 s in-memory cache (with an optional per-account key),
+low-quota/threshold helpers, per-job cost deltas, auth/quota interruption
+detection and the append-only ``usage.jsonl`` record (with optional account
+attribution). It must never persist an unmasked email, never let a
 usage failure block a job (unavailable only warns), and never raise into callers
 from parsing or reading.
 """
@@ -658,6 +659,8 @@ def read_usage_once(
     timeout_seconds: float = USAGE_TIMEOUT_SECONDS,
     env_overrides: Optional[dict[str, str]] = None,
     auth_error_patterns: Optional[list[str]] = None,
+    expected_email: Optional[str] = None,
+    expected_email_sha256: Optional[str] = None,
 ) -> dict[str, Any]:
     """Invoke `agy --log-file <tmp>/usage.log --output-format json -p "/usage"`.
 
@@ -737,6 +740,31 @@ def read_usage_once(
         email, auth_method = parse_auth_line(log_text)
         account = _account_dict(email, auth_method)
 
+        # Multi-account identity hook (D103): when a registry expectation is
+        # supplied, compare the FULL parsed address (never the masked value) and
+        # turn a mismatch into an unavailable reading. Without an expectation the
+        # reading shape is unchanged, so single-account callers are unaffected.
+        if expected_email is not None or expected_email_sha256 is not None:
+            from agy_mcp.accounts.errors import AccountError
+            from agy_mcp.accounts.identity import mask_email as _new_mask
+            from agy_mcp.accounts.identity import verify_identity
+
+            try:
+                check = verify_identity(
+                    email,
+                    expected_email=expected_email,
+                    expected_email_sha256=expected_email_sha256,
+                )
+            except AccountError as exc:
+                # The multi-account helper reveals at most first3+last2 (never
+                # more than half); existing no-expectation readings keep the
+                # historical first2 mask pinned by tests.
+                account["masked_email"] = _new_mask(email)
+                account["identity"] = exc.code
+                return _unavailable_reading(exc.code, account)
+            account["identity"] = "matched" if check.verified else check.reason
+            account["masked_email"] = check.masked_email or account["masked_email"]
+
         combined = "\n".join([stdout or "", stderr or "", log_text])
         if matches_patterns(combined, auth_error_patterns):
             return _unavailable_reading("auth_required", account)
@@ -756,6 +784,26 @@ def read_usage_once(
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
+def usage_cache_key(
+    agy_binary: str | Path,
+    home: Optional[Path] = None,
+    account_name: Optional[str] = None,
+) -> str:
+    """Return the cache key for one account's `/usage` reading.
+
+    With no account the key is exactly the pre-multi-account binary path, so the
+    single-account cache is unchanged. With an account the name and home are
+    prefixed, so account A's reading can never be served for account B (D107).
+    """
+    try:
+        base = str(Path(agy_binary).resolve())
+    except (OSError, ValueError):
+        base = str(agy_binary)
+    if account_name is None:
+        return base
+    return f"{account_name}|{home if home is not None else ''}|{base}"
+
+
 def get_usage(
     agy_binary: str | Path,
     *,
@@ -766,6 +814,9 @@ def get_usage(
     now_monotonic: Optional[float] = None,
     env_overrides: Optional[dict[str, str]] = None,
     auth_error_patterns: Optional[list[str]] = None,
+    account_name: Optional[str] = None,
+    expected_email: Optional[str] = None,
+    expected_email_sha256: Optional[str] = None,
 ) -> dict[str, Any]:
     """Return a usage reading, served from the in-memory 60 s cache when possible.
 
@@ -773,10 +824,7 @@ def get_usage(
     plus a machine-readable `reason`.
     """
     active_cache = cache if cache is not None else _DEFAULT_USAGE_CACHE
-    try:
-        cache_key = str(Path(agy_binary).resolve())
-    except (OSError, ValueError):
-        cache_key = str(agy_binary)
+    cache_key = usage_cache_key(agy_binary, home=home, account_name=account_name)
     now_val = time.monotonic() if now_monotonic is None else now_monotonic
 
     if use_cache:
@@ -791,6 +839,8 @@ def get_usage(
         timeout_seconds=timeout_seconds,
         env_overrides=env_overrides,
         auth_error_patterns=auth_error_patterns,
+        expected_email=expected_email,
+        expected_email_sha256=expected_email_sha256,
     )
     reading["cached"] = False
     # Cache only successful readings: caching an unavailable result would keep
@@ -817,6 +867,8 @@ def record_usage(
     tokens: dict[str, int],
     usage_cost: Optional[dict[str, Any]] = None,
     state: Optional[JobState] = None,
+    account: Optional[str] = None,
+    masked_email: Optional[str] = None,
 ) -> None:
     """Append job completion summary to usage.jsonl under an exclusive file lock.
 
@@ -855,6 +907,12 @@ def record_usage(
         "run_generation": int(getattr(job, "run_generation", 1) or 1),
         "wall_clock_seconds": round(duration_seconds, 2),
     }
+    # Multi-account attribution is additive: without a registry these keys are
+    # absent and the row is byte-identical to the single-account record (D107).
+    if account is not None:
+        record["account"] = account
+    if masked_email is not None:
+        record["masked_email"] = masked_email
 
     line = json.dumps(record) + "\n"
 

@@ -131,6 +131,9 @@ class JobSupervisor:
         agy_home: Optional[Path] = None,
         commit_lock: Optional[threading.Lock] = None,
         agy_binary: Optional[str] = None,
+        account_name: Optional[str] = None,
+        account_masked_email: Optional[str] = None,
+        account_home: Optional[Path] = None,
         usage_cache: Optional[Any] = None,
         quota_error_patterns: Optional[list[str]] = None,
         auth_error_patterns: Optional[list[str]] = None,
@@ -178,6 +181,11 @@ class JobSupervisor:
         self.agy_home = agy_home
         self.commit_lock = commit_lock or threading.Lock()
         self.agy_binary = str(agy_binary or getattr(runner, "executable", "agy"))
+        self.account_name = account_name
+        self.account_masked_email = account_masked_email
+        # Usage must be read from the job's account HOME, never the host HOME:
+        # a non-default account's quota lives under its own home (D104/D107).
+        self.account_home = account_home
         self.usage_cache = usage_cache
         self.quota_error_patterns = list(quota_error_patterns or [])
         self.auth_error_patterns = list(auth_error_patterns or [])
@@ -587,10 +595,11 @@ class JobSupervisor:
         # launch value and computes a zero cost delta.
         return usage_utils.get_usage(
             self.agy_binary,
-            home=self.home,
+            home=self.account_home or self.home,
             cache=self.usage_cache,
             use_cache=False,
             auth_error_patterns=self.auth_error_patterns,
+            account_name=self.account_name,
         )
 
     def _final_usage_cost(self, final_reading: dict[str, Any]) -> Optional[dict[str, Any]]:
@@ -602,7 +611,12 @@ class JobSupervisor:
                 else self.job_dir.parent.parent
             )
             concurrent_jobs = (
-                count_active_jobs(base_state, exclude_job_id=self.job.job_id) + 1
+                count_active_jobs(
+                    base_state,
+                    exclude_job_id=self.job.job_id,
+                    account=self.account_name if self.account_name else None,
+                )
+                + 1
             )
             cost = usage_utils.compute_usage_cost(
                 self.job.model,
@@ -701,6 +715,8 @@ class JobSupervisor:
                 tokens=tokens_dict,
                 usage_cost=self.job.usage_cost,
                 state=target_state,
+                account=self.account_name,
+                masked_email=self.account_masked_email,
             )
             self._usage_recorded_state = target_state
         except Exception:
@@ -777,6 +793,8 @@ class JobSupervisor:
                     duration_seconds=run_seconds,
                     tokens=tokens_dict,
                     usage_cost=self.job.usage_cost,
+                    account=self.account_name,
+                    masked_email=self.account_masked_email,
                 )
             except Exception:
                 pass
@@ -1502,6 +1520,8 @@ class JobSupervisor:
                 tokens=tokens_dict,
                 usage_cost=self.job.usage_cost,
                 state=final_state,
+                account=self.account_name,
+                masked_email=self.account_masked_email,
             )
             self._usage_recorded_state = final_state
         except Exception:

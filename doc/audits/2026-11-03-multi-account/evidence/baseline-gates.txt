@@ -1,0 +1,32 @@
+# Multi-account baseline gates, captured 2026-11-03 on feat/multi-account
+# HEAD: dd3b1fe9e584020369de005353d2048d27445595
+# Python: 3.12.3
+
+$ .venv/bin/python --version
+Python 3.12.3
+
+$ .venv/bin/ruff check src tests scripts
+All checks passed!
+
+$ sha256sum -c tests/frozen.sha256 | grep -c ': OK'
+13
+
+$ env -u PYTHONPATH .venv/bin/python scripts/check_docs.py
+docs check: OK (79 markdown files checked)
+
+$ env -u PYTHONPATH .venv/bin/python scripts/check_publishable.py
+publish hygiene: OK (853 tracked text files checked)
+
+$ env -u PYTHONPATH .venv/bin/python scripts/gen_reference.py --check
+doc/reference generated blocks are fresh
+
+$ env -u PYTHONPATH .venv/bin/python scripts/gen_codemap_index.py --check
+CODEMAP.md generated section is fresh
+
+$ env -u PYTHONPATH .venv/bin/python scripts/check_moved_code.py
+missing:                0
+changed:                0
+ambiguous:              0
+
+$ env -u PYTHONPATH .venv/bin/python scripts/check_no_behavior_change.py --compare docs/reports/docs-codemap/ast-baseline.json
+OK: 30 files match the AST baseline (no behavior change)

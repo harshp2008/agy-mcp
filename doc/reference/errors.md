@@ -19,13 +19,31 @@ traceback to `server.log` and returned as `internal_error` without details.
 
 The table below is generated from the `code=` literals and exception defaults in
 `src/agy_mcp/`. The 40 stable codes named by the Part 2 audit are here, plus the
-two server-generated fallbacks (`invalid_input`, `internal_error`).
+account-registry/identity codes and the two server-generated fallbacks
+(`invalid_input`, `internal_error`).
 
 ## Codes by source
 
 <!-- BEGIN GENERATED: error-codes -->
 | Code | Raised in |
 |---|---|
+| `account_concurrency_limit` | `manager.py` |
+| `account_config_invalid` | `identity.py`, `registry.py` |
+| `account_error` | `errors.py` |
+| `account_home_invalid` | `registry.py` |
+| `account_home_permissions` | `registry.py` |
+| `account_identity_mismatch` | `identity.py` |
+| `account_identity_unknown` | `identity.py` |
+| `account_limit_exceeded` | `registry.py` |
+| `account_name_duplicate` | `registry.py` |
+| `account_name_invalid` | `registry.py` |
+| `account_not_found` | `manager.py`, `registry.py` |
+| `account_transfer_conflict` | `transfer.py` |
+| `account_transfer_corrupt` | `transfer.py` |
+| `account_transfer_incomplete` | `transfer.py` |
+| `account_transfer_invalid_id` | `transfer.py` |
+| `account_transfer_locked` | `transfer.py` |
+| `account_transfer_source_missing` | `transfer.py` |
 | `audit_violation` | `manager.py` |
 | `cannot_resume_security_review` | `manager.py` |
 | `cap_exceeded` | `manager.py` |
@@ -34,6 +52,7 @@ two server-generated fallbacks (`invalid_input`, `internal_error`).
 | `cleanup_failed` | `manager.py` |
 | `concurrency_limit_exceeded` | `manager.py` |
 | `forbidden_flag` | `runner.py` |
+| `handoff_checkpoint_failed` | `manager.py` |
 | `home_prohibited` | `worktree.py` |
 | `insufficient_disk_space` | `manager.py`, `worktree.py` |
 | `internal_error` | `server.py` |
@@ -42,6 +61,7 @@ two server-generated fallbacks (`invalid_input`, `internal_error`).
 | `invalid_git_dir` | `worktree.py` |
 | `invalid_input` | `server.py` |
 | `invalid_job_id` | `manager.py` |
+| `invalid_priority` | `manager.py` |
 | `invalid_repo_state` | `worktree.py` |
 | `invalid_state_for_resume` | `manager.py` |
 | `invalid_verify_timeout` | `manager.py` |
@@ -53,6 +73,7 @@ two server-generated fallbacks (`invalid_input`, `internal_error`).
 | `max_minutes_over_cap` | `manager.py` |
 | `missing_prompt` | `manager.py` |
 | `model_not_allowed` | `manager.py` |
+| `no_account_eligible` | `manager.py` |
 | `not_a_directory` | `worktree.py` |
 | `not_a_git_repo` | `worktree.py` |
 | `path_outside_allowed_roots` | `worktree.py` |
@@ -117,6 +138,43 @@ two server-generated fallbacks (`invalid_input`, `internal_error`).
 | `invalid_input` | Server fallback for a `ValueError`, `FileNotFoundError` or `PermissionError` that has no `.code` (for example a missing job, an oversized `job.json`, or a missing file). | Fix the input named in the message. A missing `job_id` is returned as this code, not a dedicated one. |
 | `internal_error` | Unexpected server exception; the full traceback is in `server.log`, never in the envelope. | Check `<state>/server.log`, then report the failure with the tool name and job id. Do not retry blindly if the error repeats. |
 
+## Account codes
+
+Stable codes introduced with multi-account support (D102–D114). All are
+fail-closed: a start or resume does not proceed.
+
+| Code | Meaning | How to recover |
+|---|---|---|
+| `account_config_invalid` | An `[[accounts]]` entry has a bad shape, unknown key, bad pool/`expires_at`/`max_concurrent_jobs`, or conflicting expectations. | Fix the entry; see [config keys](config-keys.md) and the [multi-account design](../design/multi-account.md). |
+| `account_limit_exceeded` | `1 + len(accounts)` exceeds `max_accounts`. | Remove an entry or raise `max_accounts` (maximum 32). |
+| `account_name_invalid` | A name is empty, uses `default`, or does not match `[a-z0-9][a-z0-9-]{0,31}`. | Rename the account. |
+| `account_name_duplicate` | Two entries share a name. | Use unique names. |
+| `account_home_invalid` | The home is not absolute after expansion, does not exist, is not a directory, or is unreadable. | Create the directory and use an absolute path. |
+| `account_home_permissions` | The account home is accessible by group or others. | `chmod 700` the home. |
+| `account_config_invalid` | An `[[accounts]]` entry has a bad shape, unknown key, bad pool/`expires_at`/`max_concurrent_jobs`, or conflicting expectations. | Fix the entry; see [config keys](config-keys.md). |
+| `account_limit_exceeded` | `1 + len(accounts)` exceeds `max_accounts`. | Remove an entry or raise `max_accounts` (maximum 32). |
+| `account_name_invalid` | A name is empty, uses `default`, or does not match `[a-z0-9][a-z0-9-]{0,31}`. | Rename the account. |
+| `account_name_duplicate` | Two entries share a name. | Use unique names. |
+| `account_identity_mismatch` | The full email parsed from agy does not match `expected_email` or its hash. | Confirm the login, or update the expectation. The message shows only the masked value. |
+| `account_identity_unknown` | An expectation is configured but agy did not report an email. | Re-login the account; check that the CLI still logs `applyAuthResult`. |
+| `account_not_found` | An `account` name was requested that the registry does not contain, or a pinned job's account was removed. | Use a name from the registry or omit the override. |
+| `account_disabled` | The account is declared with `enabled = false`. | Enable it or use another account. |
+| `account_not_eligible` | An explicit `account` cannot take the job under the strict quota filter (`force` skips only this check). | Wait for the reset, use another account, or pass `force=true` for a quota-only override. |
+| `account_usage_unavailable` | That account's `/usage` failed, timed out, was unparsable, or failed identity verification. | Check the account login and the `reason`; the account is skipped for this start. |
+| `account_model_unavailable` | The account rejected the requested model. | Use a model that account accepts; model sets are per account. |
+| `account_permission_policy_missing` | The account home has no permission policy while the primary has one. | Copy the primary `$HOME/.gemini/config/config.json` into the account home. |
+| `account_permission_policy_drift` | The account policy's allow-rule set differs from the primary's. | Re-copy the primary policy; never weaken it. |
+| `account_concurrency_limit` | The account's own `max_concurrent_jobs` is reached. | Wait for a job to leave `queued`/`running`, or raise the account cap. |
+| `invalid_priority` | `priority` is not `normal` or `background`. | Pass one of those two values. |
+| `no_account_eligible` | The scheduler found no account that can take the job; the message names the earliest reset. | Wait for the reset, add/enable an account, or use `force=true` with a specific `account`. |
+| `account_transfer_invalid_id` | The job's conversation id is not a strict UUID. | Resume without a conversation id (a summary handoff is used) or start a new job. |
+| `account_transfer_source_missing` | The source account has no `conversations/<id>.db`. | The wrapper falls back to a summary handoff automatically. |
+| `account_transfer_corrupt` | The db is not a SQLite file, or the copy failed its header check. | The wrapper falls back to a summary handoff; inspect the file if this repeats. |
+| `account_transfer_incomplete` | A non-empty `-wal` sidecar means the db is not fully checkpointed. | Let the writing process exit, then retry; the wrapper falls back to a handoff. |
+| `account_transfer_conflict` | The target already has a different file for the same conversation id. | The wrapper falls back to a summary handoff; remove the stale target file only after review. |
+| `account_transfer_locked` | Another transfer of the same conversation is in progress. | Retry after the other transfer finishes; the wrapper falls back to a summary handoff. |
+| `handoff_checkpoint_failed` | The pre-handoff WIP commit failed. | Inspect the worktree; the job is not switched, so no work is lost. |
+
 ## Notes
 
 - Preflight codes (`repo_not_found` through `untrusted_agents_dir`,
@@ -148,5 +206,9 @@ two server-generated fallbacks (`invalid_input`, `internal_error`).
 - `src/agy_mcp/jobs.py` — `get_job` (missing job -> `FileNotFoundError` ->
   `invalid_input`) and the audit/cleanup error paths.
 - `src/agy_mcp/usage.py` — the fail-soft `available: false` reasons.
+- `src/agy_mcp/accounts/errors.py` — `AccountError` and its stable codes.
+- `src/agy_mcp/accounts/registry.py` — registry validation codes.
+- `src/agy_mcp/accounts/identity.py` — identity mismatch/unknown codes.
+- `doc/design/multi-account.md` — the account rules behind the codes.
 - `doc/audits/2026-11-02-part2c-coverage.md` — the 40-code inventory this page
   closes (COV-01).
