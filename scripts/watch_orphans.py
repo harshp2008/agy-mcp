@@ -25,7 +25,12 @@ def main():
     out_file = repo_root / "docs" / "reports" / "smoke-fixes-2" / "orphans.txt"
     out_file.parent.mkdir(parents=True, exist_ok=True)
 
-    pytest_bin = os.environ.get("PYTEST_BIN", "~/agy-mcp-venv/bin/pytest")
+    default_pytest = (
+        str(repo_root / ".venv" / "bin" / "pytest")
+        if (repo_root / ".venv" / "bin" / "pytest").is_file()
+        else "pytest"
+    )
+    pytest_bin = os.environ.get("PYTEST_BIN", default_pytest)
     env = dict(os.environ)
     env["PYTHONPATH"] = ""
 
