@@ -407,31 +407,57 @@ def _write_conversation_db(conversation_id: str) -> None:
         pass
 
 
-def _write_env_probe() -> None:
-    """Record HOME/DBUS when the test opts in, proving the child env isolation."""
+DEAD_DBUS_SESSION_BUS_ADDRESS = "unix:path=/dev/null"
+
+
+def _write_env_probe(argv: list[str]) -> None:
+    """Record HOME/DBUS when the test opts in, proving the child env isolation.
+
+    ``env-probe.json`` keeps the last spawn (the shape existing tests read) and
+    ``env-probe.jsonl`` appends one entry per spawn, so a test can tell the
+    ``/usage`` probes from the job launch without racing or sleeping.
+    """
     home = os.environ.get("HOME")
     if not home:
         return
     if not (Path(home) / ".fake_agy_env_probe").is_file():
         return
+    entry = {
+        "HOME": home,
+        "DBUS_SESSION_BUS_ADDRESS": os.environ.get("DBUS_SESSION_BUS_ADDRESS"),
+        "argv": list(argv),
+        "cwd": os.getcwd(),
+    }
     try:
-        (Path(home) / "env-probe.json").write_text(
-            json.dumps(
-                {
-                    "HOME": home,
-                    "DBUS_SESSION_BUS_ADDRESS": os.environ.get("DBUS_SESSION_BUS_ADDRESS"),
-                }
-            ),
-            encoding="utf-8",
-        )
+        (Path(home) / "env-probe.json").write_text(json.dumps(entry), encoding="utf-8")
+    except Exception:
+        pass
+    try:
+        with (Path(home) / "env-probe.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(entry) + "\n")
     except Exception:
         pass
 
 
 def _fake_usage_email() -> str:
-    """Return the per-HOME synthetic email, or the default test address."""
+    """Return the synthetic email for this spawn.
+
+    ``.fake_agy_keyring_email`` simulates the desktop SecretService keyring: it
+    is honoured only when the child env does not point at the dead D-Bus
+    address. A missing or different address therefore reproduces the live
+    leak (human test 2026-11-03) where agy authenticated as the primary login.
+    """
     home = os.environ.get("HOME")
     if home:
+        dbus = os.environ.get("DBUS_SESSION_BUS_ADDRESS")
+        keyring = Path(home) / ".fake_agy_keyring_email"
+        if dbus != DEAD_DBUS_SESSION_BUS_ADDRESS and keyring.is_file():
+            try:
+                value = keyring.read_text(encoding="utf-8").strip()
+                if value:
+                    return value
+            except Exception:
+                pass
         marker = Path(home) / ".fake_agy_email"
         if marker.is_file():
             try:
@@ -591,7 +617,7 @@ def main() -> None:
         except Exception:
             pass
 
-    _write_env_probe()
+    _write_env_probe(sys.argv[1:])
     args = parse_args(sys.argv[1:])
     prompt = str(args.get("prompt", ""))
     log_file = str(args["log_file"]) if args.get("log_file") else None
