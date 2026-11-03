@@ -20,7 +20,7 @@ continues from its "next step" instead of redoing finished phases.
 | 6 | Job model and wiring | done | c3adc70 | ruff, frozen 13, docs 89, publish 882, reference/codemap fresh, AST 39, full suite `-n 4` 1950 passed (134 s) | Phase 7 transfer |
 | 7 | Exhaustion, transfer, handoff | done | f280a00 | ruff, frozen 13, docs 89, publish 885, reference/codemap fresh, AST 41, full suite `-n 4` 1967 passed (103 s) | Phase 8 installer/doctor |
 | 8 | Installer, doctor, user docs | done | 1456c6e | ruff, frozen 13, docs 89, publish 889, reference/codemap fresh, AST 42, full suite `-n 4` 1978 passed (112 s) | Phase 9 hardening |
-| 9 | Hardening and final review | done | (this commit) | full serial 1979 passed (350 s), `-n 4` 1979 passed (108 s); ruff, frozen 13, docs 90, publish 891, reference/codemap fresh, moved 0/0/0, AST 43; see 04-implementation-review.md | complete |
+| 9 | Hardening and final review | done | 4f1e9a3 | full serial 1979 passed (350 s), `-n 4` 1979 passed (108 s); ruff, frozen 13, docs 90, publish 894, reference/codemap fresh, moved 0/0/0, AST 43; see 04-implementation-review.md | complete |
 
 ## Baseline results (Phase 0)
 
