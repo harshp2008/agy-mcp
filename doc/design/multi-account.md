@@ -245,7 +245,8 @@ filter/reservations, never identity, policy or the model check.
 stored on the job. Normal jobs keep the strict F2 filter. Background jobs:
 eligible when the longest wait until all relevant windows of the pool are
 usable again is ≤ `account_burn_horizon_minutes` (default 90), even if remaining
-< cost × safety; ranked by nearest binding reset, then smallest remaining quota;
+< cost × safety; burn-eligible accounts rank before merely-strict ones, then by
+nearest binding reset, then smallest remaining quota;
 **anti-starvation**: a background job may not take an account's last free slot
 while a normal job is queued for that account. The queue is the set of
 `queued`-state jobs plus the current caller's pending normal start.

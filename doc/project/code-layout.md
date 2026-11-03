@@ -216,6 +216,9 @@ them (it only scans `src/agy_mcp/*.py`).
     leaves the default account's env byte-identical to `util.env_allowlist()`.
   - `pools.py` — `WindowReading`, `PoolReading`, `AccountUsage` and
     `account_usage_from_reading()`; the typed view of both pools and windows.
+  - `scheduler.py` — `SchedulerConfig`, `AccountState`, `JobRequest`,
+    `estimate_cost()`, `schedule_account()` and `remaining_until_reset()`; the
+    pure, clock-injected cost/filter/ranking/burn decision (D108, D109).
   - `errors.py` — `AccountError` with a stable `.code`.
 - **Imports from `agy_mcp`:** `config.py` imports the registry; `env.py` imports
   `util.env_allowlist`; `identity.py` imports only `errors`.
@@ -224,8 +227,9 @@ them (it only scans `src/agy_mcp/*.py`).
 - **Tests:** `tests/test_accounts_registry.py`,
   `tests/test_accounts_identity.py`, `tests/test_accounts_env.py`,
   `tests/test_accounts_pools.py`, `tests/test_usage_account.py`,
+  `tests/test_accounts_scheduler.py`,
   `tests/test_accounts_single_account_equivalence.py`.
-- **Implements:** D102–D104, D107; full design in `doc/design/multi-account.md`.
+- **Implements:** D102–D104, D107–D109; full design in `doc/design/multi-account.md`.
 
 ### `audit.py`
 - **Purpose:** capture and compare the security baseline: worktree `.git`
@@ -775,6 +779,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `accounts.identity.py` | 123 | `mask_email()`; `email_sha256()`; `IdentityCheck`; `verify_identity()` |
 | `accounts.pools.py` | 208 | `WindowReading` (`remaining_pct`); `PoolReading` (`window`, `weekly`, `five_hour`); `AccountUsage` (`pool`, `pool_for_model`); `pool_for_model()`; `account_usage_from_reading()` |
 | `accounts.registry.py` | 306 | `AccountConfig` (`expanded_home`, `agy_home`, `pool_key`); `AccountRegistry` (`all`, `enabled`, `by_name`, `configured`); `parse_accounts()`; `build_registry()`; `validate_account_home()` |
+| `accounts.scheduler.py` | 477 | `CostEstimate`; `HistoryCostModel`; `SchedulerConfig`; `AccountState`; `JobRequest` (`validated`); `RankedAccount`; `SchedulerResult`; `estimate_cost()`; `schedule_account()`; `remaining_until_reset()` |
 | `audit.py` | 653 | `AuditSeverity`; `HostPathClass`; `classify_host_path()`; `Finding` (`to_dict`); `Findings` (`has_fatal`, `fatal_reason`, `blocked_files`, `passed`); `AuditSnapshot`; `save_snapshot()`; `load_snapshot()`; `take_host_path_snapshot()`; `HostPathAuditResult`; `check_host_path_snapshot()`; `verify_host_path_snapshot()`; `take_snapshot()`; `audit()`; `run_security_audit()` |
 | `cleanup.__init__.py` | 7 | _(no public definitions)_ |
 | `cleanup.fixtures_cli.py` | 517 | `parse_args()`; `run_cleanup()`; `main()` |

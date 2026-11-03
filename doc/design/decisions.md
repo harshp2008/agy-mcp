@@ -808,7 +808,7 @@ Append-only record of architectural, security, and design decisions across agy-m
 - *Rationale:* Some accounts have quota that will expire unused; normal jobs still need a hard fit.
 - *Rule:*
   1. `priority` is `normal` (default) or `background`, accepted by `agy_start` and stored on the job.
-  2. Background jobs relax the cost filter when the longest wait until all relevant windows of the pool are usable again is ≤ `burn_horizon_minutes` (default 90); ranking prefers the nearest binding reset, then the smallest remaining quota.
+  2. Background jobs relax the cost filter when the longest wait until all relevant windows of the pool are usable again is ≤ `burn_horizon_minutes` (default 90); burn-eligible accounts rank before merely-strict ones, then by nearest binding reset, then the smallest remaining quota.
   3. A background job may not take an account's last free slot while a normal job is queued for it. Paused time does not count against `cumulative_minutes` (verified in code), so no budget change is made.
 - *Tests:* burn eligibility boundary, worked example, anti-starvation, background tie-breaks.
 
