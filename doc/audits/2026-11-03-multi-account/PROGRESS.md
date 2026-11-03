@@ -13,7 +13,7 @@ continues from its "next step" instead of redoing finished phases.
 |---|---|---|---|---|---|
 | 0 | Baseline (no src change) | done | (this commit) | ruff pass, frozen 13, docs OK, publish OK, reference fresh, CODEMAP fresh, moved 0, AST 30 match, tests 1823 serial + `-n 4` | Phase 1 investigation |
 | 1 | Investigate and test the system | done | d43b0ca | docs OK (87 pages), ruff pass, frozen 13, no src change so tests unchanged | Phase 2 design |
-| 2 | Design docs | pending | — | — | `doc/design/multi-account.md` |
+| 2 | Design docs | done | (this commit) | docs gate | Phase 3 foundation |
 | 3 | Foundation (registry, identity, env) | pending | — | — | `src/agy_mcp/accounts/` |
 | 4 | Usage pools | pending | — | — | per-account `/usage` |
 | 5 | Scheduler | pending | — | — | pure decision function |
@@ -39,10 +39,13 @@ continues from its "next step" instead of redoing finished phases.
 - Every new error has a stable code in [errors.md](../../reference/errors.md).
 - Each phase commits green and updates this file.
 
-## Open questions
+## Open questions (defaults used)
 
-Recorded and decided in `doc/design/multi-account.md` during Phase 2; the
-answered defaults are copied here when Phase 2 lands.
+From `doc/design/multi-account.md`: OQ1 equal normalized permission-rule set
+(drift refuses start); OQ2 one binary, many HOMEs; OQ3 `force` skips only the
+quota filter; OQ4 copy the db only, no `brain/`; OQ5 fail-closed on the
+account's own model rejection; OQ6 handoff threshold 120 minutes; OQ7 no new
+`usage.jsonl` fields without a registry; OQ8 no `schema_version` bump.
 
 ## Sources
 

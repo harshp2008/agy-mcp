@@ -22,9 +22,9 @@ into `doc/design/`, `doc/project/` and `doc/using/`.
 3. Read [the reference index](reference/README.md) when you need an exact
    answer: an error code, an environment variable, an exit status, a config key,
    a tool parameter, a state file, a log format or a manifest.
-4. Read [the normative specification](design/spec.md) and
+4. Read [the normative specification](design/spec.md), the [multi-account design](design/multi-account.md), and
    [the architecture overview](design/architecture.md) for design contracts.
-5. Read [the decisions log](design/decisions.md) for architectural choices (D1–D101).
+5. Read [the decisions log](design/decisions.md) for architectural choices (D1–D114).
 6. Read [the code layout](project/code-layout.md) for the module map and job flow.
 7. Read [the writing conventions](developing/writing-docs.md) and
    [the gates](developing/gates.md) before changing code or documentation.
@@ -41,8 +41,8 @@ phases.
 |---|---|---|
 | [`using/`](using/install.md) | exists | Task-oriented user guides: [install](using/install.md), configuration, troubleshooting. |
 | [`reference/`](reference/README.md) | exists | Exhaustive lookup generated or checked from the code: tools, errors, environment, config, state, logs, manifests, CLIs. |
-| [`design/`](design/architecture.md) | exists | Normative design pages and the decision archive: [spec](design/spec.md), [architecture](design/architecture.md), [modes](design/modes.md), [decisions](design/decisions.md). |
-| [`findings-and-experiments/`](findings-and-experiments/README.md) | exists | Numbered experiment pages (01–14), [findings summary](findings-and-experiments/findings-summary.md), and [evidence index](findings-and-experiments/evidence/README.md). |
+| [`design/`](design/architecture.md) | exists | Normative design pages and the decision archive: [spec](design/spec.md), [architecture](design/architecture.md), [modes](design/modes.md), [decisions](design/decisions.md), [multi-account design](design/multi-account.md). |
+| [`findings-and-experiments/`](findings-and-experiments/README.md) | exists | Numbered experiment pages (01–15), [findings summary](findings-and-experiments/findings-summary.md), and [evidence index](findings-and-experiments/evidence/README.md). |
 | [`audits/`](audits/README.md) | exists | Dated audits of the repository, with evidence. See [audits/README.md](audits/README.md). |
 | [`project/`](project/code-layout.md) | exists | Code layout ([code-layout.md](project/code-layout.md)), orchestrator workflow ([orchestrator-workflow.md](project/orchestrator-workflow.md)), fake-agy guide ([fake-agy.md](project/fake-agy.md)), history ([history.md](project/history.md)), roadmap ([roadmap.md](project/roadmap.md)). |
 | `release-notes/` | planned | One user-facing page per version or maintenance series. `CHANGELOG.md` stays the raw log at repo root. |
