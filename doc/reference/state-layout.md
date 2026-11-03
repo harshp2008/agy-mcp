@@ -75,7 +75,7 @@ and moves an invalid message to `COMMIT_MSG.invalid.<n>` (capped at 20 slots).
 
 | Path | Contents |
 |---|---|
-| `usage.jsonl` | One JSON line per finished run. Fields: `ts`, `job_id`, `state`, `model`, `model_resolved`, `duration_seconds`, `cumulative_minutes`, `commits_count`, `tokens`, `usage_cost`, `quota_estimate`, `run_generation`, `wall_clock_seconds`. Appended under an exclusive flock, mode 0600, before the terminal state is persisted (D68). No prompt, title or code is included. |
+| `usage.jsonl` | One JSON line per finished run. Fields: `ts`, `job_id`, `state`, `model`, `model_resolved`, `duration_seconds`, `cumulative_minutes`, `commits_count`, `tokens`, `usage_cost`, `quota_estimate`, `run_generation`, `wall_clock_seconds`, and — only when a registry is configured — `account` (registry name) and `masked_email`. Appended under an exclusive flock, mode 0600, before the terminal state is persisted (D68). No prompt, title, code or full email is included. |
 | `server.log` | Python logging at INFO: `%(asctime)s [%(levelname)s] %(name)s: %(message)s`. stderr and this file; never stdout (stdout is the MCP stream). |
 | `concurrency.lock` | An empty file used for the `flock` that serializes active-job counting during start/resume. |
 | `daily_cap.json` | `{"date": "YYYY-MM-DD", "count": n}`, mode 0600. The date comes from `timezone`; a new date resets the count. |
@@ -178,7 +178,8 @@ envelopes read them.
 - `src/agy_mcp/audit.py` — `save_snapshot`/`load_snapshot` and the 2 MiB cap.
 - `src/agy_mcp/runner.py` — stdout/stderr/cli.log file handling.
 - `src/agy_mcp/watcher.py` — `.agy/COMMIT_MSG*` names and `rejected_COMMIT_MSG.txt`.
-- `src/agy_mcp/usage.py` — the `usage.jsonl` row.
+- `src/agy_mcp/usage.py` — the `usage.jsonl` row and the per-account cache key.
+- `src/agy_mcp/accounts/pools.py` — the typed pool/window view.
 - `src/agy_mcp/server.py` — `server.log` format and destination.
 - `src/agy_mcp/cleanup/store_io.py` — `_write_manifest` (shared by both cleaners).
 - `doc/audits/2026-11-02-part2c-coverage.md` — §7 and §10, the path/format

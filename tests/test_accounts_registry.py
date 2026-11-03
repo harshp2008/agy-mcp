@@ -49,7 +49,7 @@ def test_supported_account_counts(count: int) -> None:
     parsed = parse_accounts(raw, max_accounts=5)
     assert len(parsed) == count
     registry = AccountRegistry(
-        default=AccountConfig(name="default", home="/home/u", is_default=True),
+        default=AccountConfig(name="default", home="~/agy-home", is_default=True),
         accounts=tuple(parsed),
     )
     assert len(registry.all()) == count + 1

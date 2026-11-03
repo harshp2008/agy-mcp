@@ -214,6 +214,8 @@ them (it only scans `src/agy_mcp/*.py`).
   - `env.py` — `build_account_env()`; adds
     `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null` for non-default accounts and
     leaves the default account's env byte-identical to `util.env_allowlist()`.
+  - `pools.py` — `WindowReading`, `PoolReading`, `AccountUsage` and
+    `account_usage_from_reading()`; the typed view of both pools and windows.
   - `errors.py` — `AccountError` with a stable `.code`.
 - **Imports from `agy_mcp`:** `config.py` imports the registry; `env.py` imports
   `util.env_allowlist`; `identity.py` imports only `errors`.
@@ -221,8 +223,9 @@ them (it only scans `src/agy_mcp/*.py`).
   identity and env from the manager, scheduler and doctor.
 - **Tests:** `tests/test_accounts_registry.py`,
   `tests/test_accounts_identity.py`, `tests/test_accounts_env.py`,
+  `tests/test_accounts_pools.py`, `tests/test_usage_account.py`,
   `tests/test_accounts_single_account_equivalence.py`.
-- **Implements:** D102–D104; full design in `doc/design/multi-account.md`.
+- **Implements:** D102–D104, D107; full design in `doc/design/multi-account.md`.
 
 ### `audit.py`
 - **Purpose:** capture and compare the security baseline: worktree `.git`
@@ -770,6 +773,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `accounts.env.py` | 45 | `build_account_env()` |
 | `accounts.errors.py` | 22 | `AccountError` |
 | `accounts.identity.py` | 123 | `mask_email()`; `email_sha256()`; `IdentityCheck`; `verify_identity()` |
+| `accounts.pools.py` | 208 | `WindowReading` (`remaining_pct`); `PoolReading` (`window`, `weekly`, `five_hour`); `AccountUsage` (`pool`, `pool_for_model`); `pool_for_model()`; `account_usage_from_reading()` |
 | `accounts.registry.py` | 306 | `AccountConfig` (`expanded_home`, `agy_home`, `pool_key`); `AccountRegistry` (`all`, `enabled`, `by_name`, `configured`); `parse_accounts()`; `build_registry()`; `validate_account_home()` |
 | `audit.py` | 653 | `AuditSeverity`; `HostPathClass`; `classify_host_path()`; `Finding` (`to_dict`); `Findings` (`has_fatal`, `fatal_reason`, `blocked_files`, `passed`); `AuditSnapshot`; `save_snapshot()`; `load_snapshot()`; `take_host_path_snapshot()`; `HostPathAuditResult`; `check_host_path_snapshot()`; `verify_host_path_snapshot()`; `take_snapshot()`; `audit()`; `run_security_audit()` |
 | `cleanup.__init__.py` | 7 | _(no public definitions)_ |
@@ -794,7 +798,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `states.py` | 180 | `JobState`; `StateTransition` |
 | `supervisor.py` | 1632 | `select_conversation_id()`; `JobSupervisor` (`terminate_group`, `tick`, `stop`, `run_loop`) |
 | `transcript.py` | 263 | `DeniedCall` (`to_dict`); `cli_step_to_transcript_step()`; `read_denied_calls()` |
-| `usage.py` | 912 | `mask_email()`; `parse_auth_line()`; `parse_usage_payload()`; `parse_usage_output()`; `group_for_model()`; `find_group()`; `low_buckets()`; `exhausted_bucket_reset()`; `matches_patterns()`; `annotate_low_flags()`; `compute_usage_cost()`; `compute_quota_estimate()`; `UsageCache` (`get`, `put`, `clear`); `read_usage_once()`; `get_usage()`; `append_audit_event()`; `record_usage()`; `has_usage_record_for_generation()`; `check_daily_cap()` |
+| `usage.py` | 964 | `mask_email()`; `parse_auth_line()`; `parse_usage_payload()`; `parse_usage_output()`; `group_for_model()`; `find_group()`; `low_buckets()`; `exhausted_bucket_reset()`; `matches_patterns()`; `annotate_low_flags()`; `compute_usage_cost()`; `compute_quota_estimate()`; `UsageCache` (`get`, `put`, `clear`); `read_usage_once()`; `usage_cache_key()`; `get_usage()`; `append_audit_event()`; `record_usage()`; `has_usage_record_for_generation()`; `check_daily_cap()` |
 | `util.py` | 297 | `derive_branch_slug()`; `sanitize_absolute_paths()`; `env_allowlist()`; `truncate_tail()`; `truncate_head()`; `read_file_tail()`; `read_file_since()`; `redact_log_text()`; `sha256_file()`; `sha256_bytes()`; `strict_uuid()`; `load_preamble()`; `format_fresh_prompt()`; `format_resume_prompt()` |
 | `verify.py` | 818 | `accepted_verify_forms()`; `verify_rejection_message()`; `is_verify_allowed()`; `VerifyResult` (`status`); `run_verify()`; `diagnose_verify_output()`; `verify_tail_lines()`; `build_verify_excerpt()`; `extract_failing_tests()`; `format_fix_prompt()` |
 | `watcher.py` | 859 | `validate_commit_message()`; `repair_overlong_commit_subject()`; `CommitWatcher` (`tick`, `run_checkpoint_commit`, `run_safety_net_commit`, `final_commit`) |
