@@ -106,6 +106,10 @@ envelopes read them.
 | `state` | `JobState` |
 | `model` | `str` |
 | `model_resolved` | `str | null` |
+| `account` | `str | null` |
+| `priority` | `str` |
+| `account_masked_email` | `str | null` |
+| `quota_reservation` | `dict[str, Any] | null` |
 | `max_minutes` | `int` |
 | `verify` | `str | null` |
 | `verify_timeout_seconds` | `int` |
@@ -153,6 +157,11 @@ envelopes read them.
 | `audit_reason` | `str | null` |
 | `scratchpad_files` | `list[str]` |
 <!-- END GENERATED: job-fields -->
+
+`account`, `account_masked_email`, `priority` and `quota_reservation` are
+additive and **conditional**: they are written only when a registry selected an
+account (or, for `priority`, when it is not `normal`), so a single-account
+`job.json` is byte-identical to the pre-multi-account record (D110).
 
 ## Safety rules
 

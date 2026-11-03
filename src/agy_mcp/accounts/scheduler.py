@@ -101,6 +101,7 @@ class AccountState:
     enabled: bool = True
     identity_ok: bool = True
     policy_ok: bool = True
+    home_error: Optional[str] = None
     model_ok: bool = True
     usage: Optional[AccountUsage] = None
     active_jobs: int = 0
@@ -241,6 +242,8 @@ def _base_eligible(
     normal_waiters: frozenset[str],
 ) -> Optional[str]:
     """Return a rejection reason, or None when the non-quota checks pass."""
+    if state.home_error:
+        return state.home_error
     if not state.enabled:
         return "disabled"
     if not state.identity_ok:
@@ -467,6 +470,57 @@ def schedule_account(
         reason=ranked[0][0].reason,
         candidates=tuple(rank for rank, _ in ranked),
     )
+
+
+def account_eligibility(
+    states: tuple[AccountState, ...],
+    name: str,
+    request: JobRequest,
+    now: datetime,
+    config: Optional[SchedulerConfig] = None,
+    allow_burn: bool = False,
+) -> Optional[str]:
+    """Return None when ``name`` may take the job, else a rejection reason.
+
+    Used by the explicit ``account`` override, which must not silently fall back
+    to another account. ``allow_burn`` mirrors the background relaxation. The
+    result is computed against the full state set so a shared pool is respected.
+    """
+    config = config or SchedulerConfig()
+    request = request.validated()
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    now = now.astimezone(timezone.utc)
+    by_name = {state.name: state for state in states}
+    state = by_name.get(name)
+    if state is None:
+        return "account_not_found"
+    rejection = _base_eligible(state, request, frozenset())
+    if rejection is not None:
+        return rejection
+    grouped = _groups(states)
+    quota = _group_quota(grouped, state, request)
+    if quota is None:
+        return "usage_unavailable"
+    cost = estimate_cost(request, config)
+    five_remaining, weekly_remaining, five_reset, weekly_reset = quota
+    required_five = max(config.five_hour_floor_pct, cost.five_hour_pct * config.safety_factor)
+    required_weekly = cost.weekly_pct * config.safety_factor
+    if five_remaining >= required_five and weekly_remaining >= required_weekly:
+        return None
+    if allow_burn:
+        wait = _wait_minutes(
+            five_remaining,
+            weekly_remaining,
+            five_reset,
+            weekly_reset,
+            cost,
+            config,
+            now,
+        )
+        if wait is not None and wait <= config.burn_horizon_minutes:
+            return None
+    return "quota_exhausted"
 
 
 def remaining_until_reset(reset_time_utc: Optional[str], now: datetime) -> Optional[timedelta]:

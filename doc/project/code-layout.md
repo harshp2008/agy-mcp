@@ -38,7 +38,9 @@ worker threads.
      directory, resolvable HEAD, `.agents/**` trust gate),
    - free disk (`shutil.disk_usage`) and total state-disk budget,
    - the usage guard through **`JobManager._apply_usage_guard()`** →
-     **`usage.get_usage()`**.
+     **`usage.get_usage()`**; with a registry, **`accounts.selection.AccountSelector.select()`**
+     validates each account home and policy, reads that account's `/usage`, and
+     calls the pure **`accounts.scheduler.schedule_account()`** (D102–D109).
    It then enters **`jobs.concurrency_lock()`**, calls
    **`jobs.count_active_jobs()`**, **`jobs.check_and_increment_daily_cap()`**
    and **`jobs.create_job()`** (which writes `prompt.txt`, `job.json` and the
@@ -217,8 +219,14 @@ them (it only scans `src/agy_mcp/*.py`).
   - `pools.py` — `WindowReading`, `PoolReading`, `AccountUsage` and
     `account_usage_from_reading()`; the typed view of both pools and windows.
   - `scheduler.py` — `SchedulerConfig`, `AccountState`, `JobRequest`,
-    `estimate_cost()`, `schedule_account()` and `remaining_until_reset()`; the
-    pure, clock-injected cost/filter/ranking/burn decision (D108, D109).
+    `estimate_cost()`, `schedule_account()`, `account_eligibility()` and
+    `remaining_until_reset()`; the pure, clock-injected cost/filter/ranking/burn
+    decision (D108, D109).
+  - `policy.py` — read-only permission-policy parity between an account home and
+    the primary (D106).
+  - `selection.py` — `AccountSelector`, `Selection`, `RejectedAccount`; the I/O
+    glue that validates homes, reads `/usage`, counts jobs/reservations and calls
+    the scheduler (D102–D109).
   - `errors.py` — `AccountError` with a stable `.code`.
 - **Imports from `agy_mcp`:** `config.py` imports the registry; `env.py` imports
   `util.env_allowlist`; `identity.py` imports only `errors`.
@@ -227,9 +235,9 @@ them (it only scans `src/agy_mcp/*.py`).
 - **Tests:** `tests/test_accounts_registry.py`,
   `tests/test_accounts_identity.py`, `tests/test_accounts_env.py`,
   `tests/test_accounts_pools.py`, `tests/test_usage_account.py`,
-  `tests/test_accounts_scheduler.py`,
+  `tests/test_accounts_scheduler.py`, `tests/test_accounts_wiring.py`,
   `tests/test_accounts_single_account_equivalence.py`.
-- **Implements:** D102–D104, D107–D109; full design in `doc/design/multi-account.md`.
+- **Implements:** D102–D110; full design in `doc/design/multi-account.md`.
 
 ### `audit.py`
 - **Purpose:** capture and compare the security baseline: worktree `.git`
@@ -777,9 +785,11 @@ by hand. It exists so a stale module list or line count fails CI.
 | `accounts.env.py` | 45 | `build_account_env()` |
 | `accounts.errors.py` | 22 | `AccountError` |
 | `accounts.identity.py` | 123 | `mask_email()`; `email_sha256()`; `IdentityCheck`; `verify_identity()` |
+| `accounts.policy.py` | 81 | `PolicyCheck` (`account_rule_count`); `check_policy_parity()` |
 | `accounts.pools.py` | 208 | `WindowReading` (`remaining_pct`); `PoolReading` (`window`, `weekly`, `five_hour`); `AccountUsage` (`pool`, `pool_for_model`); `pool_for_model()`; `account_usage_from_reading()` |
 | `accounts.registry.py` | 306 | `AccountConfig` (`expanded_home`, `agy_home`, `pool_key`); `AccountRegistry` (`all`, `enabled`, `by_name`, `configured`); `parse_accounts()`; `build_registry()`; `validate_account_home()` |
-| `accounts.scheduler.py` | 477 | `CostEstimate`; `HistoryCostModel`; `SchedulerConfig`; `AccountState`; `JobRequest` (`validated`); `RankedAccount`; `SchedulerResult`; `estimate_cost()`; `schedule_account()`; `remaining_until_reset()` |
+| `accounts.scheduler.py` | 531 | `CostEstimate`; `HistoryCostModel`; `SchedulerConfig`; `AccountState`; `JobRequest` (`validated`); `RankedAccount`; `SchedulerResult`; `estimate_cost()`; `schedule_account()`; `account_eligibility()`; `remaining_until_reset()` |
+| `accounts.selection.py` | 349 | `RejectedAccount`; `Selection` (`account_name`); `scheduler_config_from_config()`; `AccountSelector` (`select`) |
 | `audit.py` | 653 | `AuditSeverity`; `HostPathClass`; `classify_host_path()`; `Finding` (`to_dict`); `Findings` (`has_fatal`, `fatal_reason`, `blocked_files`, `passed`); `AuditSnapshot`; `save_snapshot()`; `load_snapshot()`; `take_host_path_snapshot()`; `HostPathAuditResult`; `check_host_path_snapshot()`; `verify_host_path_snapshot()`; `take_snapshot()`; `audit()`; `run_security_audit()` |
 | `cleanup.__init__.py` | 7 | _(no public definitions)_ |
 | `cleanup.fixtures_cli.py` | 517 | `parse_args()`; `run_cleanup()`; `main()` |
@@ -790,18 +800,18 @@ by hand. It exists so a stale module list or line count fails CI.
 | `cleanup_fixtures.py` | 36 | _(no public definitions)_ |
 | `cleanup_jobs.py` | 41 | _(no public definitions)_ |
 | `cli_log.py` | 302 | `Denial` (`to_dict`); `read_cli_log_tail()`; `read_cli_log_head()`; `capture_cli_log_anchor()`; `cli_log_generation_start()`; `read_cli_log_since()`; `extract_conversation_id_from_cli_log()`; `extract_resuming_conversation_id_from_cli_log()`; `extract_model_resolved()`; `extract_denials_from_cli_log()`; `format_denied_commands()` |
-| `config.py` | 366 | `ConfigError`; `Config`; `load_config()` |
+| `config.py` | 425 | `ConfigError`; `Config`; `load_config()` |
 | `gitops.py` | 1049 | `GitError` (`args_list`); `GitResult`; `StagingResult`; `SkippedFile` (`path`, `reason`); `merge_skipped_files()`; `is_build_artifact()`; `is_sensitive_path()`; `get_hardened_git_env()`; `run_git()`; `execute_with_index_lock_retry()`; `parse_porcelain_z()`; `stage_changes()`; `commit_with_retry()`; `is_worktree_dirty()`; `sanitize_commit_subject()`; `sanitize_commit_body()`; `build_wrapper_commit_text()`; `commit_message_problem()`; `write_wrapper_commit_msg()`; `checkpoint_commit()`; `find_most_recent_commit_msg()`; `safety_net_commit()`; `get_merge_base()`; `get_ahead_behind()`; `has_base_moved()`; `get_diff_stat()`; `get_commits_list()`; `get_files_modified()`; `take_git_config_snapshot()`; `diff_git_config_snapshots()` |
-| `jobs.py` | 603 | `get_base_state_dir()`; `get_job_dir()`; `append_audit_event()`; `record_cleanup_error()`; `create_job()`; `save_job()`; `get_job()`; `list_jobs()`; `concurrency_lock()`; `count_active_jobs()`; `transition_job_state()`; `record_job_execution_time()`; `get_daily_date()`; `check_and_increment_daily_cap()`; `rebuild_daily_cap_from_audit()`; `get_job_disk_usage()`; `get_total_state_disk_usage()`; `prune_retained_jobs()`; `cleanup_retained_jobs()` |
-| `manager.py` | 1741 | `ManagerError`; `JobManager` (`start`, `usage`, `status`, `wait`, `reconcile`, `result`, `cancel`, `list`, `resume`, `review`, `cleanup`, `shutdown`) |
-| `models.py` | 1077 | `wrap_untrusted_text()`; `unwrap_untrusted_text()`; `TokenUsage` (`to_dict`, `from_dict`); `AuditEvent` (`to_dict`, `from_dict`); `StandardEnvelope` (`to_dict`); `Job` (`to_dict`, `from_dict`); `derive_next_actions()`; `get_effective_verify_envelope()`; `get_plan_envelope()`; `build_facts()`; `build_standard_envelope()`; `standard_envelope_fields()`; `JobStatusResponse` (`to_dict`); `JobResultResponse` (`to_dict`); `build_result_response()`; `JobReviewResponse` (`to_dict`); `build_review_response()`; `JobCleanupResponse` (`to_dict`); `JobListResponse` (`to_dict`) |
+| `jobs.py` | 657 | `get_base_state_dir()`; `cap_file_stem()`; `job_belongs_to_account()`; `get_job_dir()`; `append_audit_event()`; `record_cleanup_error()`; `create_job()`; `save_job()`; `get_job()`; `list_jobs()`; `concurrency_lock()`; `count_active_jobs()`; `transition_job_state()`; `record_job_execution_time()`; `get_daily_date()`; `check_and_increment_daily_cap()`; `rebuild_daily_cap_from_audit()`; `get_job_disk_usage()`; `get_total_state_disk_usage()`; `prune_retained_jobs()`; `cleanup_retained_jobs()` |
+| `manager.py` | 1938 | `ManagerError`; `JobManager` (`start`, `usage`, `status`, `wait`, `reconcile`, `result`, `cancel`, `list`, `resume`, `review`, `cleanup`, `shutdown`) |
+| `models.py` | 1108 | `wrap_untrusted_text()`; `unwrap_untrusted_text()`; `TokenUsage` (`to_dict`, `from_dict`); `AuditEvent` (`to_dict`, `from_dict`); `StandardEnvelope` (`to_dict`); `Job` (`to_dict`, `from_dict`); `derive_next_actions()`; `get_effective_verify_envelope()`; `get_plan_envelope()`; `build_facts()`; `build_standard_envelope()`; `standard_envelope_fields()`; `JobStatusResponse` (`to_dict`); `JobResultResponse` (`to_dict`); `build_result_response()`; `JobReviewResponse` (`to_dict`); `build_review_response()`; `JobCleanupResponse` (`to_dict`); `JobListResponse` (`to_dict`) |
 | `parse_result.py` | 346 | `StdoutPayload`; `ParsedResult`; `extract_stdout_payload()`; `parse_agy_output()` |
 | `recovery.py` | 356 | `check_process_liveness()`; `get_liveness_summary()`; `reconcile_on_startup()` |
 | `runner.py` | 361 | `RunnerError`; `PromptTooLargeError`; `ProcessHandle`; `read_proc_stat_field()`; `read_proc_start_time()`; `build_argv()`; `Runner` (`launch`, `poll`, `kill`, `cleanup`); `LocalProcessRunner` (`launch`, `poll`, `kill`, `cleanup`) |
 | `scratchpad.py` | 453 | `ScratchFile` (`ok`); `cap_text_bytes()`; `tail_text_bytes()`; `report_claims_tests_passed()`; `normalize_checklist()`; `build_plan_content()`; `write_metadata_file()`; `seed_scratchpad()`; `parse_plan_text()`; `read_scratchpad_file()`; `read_plan()`; `copy_to_jobdir()`; `format_plan_nudge()`; `format_state_block()` |
-| `server.py` | 587 | `get_manager()`; `set_manager()`; `make_error_envelope()`; `agy_start()`; `agy_status()`; `agy_wait()`; `agy_result()`; `agy_cancel()`; `agy_list()`; `agy_resume()`; `agy_review()`; `agy_cleanup()`; `agy_usage()`; `parse_args()`; `resolve_agy_binary()`; `setup_server()`; `main()` |
+| `server.py` | 598 | `get_manager()`; `set_manager()`; `make_error_envelope()`; `agy_start()`; `agy_status()`; `agy_wait()`; `agy_result()`; `agy_cancel()`; `agy_list()`; `agy_resume()`; `agy_review()`; `agy_cleanup()`; `agy_usage()`; `parse_args()`; `resolve_agy_binary()`; `setup_server()`; `main()` |
 | `states.py` | 180 | `JobState`; `StateTransition` |
-| `supervisor.py` | 1632 | `select_conversation_id()`; `JobSupervisor` (`terminate_group`, `tick`, `stop`, `run_loop`) |
+| `supervisor.py` | 1652 | `select_conversation_id()`; `JobSupervisor` (`terminate_group`, `tick`, `stop`, `run_loop`) |
 | `transcript.py` | 263 | `DeniedCall` (`to_dict`); `cli_step_to_transcript_step()`; `read_denied_calls()` |
 | `usage.py` | 964 | `mask_email()`; `parse_auth_line()`; `parse_usage_payload()`; `parse_usage_output()`; `group_for_model()`; `find_group()`; `low_buckets()`; `exhausted_bucket_reset()`; `matches_patterns()`; `annotate_low_flags()`; `compute_usage_cost()`; `compute_quota_estimate()`; `UsageCache` (`get`, `put`, `clear`); `read_usage_once()`; `usage_cache_key()`; `get_usage()`; `append_audit_event()`; `record_usage()`; `has_usage_record_for_generation()`; `check_daily_cap()` |
 | `util.py` | 297 | `derive_branch_slug()`; `sanitize_absolute_paths()`; `env_allowlist()`; `truncate_tail()`; `truncate_head()`; `read_file_tail()`; `read_file_since()`; `redact_log_text()`; `sha256_file()`; `sha256_bytes()`; `strict_uuid()`; `load_preamble()`; `format_fresh_prompt()`; `format_resume_prompt()` |

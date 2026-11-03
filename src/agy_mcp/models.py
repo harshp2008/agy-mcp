@@ -166,6 +166,9 @@ class StandardEnvelope:
     facts: dict[str, Any] = field(default_factory=dict)
     agent_report: Optional[str] = None
     scratchpad: list[str] = field(default_factory=list)
+    # Multi-account fields appear only when a registry selected an account (D103/D110).
+    account: Optional[str] = None
+    account_email: Optional[str] = None
     verify: dict[str, Any] = field(
         default_factory=lambda: {
             "requested": False,
@@ -187,7 +190,7 @@ class StandardEnvelope:
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the base envelope, converting the state enum to its value."""
-        return {
+        data: dict[str, Any] = {
             "job_id": self.job_id,
             "state": self.state.value if isinstance(self.state, JobState) else self.state,
             "elapsed_seconds": self.elapsed_seconds,
@@ -216,6 +219,10 @@ class StandardEnvelope:
             "scratchpad": self.scratchpad,
             "verify": self.verify,
         }
+        if self.account is not None:
+            data["account"] = self.account
+            data["account_email"] = self.account_email
+        return data
 
 
 @dataclass
@@ -231,6 +238,12 @@ class Job:
     state: JobState = JobState.QUEUED
     model: str = "gemini-3.8-flash-medium"
     model_resolved: Optional[str] = None
+    # Multi-account pinning (D110). None means the implicit default account, so
+    # a single-account job record stays byte-identical.
+    account: Optional[str] = None
+    priority: str = "normal"
+    account_masked_email: Optional[str] = None
+    quota_reservation: Optional[dict[str, Any]] = None
     max_minutes: int = 240
     verify: Optional[str] = None
     verify_timeout_seconds: int = 900
@@ -290,8 +303,13 @@ class Job:
     scratchpad_files: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert job to a JSON-serializable dictionary."""
-        return {
+        """Convert job to a JSON-serializable dictionary.
+
+        Multi-account fields are emitted only when they differ from the
+        single-account default (D110), so an old job record and a new job on the
+        implicit default account serialize identically.
+        """
+        data: dict[str, Any] = {
             "schema_version": self.schema_version,
             "job_id": self.job_id,
             "title": self.title,
@@ -348,6 +366,13 @@ class Job:
             "audit_reason": self.audit_reason,
             "scratchpad_files": self.scratchpad_files,
         }
+        if self.account is not None:
+            data["account"] = self.account
+            data["account_masked_email"] = self.account_masked_email
+            data["quota_reservation"] = self.quota_reservation
+        if self.priority != "normal":
+            data["priority"] = self.priority
+        return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "Job":
@@ -385,6 +410,10 @@ class Job:
             state=JobState(data["state"]),
             model=str(data.get("model", "gemini-3.8-flash-medium")),
             model_resolved=data.get("model_resolved"),
+            account=data.get("account"),
+            priority=str(data.get("priority", "normal")),
+            account_masked_email=data.get("account_masked_email"),
+            quota_reservation=data.get("quota_reservation"),
             max_minutes=int(data.get("max_minutes", 240)),
             verify=data.get("verify"),
             verify_timeout_seconds=int(data.get("verify_timeout_seconds", 900)),
@@ -816,6 +845,8 @@ def build_standard_envelope(
         facts=build_facts(job, verify_env),
         agent_report=job.agent_report,
         scratchpad=[str(name) for name in job.scratchpad_files],
+        account=job.account,
+        account_email=job.account_masked_email,
         verify=verify_env,
     )
 

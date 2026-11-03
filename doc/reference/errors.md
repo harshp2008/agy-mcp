@@ -27,6 +27,7 @@ account-registry/identity codes and the two server-generated fallbacks
 <!-- BEGIN GENERATED: error-codes -->
 | Code | Raised in |
 |---|---|
+| `account_concurrency_limit` | `manager.py` |
 | `account_config_invalid` | `identity.py`, `registry.py` |
 | `account_error` | `errors.py` |
 | `account_home_invalid` | `registry.py` |
@@ -36,7 +37,7 @@ account-registry/identity codes and the two server-generated fallbacks
 | `account_limit_exceeded` | `registry.py` |
 | `account_name_duplicate` | `registry.py` |
 | `account_name_invalid` | `registry.py` |
-| `account_not_found` | `registry.py` |
+| `account_not_found` | `manager.py`, `registry.py` |
 | `audit_violation` | `manager.py` |
 | `cannot_resume_security_review` | `manager.py` |
 | `cap_exceeded` | `manager.py` |
@@ -53,6 +54,7 @@ account-registry/identity codes and the two server-generated fallbacks
 | `invalid_git_dir` | `worktree.py` |
 | `invalid_input` | `server.py` |
 | `invalid_job_id` | `manager.py` |
+| `invalid_priority` | `manager.py` |
 | `invalid_repo_state` | `worktree.py` |
 | `invalid_state_for_resume` | `manager.py` |
 | `invalid_verify_timeout` | `manager.py` |
@@ -64,6 +66,7 @@ account-registry/identity codes and the two server-generated fallbacks
 | `max_minutes_over_cap` | `manager.py` |
 | `missing_prompt` | `manager.py` |
 | `model_not_allowed` | `manager.py` |
+| `no_account_eligible` | `manager.py` |
 | `not_a_directory` | `worktree.py` |
 | `not_a_git_repo` | `worktree.py` |
 | `path_outside_allowed_roots` | `worktree.py` |
@@ -143,7 +146,16 @@ fail-closed: a start or resume does not proceed.
 | `account_home_permissions` | The account home is accessible by group or others. | `chmod 700` the home. |
 | `account_identity_mismatch` | The full email parsed from agy does not match `expected_email` or its hash. | Confirm the login, or update the expectation. The message shows only the masked value. |
 | `account_identity_unknown` | An expectation is configured but agy did not report an email. | Re-login the account; check that the CLI still logs `applyAuthResult`. |
-| `account_not_found` | An `account` name was requested that the registry does not contain. | Use a name from the registry or omit the override. |
+| `account_not_found` | An `account` name was requested that the registry does not contain, or a pinned job's account was removed. | Use a name from the registry or omit the override. |
+| `account_disabled` | The account is declared with `enabled = false`. | Enable it or use another account. |
+| `account_not_eligible` | An explicit `account` cannot take the job under the strict quota filter (`force` skips only this check). | Wait for the reset, use another account, or pass `force=true` for a quota-only override. |
+| `account_usage_unavailable` | That account's `/usage` failed, timed out, was unparsable, or failed identity verification. | Check the account login and the `reason`; the account is skipped for this start. |
+| `account_model_unavailable` | The account rejected the requested model. | Use a model that account accepts; model sets are per account. |
+| `account_permission_policy_missing` | The account home has no permission policy while the primary has one. | Copy the primary `$HOME/.gemini/config/config.json` into the account home. |
+| `account_permission_policy_drift` | The account policy's allow-rule set differs from the primary's. | Re-copy the primary policy; never weaken it. |
+| `account_concurrency_limit` | The account's own `max_concurrent_jobs` is reached. | Wait for a job to leave `queued`/`running`, or raise the account cap. |
+| `invalid_priority` | `priority` is not `normal` or `background`. | Pass one of those two values. |
+| `no_account_eligible` | The scheduler found no account that can take the job; the message names the earliest reset. | Wait for the reset, add/enable an account, or use `force=true` with a specific `account`. |
 
 ## Notes
 

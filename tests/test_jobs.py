@@ -8,6 +8,7 @@ import pytest
 
 from agy_mcp.jobs import (
     _atomic_write_file,
+    cap_file_stem,
     check_and_increment_daily_cap,
     count_active_jobs,
     create_job,
@@ -462,3 +463,64 @@ def test_retention_and_disk_usage(tmp_path: Path):
 
     prunable = prune_retained_jobs(tmp_path, retention_days=14)
     assert prunable == ["ret-job"]
+
+
+def test_cap_file_stem_default_and_account():
+    """The default account keeps the historical file names; extras are suffixed."""
+    assert cap_file_stem(None) == "daily_cap"
+    assert cap_file_stem("default") == "daily_cap"
+    assert cap_file_stem("account-b") == "daily_cap.account-b"
+    with pytest.raises(ValueError):
+        cap_file_stem("../escape")
+
+
+def test_per_account_daily_caps_are_independent(tmp_path: Path):
+    """A cap on one account never consumes another account's budget (D105)."""
+    assert check_and_increment_daily_cap(tmp_path, 1, account="account-a")
+    assert not check_and_increment_daily_cap(tmp_path, 1, account="account-a")
+    assert check_and_increment_daily_cap(tmp_path, 1, account="account-b")
+    assert (tmp_path / "daily_cap.account-a.json").is_file()
+    assert (tmp_path / "daily_cap.account-b.json").is_file()
+
+
+def test_count_active_jobs_filters_by_account(tmp_path: Path):
+    a = create_job(
+        repo_path=tmp_path / "a",
+        title="a",
+        prompt="p",
+        model="m",
+        max_minutes=1,
+        base_state_dir=tmp_path,
+        account="account-a",
+    )
+    b = create_job(
+        repo_path=tmp_path / "b",
+        title="b",
+        prompt="p",
+        model="m",
+        max_minutes=1,
+        base_state_dir=tmp_path,
+        account="account-b",
+    )
+    transition_job_state(a, JobState.RUNNING, "spawned", base_state_dir=tmp_path)
+    transition_job_state(b, JobState.RUNNING, "spawned", base_state_dir=tmp_path)
+    assert count_active_jobs(tmp_path) == 2
+    assert count_active_jobs(tmp_path, account="account-a") == 1
+    assert count_active_jobs(tmp_path, account="account-b") == 1
+    assert count_active_jobs(tmp_path, account="missing") == 0
+
+
+def test_rebuild_daily_cap_is_per_account(tmp_path: Path):
+    for account, count in (("account-a", 2), ("account-b", 1)):
+        for index in range(count):
+            create_job(
+                repo_path=tmp_path / account / str(index),
+                title=account,
+                prompt="p",
+                model="m",
+                max_minutes=1,
+                base_state_dir=tmp_path,
+                account=account,
+            )
+    assert rebuild_daily_cap_from_audit(tmp_path, account="account-a") == 2
+    assert rebuild_daily_cap_from_audit(tmp_path, account="account-b") == 1

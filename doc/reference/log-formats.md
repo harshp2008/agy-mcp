@@ -31,6 +31,9 @@ The event names are generated from the `event="..."` literals in
 <!-- BEGIN GENERATED: audit-events -->
 | Event | Emitted in |
 |---|---|
+| `account_rejected` | `manager.py` |
+| `account_selected` | `jobs.py` |
+| `account_verified` | `manager.py` |
 | `audit_error_during_tick_error` | `supervisor.py` |
 | `audit_violation` | `supervisor.py` |
 | `checkpoint_rejected` | `watcher.py` |
@@ -57,6 +60,11 @@ The event names are generated from the `event="..."` literals in
 | `verify_finished` | `supervisor.py` |
 | `verify_started` | `supervisor.py` |
 <!-- END GENERATED: audit-events -->
+
+`account_selected` and `account_verified` are written when a job is created on a
+registry account; `account_rejected` is written once per account the scheduler
+could not use (at most five). Their details carry the registry `name`, the
+machine-readable reason and a **masked** email only, never the full address.
 
 | Event | Meaning |
 |---|---|

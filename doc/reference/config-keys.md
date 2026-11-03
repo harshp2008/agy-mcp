@@ -51,6 +51,14 @@ removed; `scripts/check_docs.py` fails until it is.
 | `timezone` | `str | null` | `null` |
 | `accounts` | `list[AccountConfig]` | `[]` |
 | `max_accounts` | `int` | `5` |
+| `account_cost_tokens_per_minute` | `int` | `35300` |
+| `account_cost_expected_minutes` | `int` | `30` |
+| `account_cost_safety_factor` | `float` | `1.5` |
+| `account_five_hour_floor_pct` | `float` | `15.0` |
+| `account_burn_horizon_minutes` | `int` | `90` |
+| `account_handoff_min_wait_minutes` | `int` | `120` |
+| `account_usage_max_age_seconds` | `int` | `60` |
+| `account_expires_boost_horizon_hours` | `int` | `168` |
 <!-- END GENERATED: config-keys -->
 
 ## Validator and effect
@@ -86,6 +94,14 @@ removed; `scripts/check_docs.py` fails until it is.
 | `timezone` | `null`, or a non-empty `str`; `local`/`system` are accepted, otherwise `zoneinfo.ZoneInfo(name)` must resolve | Calendar timezone for `daily_jobs_cap` and for rebuilding `daily_cap.json` (`get_daily_date`). `null`/`local`/`system` use the system zone. It does not change job timestamps: `job.json`, `audit.jsonl` and `usage.jsonl` stay UTC. |
 | `accounts` | array of tables; see [the multi-account design](../design/multi-account.md) | Additional accounts beyond the implicit `default`. Each entry needs `name` and an absolute `home`; optional `pool`, `enabled`, `max_concurrent_jobs`, `expires_at` and one of `expected_email`/`expected_email_sha256`. Invalid entries fail closed (`ConfigError`). |
 | `max_accounts` | `int` (not `bool`), `1..32` | Maximum **total** accounts including the implicit `default`; `[[accounts]]` may declare at most `max_accounts - 1` entries. Exceeding it is `account_limit_exceeded`. |
+| `account_cost_tokens_per_minute` | `int` (not `bool`), `>= 1` | Cost-estimate rate for a job with no history (default 35300, the median of the seven calibration jobs). |
+| `account_cost_expected_minutes` | `int` (not `bool`), `>= 1` | Expected job duration used as the cost horizon; `max_minutes` is a ceiling, so the horizon is `min(max_minutes, this)`. |
+| `account_cost_safety_factor` | number (not `bool`), `>= 1.0` | Both windows must exceed `estimated cost * factor` before an account is strictly eligible. |
+| `account_five_hour_floor_pct` | number (not `bool`), `0..100` | Minimum five-hour remaining percentage for any start. |
+| `account_burn_horizon_minutes` | `int`, `>= 0` | Background jobs may burn an account when all its binding windows are usable again within this many minutes. |
+| `account_handoff_min_wait_minutes` | `int`, `>= 0` | Reserved for the conversation-transfer threshold in Phase 7. |
+| `account_usage_max_age_seconds` | `int`, `>= 0` | Use the in-memory usage cache when > 0; 0 forces a fresh `/usage` read. The cache TTL itself is 60 s. |
+| `account_expires_boost_horizon_hours` | `int`, `>= 0` | Window in which an account's optional `expires_at` boosts its scheduling urgency. |
 
 ## Example
 

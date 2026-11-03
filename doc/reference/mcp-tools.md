@@ -25,7 +25,7 @@ client shows to a model) are the canonical "when to call / next action" wording.
 <!-- BEGIN GENERATED: mcp-tools -->
 | Tool | Parameters |
 |---|---|
-| `agy_start` | `repo_path`: string (required), `prompt`: string (required), `title`: string (required), `model`: string = "gemini-3.8-flash-medium", `max_minutes`: integer = 240, `verify`: string|null = null, `checklist`: array|null = null, `verify_timeout_seconds`: integer|null = null |
+| `agy_start` | `repo_path`: string (required), `prompt`: string (required), `title`: string (required), `model`: string = "gemini-3.8-flash-medium", `max_minutes`: integer = 240, `verify`: string|null = null, `checklist`: array|null = null, `verify_timeout_seconds`: integer|null = null, `account`: string|null = null, `priority`: string = "normal", `force`: boolean = false |
 | `agy_status` | `job_id`: string (required), `tail_lines`: integer = 20 |
 | `agy_wait` | `job_id`: string (required), `seconds`: integer = 30 |
 | `agy_result` | `job_id`: string (required) |
@@ -44,7 +44,15 @@ returns `state="queued"`; a background thread provisions the worktree and spawns
 `agy`, so a launch failure appears later on the job (`failed`, with the error in
 `job.json` and the logs), not in this response.
 
-- **Errors:** `missing_prompt`, `invalid_checklist`, `checklist_too_long`,
+- **Multi-account:** `account` pins a registered account (default: scheduler
+  choice), `priority` is `normal` or `background`, and `force` skips only the
+  quota filter for an explicit account. With no `[[accounts]]` registry the job
+  runs on the implicit `default` account exactly as before. The envelope adds
+  `account` and its masked `account_email` only when a registry selected one.
+- **Errors:** `no_account_eligible`, `account_not_eligible`, `account_not_found`,
+  `account_identity_mismatch`, `account_permission_policy_missing`,
+  `account_permission_policy_drift`, `account_concurrency_limit`,
+  `invalid_priority`, `missing_prompt`, `invalid_checklist`, `checklist_too_long`,
   `checklist_item_too_long`, `invalid_verify_timeout`, `max_minutes_over_cap`,
   `model_not_allowed`, `verify_not_allowed`, `concurrency_limit_exceeded`,
   `cap_exceeded`, `low_quota`, `insufficient_disk_space`, `state_disk_full`,

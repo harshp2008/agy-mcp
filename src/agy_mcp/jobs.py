@@ -11,6 +11,7 @@ import fcntl
 import json
 import logging
 import os
+import re
 import tempfile
 import uuid
 from contextlib import contextmanager
@@ -32,6 +33,30 @@ def get_base_state_dir(base_state_dir: Optional[Path] = None) -> Path:
     xdg_state = os.environ.get("XDG_STATE_HOME")
     base = Path(xdg_state) if xdg_state else Path.home() / ".local" / "state"
     return base / "agy-mcp"
+
+
+_ACCOUNT_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,31}$")
+
+
+def cap_file_stem(account: Optional[str]) -> str:
+    """Return the daily-cap file stem for an account.
+
+    The implicit default account keeps the historical unsuffixed
+    ``daily_cap`` names; every other account gets a validated suffix. The name is
+    re-validated here because it becomes part of a file path (D105).
+    """
+    if account is None or account == "default":
+        return "daily_cap"
+    if not _ACCOUNT_NAME_RE.match(account):
+        raise ValueError(f"invalid account name for a cap file: {account!r}")
+    return f"daily_cap.{account}"
+
+
+def job_belongs_to_account(job: Job, account: Optional[str]) -> bool:
+    """True when ``job`` belongs to ``account``; None means the implicit default."""
+    if account is None:
+        return job.account is None or job.account == "default"
+    return job.account == account
 
 
 def get_job_dir(job_id: str, base_state_dir: Optional[Path] = None) -> Path:
@@ -138,6 +163,10 @@ def create_job(
     job_id: Optional[str] = None,
     base_commit: str = "HEAD",
     branch: Optional[str] = None,
+    account: Optional[str] = None,
+    priority: str = "normal",
+    account_masked_email: Optional[str] = None,
+    quota_reservation: Optional[dict[str, Any]] = None,
 ) -> Job:
     """Initialize a new job record and provision its state directory per SPEC section 10."""
     jid = job_id or str(uuid.uuid4())
@@ -170,20 +199,30 @@ def create_job(
         verify=verify,
         verify_timeout_seconds=verify_timeout_seconds,
         worktree_path=job_dir / "work",
+        account=account,
+        priority=priority,
+        account_masked_email=account_masked_email,
+        quota_reservation=quota_reservation,
     )
 
     save_job(job, base_state_dir)
-    append_audit_event(
-        job_dir,
-        event="job_created",
-        detail={
-            "title": title,
-            "model": model,
-            "max_minutes": max_minutes,
-            "verify": verify,
-            "verify_timeout_seconds": verify_timeout_seconds,
-        },
-    )
+    created_detail: dict[str, Any] = {
+        "title": title,
+        "model": model,
+        "max_minutes": max_minutes,
+        "verify": verify,
+        "verify_timeout_seconds": verify_timeout_seconds,
+    }
+    # Tagging job_created lets the per-account daily-cap rebuild filter without
+    # reading job.json, which retention may have moved (D105).
+    if account is not None:
+        created_detail["account"] = account
+    append_audit_event(job_dir, event="job_created", detail=created_detail)
+    if account is not None:
+        detail_account = {"account": account}
+        if account_masked_email is not None:
+            detail_account["account_masked_email"] = account_masked_email
+        append_audit_event(job_dir, event="account_selected", detail=detail_account)
     return job
 
 
@@ -267,8 +306,14 @@ def concurrency_lock(base_state_dir: Optional[Path] = None):
 def count_active_jobs(
     base_state_dir: Optional[Path] = None,
     exclude_job_id: Optional[str] = None,
+    account: Optional[str] = None,
 ) -> int:
-    """Count number of currently active (queued or running) jobs across all repositories."""
+    """Count active (queued/running) jobs, optionally only one account's.
+
+    ``account=None`` keeps the historical global count. ``account="default"``
+    includes old records with no ``account`` field, so the implicit default
+    account keeps its historical jobs.
+    """
     active_states = {JobState.QUEUED, JobState.RUNNING}
     jobs = list_jobs(base_state_dir)
     return sum(
@@ -276,6 +321,7 @@ def count_active_jobs(
         for j in jobs
         if (j.state in active_states or getattr(j.state, "value", str(j.state)) == "starting")
         and (exclude_job_id is None or j.job_id != exclude_job_id)
+        and (account is None or job_belongs_to_account(j, account))
     )
 
 
@@ -389,6 +435,7 @@ def check_and_increment_daily_cap(
     daily_cap: int,
     date_str: Optional[str] = None,
     tz_name: Optional[str] = None,
+    account: Optional[str] = None,
 ) -> bool:
     """Check and increment daily job start counter under an exclusive flock.
 
@@ -398,8 +445,9 @@ def check_and_increment_daily_cap(
     state_dir.mkdir(parents=True, exist_ok=True)
     os.chmod(state_dir, 0o700)
 
-    lock_file = state_dir / "daily_cap.lock"
-    data_file = state_dir / "daily_cap.json"
+    stem = cap_file_stem(account)
+    lock_file = state_dir / f"{stem}.lock"
+    data_file = state_dir / f"{stem}.json"
     target_date = date_str or get_daily_date(tz_name)
 
     lock_fd = os.open(str(lock_file), os.O_RDWR | os.O_CREAT, 0o600)
@@ -432,11 +480,13 @@ def rebuild_daily_cap_from_audit(
     state_dir: Path,
     date_str: Optional[str] = None,
     tz_name: Optional[str] = None,
+    account: Optional[str] = None,
 ) -> int:
-    """Rebuild daily_cap.json count by scanning all job audit.jsonl logs under flock."""
+    """Rebuild one account's daily-cap count from job_created audit events."""
     state_dir.mkdir(parents=True, exist_ok=True)
-    lock_file = state_dir / "daily_cap.lock"
-    data_file = state_dir / "daily_cap.json"
+    stem = cap_file_stem(account)
+    lock_file = state_dir / f"{stem}.lock"
+    data_file = state_dir / f"{stem}.json"
     target_date = date_str or get_daily_date(tz_name)
 
     lock_fd = os.open(str(lock_file), os.O_RDWR | os.O_CREAT, 0o600)
@@ -458,6 +508,10 @@ def rebuild_daily_cap_from_audit(
                                 continue
                             ev = json.loads(line)
                             if ev.get("event") == "job_created":
+                                if account is not None:
+                                    event_account = ev.get("detail", {}).get("account")
+                                    if event_account != account:
+                                        continue
                                 ts = ev.get("ts", "")
                                 try:
                                     iso_ts = ts.replace("Z", "+00:00")

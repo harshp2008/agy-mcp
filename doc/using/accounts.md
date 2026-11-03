@@ -9,12 +9,11 @@ what the wrapper will and will not do with it. The normative rules are D102–D1
 in [the decisions log](../design/decisions.md); the full design is
 [the multi-account design](../design/multi-account.md).
 
-> **Implementation status (Phase 3 of the multi-account work).** The registry is
-> parsed and validated, and the masking/environment helpers exist. Account
-> selection in `agy_start`, per-account quota scheduling, conversation transfer
-> and the doctor account checks are implemented in later phases. Until then the
-> recipe and config below are the supported *setup*; jobs still run on the
-> primary account.
+> **Implementation status (Phase 6 of the multi-account work).** The registry,
+> per-account usage, the quota-aware scheduler and account selection in
+> `agy_start` are implemented, including explicit `account`, `priority` and
+> `force`. Pinning across resumes is implemented. Conversation transfer/summary
+> handoff and the `--doctor` account checks arrive in later phases.
 
 ## What the wrapper never does
 

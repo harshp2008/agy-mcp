@@ -275,7 +275,10 @@ The `plan`, `facts`, `agent_report` and `scratchpad` fields are wrapper-owned (D
   - `verify`: `Optional[str]` = `None` (Verification command, must be in `verify_allowlist`)
   - `checklist`: `Optional[List[str]]` = `None` (Optional PLAN.md seed; at most 30 items of at most 200 characters each, sanitized to single lines. When omitted the wrapper seeds the two default steps described in section 9.)
   - `verify_timeout_seconds`: `Optional[int]` = `None` (Per-job verify timeout; `None` uses the config's `verify_timeout_seconds`, default `900`. Must be 1..86400.)
-- **Returns:** Standard envelope. `state` is `"queued"` while worktree is provisioned and process spawned, transitioning to `"running"`. `branch` is the final `agy/<slug>-<shortid>` name: it is allocated once and persisted in `job.json` before this envelope is returned, so `agy_status`, `agy_wait`, `agy_review`, `agy_result`, `agy_cleanup` and git all report the same ref (D72).
+  - `account`: `Optional[str]` = `None` (Registry name to pin; `None` lets the scheduler choose. With no `[[accounts]]` registry only `default` is acceptable. An explicit account must pass identity/policy/model/cap checks; it must also pass the quota filter unless `force`.)
+  - `priority`: `str` = `"normal"` (`normal` or `background`; background may burn quota that is about to reset and never takes an account's last free slot while a normal job waits for it, D109).
+  - `force`: `bool` = `False` (Skip only the quota filter/reservations for an explicit `account`; never skip identity, permission policy, home or the model/cap checks.)
+- **Returns:** Standard envelope, plus `account`/`account_email` only when a registry selected an account (`account_email` is masked). `state` is `"queued"` while worktree is provisioned and process spawned, transitioning to `"running"`. `branch` is the final `agy/<slug>-<shortid>` name: it is allocated once and persisted in `job.json` before this envelope is returned, so `agy_status`, `agy_wait`, `agy_review`, `agy_result`, `agy_cleanup` and git all report the same ref (D72).
 
 #### 2. `agy_status`
 - **Parameters:**

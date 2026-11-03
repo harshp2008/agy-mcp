@@ -20,6 +20,15 @@ from typing import Any, Optional
 
 from agy_mcp import scratchpad
 from agy_mcp import usage as usage_utils
+from agy_mcp.accounts.env import build_account_env
+from agy_mcp.accounts.errors import AccountError
+from agy_mcp.accounts.policy import check_policy_parity
+from agy_mcp.accounts.registry import (
+    AccountConfig,
+    build_registry,
+    validate_account_home,
+)
+from agy_mcp.accounts.selection import AccountSelector, Selection
 from agy_mcp.audit import (
     AuditSeverity,
     Finding,
@@ -78,7 +87,6 @@ from agy_mcp.runner import (
 from agy_mcp.states import JobState
 from agy_mcp.supervisor import JobSupervisor
 from agy_mcp.util import (
-    env_allowlist,
     format_fresh_prompt,
     format_resume_prompt,
     strict_uuid,
@@ -136,6 +144,59 @@ class JobManager:
         self._job_commit_locks: dict[str, threading.Lock] = {}
         self._lock = threading.RLock()
         self._usage_cache = usage_utils.UsageCache()
+        self.registry = build_registry(self.config, self.home)
+        self._account_selector_instance: Optional[AccountSelector] = None
+
+    def _get_account_selector(self) -> AccountSelector:
+        """Return the lazily built account selector (one per manager)."""
+        if self._account_selector_instance is None:
+            self._account_selector_instance = AccountSelector(
+                self.config,
+                self.registry,
+                self.home,
+                str(getattr(self.runner, "executable", "agy")),
+                usage_cache=self._usage_cache,
+                state_dir=self.state_dir,
+            )
+        return self._account_selector_instance
+
+    def _account_for_job(self, job: Job) -> AccountConfig:
+        """Return the account a job is pinned to (default for legacy records)."""
+        name = job.account or "default"
+        try:
+            return self.registry.by_name(name)
+        except AccountError as exc:
+            raise ManagerError(
+                f"job is pinned to account '{name}' which is no longer configured",
+                code="account_not_found",
+            ) from exc
+
+    def _agy_home_for(self, account: AccountConfig) -> Path:
+        """Return the agy state dir for an account (config override only for default)."""
+        if account.is_default:
+            return Path(self.config.agy_home).expanduser()
+        return account.agy_home
+
+    def _check_account_ready(self, account: AccountConfig) -> None:
+        """Fail closed when an account home or its permission policy is unusable."""
+        if account.is_default:
+            return
+        try:
+            validate_account_home(account)
+        except AccountError as exc:
+            raise ManagerError(exc.message, code=exc.code) from exc
+        policy = check_policy_parity(account.expanded_home, self.home)
+        if not policy.ok:
+            code = (
+                "account_permission_policy_drift"
+                if policy.status == "drift"
+                else "account_permission_policy_missing"
+            )
+            raise ManagerError(
+                f"account '{account.name}' permission policy does not match the "
+                f"primary login ({policy.status})",
+                code=code,
+            )
 
     def _get_job_lock(self, job_id: str) -> threading.Lock:
         """Get or create a per-job lock to serialize operations on a job."""
@@ -223,8 +284,17 @@ class JobManager:
         verify: Optional[str] = None,
         checklist: Optional[list[str]] = None,
         verify_timeout_seconds: Optional[int] = None,
+        account: Optional[str] = None,
+        priority: str = "normal",
+        force: bool = False,
     ) -> StandardEnvelope:
-        """Start a new autonomous job per SPEC sections 8, 9, 10."""
+        """Start a new autonomous job per SPEC sections 8, 9, 10.
+
+        With no ``[accounts]`` registry the implicit default account is used and
+        the pre-multi-account path is unchanged. With a registry the scheduler
+        picks the account; ``account`` overrides it and ``force`` skips only the
+        quota filter (never identity, policy or cap) (D102, D108, D110).
+        """
         # 0. Prompt non-empty check
         if not prompt or not prompt.strip():
             raise ManagerError("Prompt must not be empty", code="missing_prompt")
@@ -248,6 +318,11 @@ class JobManager:
 
         # 0b. Optional PLAN.md checklist (SPEC section 8, D62)
         checklist = self._validate_checklist(checklist)
+
+        if priority not in ("normal", "background"):
+            raise ManagerError(
+                "priority must be 'normal' or 'background'", code="invalid_priority"
+            )
 
         # 1. Prompt size limit check
         if len(prompt.encode("utf-8")) > MAX_PROMPT_BYTES:
@@ -341,8 +416,43 @@ class JobManager:
                 code="state_disk_full",
             )
 
-        # 7b. Usage guard (D59, Item 4): warn or block before consuming a launch slot.
-        self._apply_usage_guard(model, warnings)
+        # 7b. Account selection (D102, D108, D109). With no registry this is the
+        # implicit default account and the pre-multi-account path is unchanged.
+        selection: Optional[Selection] = None
+        selected_account = self.registry.default
+        selection_masked_email: Optional[str] = None
+        reservation: Optional[dict[str, Any]] = None
+        if self.registry.configured:
+            try:
+                selection = self._get_account_selector().select(
+                    model, max_minutes, priority, account=account, force=force
+                )
+            except AccountError as exc:
+                raise ManagerError(exc.message, code=exc.code) from exc
+            if selection.account is None:
+                resume_after = selection.result.resume_after or "unknown"
+                raise ManagerError(
+                    "No configured account can take this job within quota; "
+                    f"earliest reset: {resume_after}",
+                    code="no_account_eligible",
+                )
+            selected_account = selection.account
+            selection_masked_email = selection.masked_email
+            if selection.result.estimated_cost is not None:
+                cost = selection.result.estimated_cost
+                reservation = {
+                    "five_hour_pct": cost.five_hour_pct,
+                    "weekly_pct": cost.weekly_pct,
+                    "estimated_minutes": cost.estimated_minutes,
+                }
+        elif account not in (None, "default"):
+            raise ManagerError(
+                "An account override requires an [accounts] registry",
+                code="account_not_found",
+            )
+
+        # 7c. Usage guard (D59, Item 4): warn or block before consuming a launch slot.
+        self._apply_usage_guard(model, warnings, account=selected_account)
 
         # 2 & 3. Concurrency limit and daily cap check under flock + job creation (F13, SPEC 18)
         # The flock spans the count, the daily-cap increment and create_job so two
@@ -356,10 +466,24 @@ class JobManager:
                     code="concurrency_limit_exceeded",
                 )
 
+            account_cap = (
+                selected_account.max_concurrent_jobs or self.config.max_concurrent_jobs
+            )
+            account_active = count_active_jobs(
+                self.state_dir, account=selected_account.name
+            )
+            if account_active >= account_cap:
+                raise ManagerError(
+                    f"Account '{selected_account.name}' active jobs ({account_active}) "
+                    f"reached its concurrency limit ({account_cap})",
+                    code="account_concurrency_limit",
+                )
+
             if not check_and_increment_daily_cap(
                 self.state_dir,
                 self.config.daily_jobs_cap,
                 tz_name=self.config.timezone,
+                account=selected_account.name,
             ):
                 raise ManagerError(
                     f"Daily job start ceiling reached ({self.config.daily_jobs_cap})",
@@ -381,10 +505,34 @@ class JobManager:
                 base_state_dir=self.state_dir,
                 base_commit=base_commit_sha,
                 branch=branch_name,
+                account=selected_account.name if self.registry.configured else None,
+                priority=priority,
+                account_masked_email=selection_masked_email,
+                quota_reservation=reservation,
             )
             job.source_dirty = source_dirty
             job.warnings.extend(warnings)
             save_job(job, self.state_dir)
+            if selection is not None:
+                job_dir = get_job_dir(job.job_id, self.state_dir)
+                verified_detail: dict[str, Any] = {"account": selected_account.name}
+                if selection_masked_email is not None:
+                    verified_detail["account_masked_email"] = selection_masked_email
+                verified_detail["identity_expectation"] = bool(
+                    selected_account.expected_email
+                    or selected_account.expected_email_sha256
+                )
+                append_audit_event(job_dir, event="account_verified", detail=verified_detail)
+                for rejected in selection.rejections[:5]:
+                    rejected_detail: dict[str, Any] = {
+                        "account": rejected.name,
+                        "reason": rejected.reason,
+                    }
+                    if rejected.masked_email is not None:
+                        rejected_detail["account_masked_email"] = rejected.masked_email
+                    append_audit_event(
+                        job_dir, event="account_rejected", detail=rejected_detail
+                    )
 
         # 9. Asynchronous worktree provisioning & process launch per SPEC section 8
         prov_thread = threading.Thread(
@@ -453,7 +601,8 @@ class JobManager:
             log_file = job_dir / "cli.log"
             tmp_dir = job_dir / "tmp"
 
-            env = env_allowlist(job_tmp_dir=tmp_dir, home=self.home)
+            account = self._account_for_job(job)
+            env = build_account_env(account, tmp_dir)
             agy_binary = getattr(self.runner, "executable", "agy")
             effective_timeout = max(1, int(min(job.max_minutes, self.config.max_minutes_cap) * 60))
 
@@ -517,8 +666,11 @@ class JobManager:
                 poll_interval_seconds=self.poll_interval_seconds,
                 settle_window_seconds=self.settle_window_seconds,
                 checkpoint_interval_seconds=self.config.checkpoint_commit_minutes * 60,
-                agy_home=Path(self.config.agy_home).expanduser(),
+                agy_home=self._agy_home_for(account),
                 agy_binary=str(getattr(self.runner, "executable", "agy")),
+                account_name=job.account,
+                account_masked_email=job.account_masked_email,
+                account_home=account.expanded_home,
                 usage_cache=self._usage_cache,
                 quota_error_patterns=self.config.quota_error_patterns,
                 auth_error_patterns=self.config.auth_error_patterns,
@@ -782,7 +934,12 @@ class JobManager:
                 self._auto_fix_counts[job.job_id] = self.config.auto_fix_attempts
                 save_job(job, self.state_dir)
 
-    def _apply_usage_guard(self, model: str, warnings: list[str]) -> None:
+    def _apply_usage_guard(
+        self,
+        model: str,
+        warnings: list[str],
+        account: Optional[AccountConfig] = None,
+    ) -> None:
         """Apply usage_guard=off|warn|block before starting or resuming (D59, Item 4).
 
         Unavailable usage only warns (``usage_unavailable``) and never blocks,
@@ -793,7 +950,7 @@ class JobManager:
         if guard == "off":
             return
 
-        reading = self._read_usage(use_cache=True)
+        reading = self._read_usage(use_cache=True, account=account)
         if not reading.get("available"):
             if "usage_unavailable" not in warnings:
                 warnings.append("usage_unavailable")
@@ -833,14 +990,29 @@ class JobManager:
         if "low_quota" not in warnings:
             warnings.append("low_quota")
 
-    def _read_usage(self, use_cache: bool = True) -> dict[str, Any]:
-        """Read agy `/usage` through the manager's in-memory cache."""
+    def _read_usage(
+        self,
+        use_cache: bool = True,
+        account: Optional[AccountConfig] = None,
+    ) -> dict[str, Any]:
+        """Read agy `/usage` through the manager's in-memory cache.
+
+        With no account (the single-account path) the call is byte-identical to
+        the pre-multi-account one. With an account the home, cache key and
+        identity expectation are that account's (D103/D107).
+        """
+        configured = account is not None and self.registry.configured
         return usage_utils.get_usage(
             getattr(self.runner, "executable", "agy"),
-            home=self.home,
+            home=account.expanded_home if account is not None else self.home,
             cache=self._usage_cache,
             use_cache=use_cache,
             auth_error_patterns=getattr(self.config, "auth_error_patterns", None),
+            account_name=account.name if configured else None,
+            expected_email=account.expected_email if account is not None else None,
+            expected_email_sha256=(
+                account.expected_email_sha256 if account is not None else None
+            ),
         )
 
     def usage(self) -> dict[str, Any]:
@@ -1038,6 +1210,7 @@ class JobManager:
                         stdout_path=job_dir / "stdout.txt",
                         stderr_path=job_dir / "stderr.txt",
                     )
+                    account = self._account_for_job(job)
                     supervisor = JobSupervisor(
                         job=job,
                         handle=handle,
@@ -1051,8 +1224,11 @@ class JobManager:
                         poll_interval_seconds=self.poll_interval_seconds,
                         settle_window_seconds=self.settle_window_seconds,
                         checkpoint_interval_seconds=self.config.checkpoint_commit_minutes * 60,
-                        agy_home=Path(self.config.agy_home).expanduser(),
+                        agy_home=self._agy_home_for(account),
                         agy_binary=str(getattr(self.runner, "executable", "agy")),
+                        account_name=job.account,
+                        account_masked_email=job.account_masked_email,
+                        account_home=account.expanded_home,
                         usage_cache=self._usage_cache,
                         quota_error_patterns=self.config.quota_error_patterns,
                         auth_error_patterns=self.config.auth_error_patterns,
@@ -1437,8 +1613,12 @@ class JobManager:
             if job.cumulative_minutes >= effective_limit:
                 raise ManagerError("Cumulative job time budget exhausted", code="cap_exceeded")
 
+            # Pinned account: verify home/policy, then guard against its quota.
+            account = self._account_for_job(job)
+            self._check_account_ready(account)
+
             # Usage guard on resume (D59, Item 4).
-            self._apply_usage_guard(job.model, job.warnings)
+            self._apply_usage_guard(job.model, job.warnings, account=account)
 
             # Mandatory resume audit gate
             job_dir = get_job_dir(job_id, self.state_dir)
@@ -1495,7 +1675,7 @@ class JobManager:
             log_file = job_dir / "cli.log"
             tmp_dir = job_dir / "tmp"
 
-            env = env_allowlist(job_tmp_dir=tmp_dir, home=self.home)
+            env = build_account_env(account, tmp_dir)
             agy_binary = getattr(self.runner, "executable", "agy")
             remaining_budget = max(60, int((effective_limit - job.cumulative_minutes) * 60))
 
@@ -1517,6 +1697,20 @@ class JobManager:
                             f"Active jobs ({active_count}) reached concurrency limit "
                             f"({self.config.max_concurrent_jobs})",
                             code="concurrency_limit_exceeded",
+                        )
+                    account_cap = (
+                        account.max_concurrent_jobs or self.config.max_concurrent_jobs
+                    )
+                    account_active = count_active_jobs(
+                        self.state_dir,
+                        exclude_job_id=job.job_id,
+                        account=account.name,
+                    )
+                    if account_active >= account_cap:
+                        raise ManagerError(
+                            f"Account '{account.name}' active jobs ({account_active}) "
+                            f"reached its concurrency limit ({account_cap})",
+                            code="account_concurrency_limit",
                         )
 
                     # Every resume is a new generation: anchor the reused
@@ -1569,8 +1763,11 @@ class JobManager:
                     poll_interval_seconds=self.poll_interval_seconds,
                     settle_window_seconds=self.settle_window_seconds,
                     checkpoint_interval_seconds=self.config.checkpoint_commit_minutes * 60,
-                    agy_home=Path(self.config.agy_home).expanduser(),
+                    agy_home=self._agy_home_for(account),
                     agy_binary=str(getattr(self.runner, "executable", "agy")),
+                    account_name=job.account,
+                    account_masked_email=job.account_masked_email,
+                    account_home=account.expanded_home,
                     usage_cache=self._usage_cache,
                     quota_error_patterns=self.config.quota_error_patterns,
                     auth_error_patterns=self.config.auth_error_patterns,
