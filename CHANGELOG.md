@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added pytest-xdist to the dev extras; CI runs the suite with -n 2.
+- Added pytest-xdist to the dev extras for local parallel runs; CI stays serial.
 - Minimum Python is now 3.12 (3.10 is end-of-life).
 
 ## 2026-11-02 — Platform-support audit (read-only)
