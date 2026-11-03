@@ -151,6 +151,10 @@ fail-closed: a start or resume does not proceed.
 | `account_name_duplicate` | Two entries share a name. | Use unique names. |
 | `account_home_invalid` | The home is not absolute after expansion, does not exist, is not a directory, or is unreadable. | Create the directory and use an absolute path. |
 | `account_home_permissions` | The account home is accessible by group or others. | `chmod 700` the home. |
+| `account_config_invalid` | An `[[accounts]]` entry has a bad shape, unknown key, bad pool/`expires_at`/`max_concurrent_jobs`, or conflicting expectations. | Fix the entry; see [config keys](config-keys.md). |
+| `account_limit_exceeded` | `1 + len(accounts)` exceeds `max_accounts`. | Remove an entry or raise `max_accounts` (maximum 32). |
+| `account_name_invalid` | A name is empty, uses `default`, or does not match `[a-z0-9][a-z0-9-]{0,31}`. | Rename the account. |
+| `account_name_duplicate` | Two entries share a name. | Use unique names. |
 | `account_identity_mismatch` | The full email parsed from agy does not match `expected_email` or its hash. | Confirm the login, or update the expectation. The message shows only the masked value. |
 | `account_identity_unknown` | An expectation is configured but agy did not report an email. | Re-login the account; check that the CLI still logs `applyAuthResult`. |
 | `account_not_found` | An `account` name was requested that the registry does not contain, or a pinned job's account was removed. | Use a name from the registry or omit the override. |
