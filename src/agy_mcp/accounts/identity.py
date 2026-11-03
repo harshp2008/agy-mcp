@@ -18,11 +18,12 @@ def mask_email(email: str, head: int = 3, tail: int = 2) -> str:
     """Mask an email so it stays recognisable without exposing most of it.
 
     Shows at most ``head`` leading and ``tail`` trailing local-part characters,
-    but never more than half of the local part (rounded down). Local parts of one
-    or two characters are masked completely, and a value without a usable
-    local/domain split becomes ``***``. The domain stays visible because it does
-    not identify the account on its own. Never raises: this helper is on logging
-    paths where a malformed value must not break the caller.
+    in the shape ``head***tail@domain``, but never more than half of the local
+    part (rounded down). Local parts of one or two characters are masked
+    completely, and a value without a usable local/domain split becomes ``***``.
+    The domain stays visible because it does not identify the account on its
+    own. Never raises: this helper is on logging paths where a malformed value
+    must not break the caller.
     """
     if not isinstance(email, str) or "@" not in email:
         return "***"
@@ -35,10 +36,9 @@ def mask_email(email: str, head: int = 3, tail: int = 2) -> str:
     max_visible = len(local) // 2
     visible_head = min(max(0, head), max_visible)
     visible_tail = min(max(0, tail), max_visible - visible_head)
-    shown = local[:visible_head]
-    if visible_tail:
-        shown += local[-visible_tail:]
-    return f"{shown}***@{domain}"
+    shown_head = local[:visible_head]
+    shown_tail = local[-visible_tail:] if visible_tail else ""
+    return f"{shown_head}***{shown_tail}@{domain}"
 
 
 def email_sha256(email: str) -> str:

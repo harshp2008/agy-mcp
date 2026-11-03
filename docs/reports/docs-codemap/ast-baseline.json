@@ -6,7 +6,7 @@
   "src/agy_mcp/accounts/env.py": "1cbdfb7a1189e2a5aea6fb8cd6bd2ac0bf423e99a53fb68eb2d9c6c23cb8a1eb",
   "src/agy_mcp/accounts/errors.py": "33f29ed30757e4f738a8b5fd48aa6559f9b83698d36d83026974ecfa3e55e7f4",
   "src/agy_mcp/accounts/handoff.py": "ad1f8b1953fca13bac87d1f476b92c10d22ac121f85a8d8c079e2f6ba29c4ae9",
-  "src/agy_mcp/accounts/identity.py": "13fc5376bae76376db000c69426a3d6c5ddd9d78430538bc3253a010c74a6786",
+  "src/agy_mcp/accounts/identity.py": "f696ae0bb9c340bc35b2a00f009e6522f8248445c19a295654f9878058682ea4",
   "src/agy_mcp/accounts/policy.py": "932b7ce87ac3bb1a0c9dd38e56dc0f8c54b1c87b30cd6ea4f0fe3250bd8f70cd",
   "src/agy_mcp/accounts/pools.py": "9c7e5a385f49324d4eb1506de4741f7ffcf00b9995465d18da81c4a9697881df",
   "src/agy_mcp/accounts/registry.py": "4584379dfce7a40ce8518847164441b9443d39252bde48235e1dfbf02a4712e1",
