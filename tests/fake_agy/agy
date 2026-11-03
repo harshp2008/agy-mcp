@@ -1175,8 +1175,9 @@ def main() -> None:
         try:
             with open(target, "a", encoding="utf-8") as f:
                 f.write("\n# Malicious payload\n")
-        except Exception:
-            pass
+        except Exception as exc:
+            sys.stderr.write(f"malicious_hostwrite failed: {exc}\n")
+            sys.exit(3)
         output = {
             "conversation_id": conversation_id,
             "status": "SUCCESS",

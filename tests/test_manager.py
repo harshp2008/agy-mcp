@@ -393,18 +393,11 @@ def test_manager_auto_fix_exhaustion(tmp_path: Path) -> None:
         verify="python3 test_suite.py",
     )
 
-    # Wait until supervisor finishes and auto-fix loop runs
-    deadline = time.time() + 8.0
-    while time.time() < deadline:
-        st = manager.status(env.job_id)
-        if st.state == JobState.NEEDS_REVIEW:
-            break
-        time.sleep(0.3)
-
-    st = manager.status(env.job_id)
+    st = manager.wait(env.job_id, seconds=30)
     assert st.state == JobState.NEEDS_REVIEW
-    # Reached needs_review with verification_failed
-    assert "verification_failed" in str(st.review_reason) if hasattr(st, "review_reason") else True
+    job = get_job(env.job_id, manager.state_dir)
+    assert job.review_reason in ("verification_failed", "verify_failed")
+    assert job.auto_fix_count == 1
 
 
 def test_manager_auto_fix_success_second_attempt(tmp_path: Path) -> None:
@@ -433,14 +426,7 @@ def test_manager_auto_fix_success_second_attempt(tmp_path: Path) -> None:
         verify="python3 test_suite.py",
     )
 
-    deadline = time.time() + 8.0
-    while time.time() < deadline:
-        st = manager.status(env.job_id)
-        if st.state == JobState.DONE:
-            break
-        time.sleep(0.3)
-
-    st = manager.status(env.job_id)
+    st = manager.wait(env.job_id, seconds=30)
     assert st.state == JobState.DONE
 
 
