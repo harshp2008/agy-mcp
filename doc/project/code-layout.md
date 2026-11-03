@@ -231,6 +231,8 @@ them (it only scans `src/agy_mcp/*.py`).
     atomic db copy between account stores (D111).
   - `handoff.py` — the capped, fenced summary prompt used when the db cannot
     move (D111).
+  - `doctor.py` — the read-only account checks behind `installer/install.sh
+    --doctor` (D113).
   - `errors.py` — `AccountError` with a stable `.code`.
 - **Imports from `agy_mcp`:** `config.py` imports the registry; `env.py` imports
   `util.env_allowlist`; `identity.py` imports only `errors`.
@@ -787,6 +789,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `__init__.py` | 9 | _(no public definitions)_ |
 | `__main__.py` | 14 | _(no public definitions)_ |
 | `accounts.__init__.py` | 25 | _(no public definitions)_ |
+| `accounts.doctor.py` | 221 | `DoctorFinding`; `doctor_report()`; `render_report()`; `main()` |
 | `accounts.env.py` | 45 | `build_account_env()` |
 | `accounts.errors.py` | 22 | `AccountError` |
 | `accounts.handoff.py` | 117 | `build_handoff_prompt()` |
@@ -820,7 +823,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `states.py` | 180 | `JobState`; `StateTransition` |
 | `supervisor.py` | 1652 | `select_conversation_id()`; `JobSupervisor` (`terminate_group`, `tick`, `stop`, `run_loop`) |
 | `transcript.py` | 263 | `DeniedCall` (`to_dict`); `cli_step_to_transcript_step()`; `read_denied_calls()` |
-| `usage.py` | 964 | `mask_email()`; `parse_auth_line()`; `parse_usage_payload()`; `parse_usage_output()`; `group_for_model()`; `find_group()`; `low_buckets()`; `exhausted_bucket_reset()`; `matches_patterns()`; `annotate_low_flags()`; `compute_usage_cost()`; `compute_quota_estimate()`; `UsageCache` (`get`, `put`, `clear`); `read_usage_once()`; `usage_cache_key()`; `get_usage()`; `append_audit_event()`; `record_usage()`; `has_usage_record_for_generation()`; `check_daily_cap()` |
+| `usage.py` | 970 | `mask_email()`; `parse_auth_line()`; `parse_usage_payload()`; `parse_usage_output()`; `group_for_model()`; `find_group()`; `low_buckets()`; `exhausted_bucket_reset()`; `matches_patterns()`; `annotate_low_flags()`; `compute_usage_cost()`; `compute_quota_estimate()`; `UsageCache` (`get`, `put`, `clear`); `read_usage_once()`; `usage_cache_key()`; `get_usage()`; `append_audit_event()`; `record_usage()`; `has_usage_record_for_generation()`; `check_daily_cap()` |
 | `util.py` | 297 | `derive_branch_slug()`; `sanitize_absolute_paths()`; `env_allowlist()`; `truncate_tail()`; `truncate_head()`; `read_file_tail()`; `read_file_since()`; `redact_log_text()`; `sha256_file()`; `sha256_bytes()`; `strict_uuid()`; `load_preamble()`; `format_fresh_prompt()`; `format_resume_prompt()` |
 | `verify.py` | 818 | `accepted_verify_forms()`; `verify_rejection_message()`; `is_verify_allowed()`; `VerifyResult` (`status`); `run_verify()`; `diagnose_verify_output()`; `verify_tail_lines()`; `build_verify_excerpt()`; `extract_failing_tests()`; `format_fix_prompt()` |
 | `watcher.py` | 859 | `validate_commit_message()`; `repair_overlong_commit_subject()`; `CommitWatcher` (`tick`, `run_checkpoint_commit`, `run_safety_net_commit`, `final_commit`) |

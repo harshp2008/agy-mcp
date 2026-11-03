@@ -9,10 +9,10 @@ what the wrapper will and will not do with it. The normative rules are D102–D1
 in [the decisions log](../design/decisions.md); the full design is
 [the multi-account design](../design/multi-account.md).
 
-> **Implementation status (Phase 7 of the multi-account work).** The registry,
+> **Implementation status (Phase 8 of the multi-account work).** The registry,
 > per-account usage, the quota-aware scheduler, account selection in `agy_start`,
-> pinning across resumes, conversation transfer and the summary handoff are
-> implemented. The `--doctor` account checks arrive in Phase 8.
+> pinning across resumes, conversation transfer, the summary handoff and the
+> read-only `--doctor` account checks are implemented.
 
 ## What the wrapper never does
 
@@ -138,6 +138,34 @@ accounts.
 | `max_concurrent_jobs` | no | Per-account cap; default is the global `max_concurrent_jobs` |
 | `expires_at` | no | Informational billing expiry; boosts scheduling urgency |
 | `expected_email` / `expected_email_sha256` | no | At most one; verifies the observed login |
+
+## Check the setup with `--doctor`
+
+`./installer/install.sh --doctor` (or `--doctor --client generic`) runs a
+read-only account check after the existing installer checks. When the account
+doctor module is present it prints one line per check, for example:
+
+```text
+account -: registry: ok: 1 extra account(s)
+account account-b: home: ok: exists, mode 0700
+account account-b: policy: ok: matches the primary
+account account-b: isolation_and_login: ok: isolated /usage ok as docer***@example.com
+account account-b: email: ok: docer***@example.com (matched)
+```
+
+It never logs in or out and never writes an account home. A missing home, a home
+that is not mode 0700, a missing/drifted policy, an expected-email mismatch, or
+a failed isolated `/usage` (not logged in, timeout, command failure) is reported
+as a problem and makes the doctor exit 1. Emails are masked; the full address is
+never printed. With no `[[accounts]]` the check is a single healthy
+"single-account install" line, so an existing install is unaffected.
+
+The same module can be run directly:
+
+```bash
+~/.config/ai-stack/agymcp/venv/bin/python -m agy_mcp.accounts.doctor \
+  --config ~/.config/agy-mcp/config.toml --agy-binary ~/.local/bin/agy
+```
 
 ## Common problems
 

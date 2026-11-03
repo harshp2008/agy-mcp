@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Multi-account support.** `[[accounts]]` in `config.toml` adds Google accounts
+  the user legitimately owns; each runs with its own `HOME` and a dead D-Bus so
+  it cannot reach the desktop keyring. Jobs are pinned to an account, scheduled
+  by remaining quota across both pools/windows (including a background
+  burn-before-expiry mode), and a quota-paused job can move to another account by
+  copying its conversation db under a lock, or fall back to a factual summary
+  handoff. `agy_start` gains `account`/`priority`/`force`; `agy_resume` gains
+  `allow_handoff`; `--doctor` gains read-only account checks. With no
+  `[[accounts]]` configuration behavior is unchanged (D102–D114).
 - Added pytest-xdist to the dev extras for local parallel runs; CI stays serial.
 - Minimum Python is now 3.12 (3.10 is end-of-life).
 

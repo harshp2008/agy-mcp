@@ -95,6 +95,15 @@ Verify your setup by running through the following smoke checklist:
 6. **Clean Shutdown & Recovery Check:**
    If DSH or the MCP client process is restarted while a job is running, `agy-mcp` cleanly shuts down its supervisors without terminating the background `agy` process group. Upon restart, `agy-mcp` reconciles running jobs and resumes supervision.
 
+## 4. Multi-account setups
+
+Adding a second Google account is a manual, human-login recipe: create a private
+home, prove D-Bus isolation, log in yourself, copy the permission policy, then
+add a `[[accounts]]` table to `config.toml`. The full recipe is
+[Run jobs on more than one Google account](accounts.md). The installer never
+logs in or out and never writes an account home. `--doctor` runs the read-only
+account checks described on that page.
+
 ## Sources
 
 - `installer/install.sh` — automated registration, patch blocks, and installer CLI flags.

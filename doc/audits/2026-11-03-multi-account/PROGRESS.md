@@ -19,7 +19,7 @@ continues from its "next step" instead of redoing finished phases.
 | 5 | Scheduler | done | a6b146c | ruff, frozen 13, docs 89, publish 880, reference/codemap fresh, AST 37, full suite `-n 4` 1935 passed (106 s) | Phase 6 job wiring |
 | 6 | Job model and wiring | done | c3adc70 | ruff, frozen 13, docs 89, publish 882, reference/codemap fresh, AST 39, full suite `-n 4` 1950 passed (134 s) | Phase 7 transfer |
 | 7 | Exhaustion, transfer, handoff | done | f280a00 | ruff, frozen 13, docs 89, publish 885, reference/codemap fresh, AST 41, full suite `-n 4` 1967 passed (103 s) | Phase 8 installer/doctor |
-| 8 | Installer, doctor, user docs | pending | — | — | `--doctor` account checks |
+| 8 | Installer, doctor, user docs | done | (this commit) | ruff, frozen 13, docs 89, publish 889, reference/codemap fresh, AST 42, full suite `-n 4` 1978 passed (112 s) | Phase 9 hardening |
 | 9 | Hardening and final review | pending | — | — | final gates |
 
 ## Baseline results (Phase 0)

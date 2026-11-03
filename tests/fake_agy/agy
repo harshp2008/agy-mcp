@@ -407,6 +407,27 @@ def _write_conversation_db(conversation_id: str) -> None:
         pass
 
 
+def _write_env_probe() -> None:
+    """Record HOME/DBUS when the test opts in, proving the child env isolation."""
+    home = os.environ.get("HOME")
+    if not home:
+        return
+    if not (Path(home) / ".fake_agy_env_probe").is_file():
+        return
+    try:
+        (Path(home) / "env-probe.json").write_text(
+            json.dumps(
+                {
+                    "HOME": home,
+                    "DBUS_SESSION_BUS_ADDRESS": os.environ.get("DBUS_SESSION_BUS_ADDRESS"),
+                }
+            ),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
 def _fake_usage_email() -> str:
     """Return the per-HOME synthetic email, or the default test address."""
     home = os.environ.get("HOME")
@@ -570,6 +591,7 @@ def main() -> None:
         except Exception:
             pass
 
+    _write_env_probe()
     args = parse_args(sys.argv[1:])
     prompt = str(args.get("prompt", ""))
     log_file = str(args["log_file"]) if args.get("log_file") else None

@@ -61,6 +61,15 @@ Source: `installer/install.sh`.
 | `0` | `--help`/`-h`; a dry run; a successful install/upgrade; `--doctor` or `--uninstall` that passed. |
 | `1` | Any `die`: missing/old Python (needs 3.12+), missing `agy` or `git`, missing `AGY_MCP_SRC`, a failed venv/pip step, an unknown `--client`, unknown option, conflicting `--doctor`/`--uninstall`, or the inside-dsh refusal. `--doctor` returns 1 when it finds any problem and 0 when healthy; `--uninstall` returns 1 on a problem and 0 on success. |
 
+## `python -m agy_mcp.accounts.doctor`
+
+Read-only account check invoked by `installer/install.sh --doctor`.
+
+| Code | When |
+|---|---|
+| `0` | No `[[accounts]]` configured (single-account install), or every configured account passed. |
+| `1` | A config/registry error, or at least one account finding failed (home, mode, policy, identity, isolated `/usage`). |
+
 ## `scripts/*`
 
 Source: each script's `main`. These are developer/evidence tools, not part of

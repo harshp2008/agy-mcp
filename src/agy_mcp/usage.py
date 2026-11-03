@@ -746,6 +746,7 @@ def read_usage_once(
         # reading shape is unchanged, so single-account callers are unaffected.
         if expected_email is not None or expected_email_sha256 is not None:
             from agy_mcp.accounts.errors import AccountError
+            from agy_mcp.accounts.identity import mask_email as _new_mask
             from agy_mcp.accounts.identity import verify_identity
 
             try:
@@ -755,9 +756,14 @@ def read_usage_once(
                     expected_email_sha256=expected_email_sha256,
                 )
             except AccountError as exc:
+                # The multi-account helper reveals at most first3+last2 (never
+                # more than half); existing no-expectation readings keep the
+                # historical first2 mask pinned by tests.
+                account["masked_email"] = _new_mask(email)
                 account["identity"] = exc.code
                 return _unavailable_reading(exc.code, account)
             account["identity"] = "matched" if check.verified else check.reason
+            account["masked_email"] = check.masked_email or account["masked_email"]
 
         combined = "\n".join([stdout or "", stderr or "", log_text])
         if matches_patterns(combined, auth_error_patterns):

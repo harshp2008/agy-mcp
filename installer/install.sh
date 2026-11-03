@@ -757,6 +757,18 @@ doctor_agymcp() {
         note "config missing at $config"
         failures=$((failures + 1))
     fi
+    if [[ -n "$agy_bin" ]] && env -u PYTHONPATH "$venv/bin/python" -c \
+            'import agy_mcp.accounts.doctor' >/dev/null 2>&1; then
+        local account_report=""
+        if account_report="$(env -u PYTHONPATH "$venv/bin/python" -m agy_mcp.accounts.doctor \
+                --config "$config" --agy-binary "$agy_bin" 2>&1)"; then
+            good "account checks: healthy"
+        else
+            note "account checks reported a problem"
+            printf '%s\n' "$account_report"
+            failures=$((failures + 1))
+        fi
+    fi
 
     if [[ "$client" == "dsh" ]]; then
         local patch=""
