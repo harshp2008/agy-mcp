@@ -122,7 +122,7 @@ persisted, so a reader that sees the new state in `job.json` finds the row
 | `run_generation` | The run number inside the job (resume increments it; older rows count as 1). |
 | `wall_clock_seconds` | Alias of `duration_seconds`, kept for the run record. |
 | `account` | Optional. The registry name of the account that ran the job, present **only** when a registry is configured (D107). |
-| `masked_email` | Optional. The masked account email; present only with `account`, never the full address. |
+| `masked_email` | Optional. The masked account email in `head***tail@domain` shape; present only with `account`, never the full address. |
 
 The row never contains a prompt, title, branch, repository path, code or a full
 email address. Recovery does not append a second row for a run whose finalizer

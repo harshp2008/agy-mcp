@@ -62,7 +62,10 @@ making `default` declarable (breaks the "no registry = today" invariant).
 trailing local-part characters but **never more than half** the local part
 (rounded down), so a short local part reveals less: 1–2 characters → `***`,
 length 3–6 reveals at most half, a long address shows at most 3+2. Domain is
-kept because it is not identifying on its own.
+kept because it is not identifying on its own. The output shape is
+`head***tail@domain` (`dipal83photos@example.com` → `dip***os@example.com`);
+when no tail character is revealed the tail segment is omitted
+(`abc***@example.com`).
 
 Places that show or store an email today, and their new rule:
 

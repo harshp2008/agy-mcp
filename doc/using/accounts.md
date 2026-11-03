@@ -21,8 +21,8 @@ in [the decisions log](../design/decisions.md); the full design is
   file.
 - It never creates or registers a Google account, and never automates sign-up.
 - It never prints a full email address; logs, job records and MCP responses show
-  a masked form (first three and last two local-part characters at most, never
-  more than half the local part).
+  a masked form (`head***tail@domain`: first three and last two local-part
+  characters at most, never more than half the local part).
 
 Only use accounts you are entitled to use. The registry is a selection list, not
 a credential store.
@@ -149,8 +149,8 @@ doctor module is present it prints one line per check, for example:
 account -: registry: ok: 1 extra account(s)
 account account-b: home: ok: exists, mode 0700
 account account-b: policy: ok: matches the primary
-account account-b: isolation_and_login: ok: isolated /usage ok as docer***@example.com
-account account-b: email: ok: docer***@example.com (matched)
+account account-b: isolation_and_login: ok: isolated /usage ok as doc***er@example.com
+account account-b: email: ok: doc***er@example.com (matched)
 ```
 
 It never logs in or out and never writes an account home. A missing home, a home

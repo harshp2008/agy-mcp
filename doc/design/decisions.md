@@ -757,7 +757,7 @@ Append-only record of architectural, security, and design decisions across agy-m
 ### D103: Email masking and identity verification
 - *Rationale:* An account email is identifying; logs, job records and MCP responses must never carry the full value, yet the wrapper must be able to prove the selected account is the expected one.
 - *Rule:*
-  1. One `mask_email(email, head=3, tail=2)` helper reveals at most `head` leading and `tail` trailing local-part characters and never more than half the local part; 1–2 characters are fully masked.
+  1. One `mask_email(email, head=3, tail=2)` helper reveals at most `head` leading and `tail` trailing local-part characters in the shape `head***tail@domain` and never more than half the local part; 1–2 characters are fully masked.
   2. The full email parsed from `applyAuthResult` stays in memory only. Verification compares the full value with `expected_email` or its SHA-256 with `expected_email_sha256`; the masked string is never compared.
   3. `job.json`, audit logs, `usage.jsonl` and MCP envelopes carry the registry name and masked email only. A mismatch is `account_identity_mismatch`; a missing auth line is `account_identity_unknown` (blocked only when an expectation is configured).
 - *Tests:* mask table (short/long local parts), planted-full-email grep over new outputs, verification mismatch/unknown.

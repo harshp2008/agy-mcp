@@ -64,6 +64,9 @@ listed as a follow-up.
    is used for identity-configured readings, the doctor and new account output.
    Unifying them would change pinned single-account output; a follow-up can add a
    deliberate, versioned change.
+   *Correction (2026-11-04):* the new helper emitted the head and tail in the
+   wrong order (`docer***@` instead of `doc***er@`); the reveal counts were
+   correct. Fixed on `fix/mask-email-shape`; the shape is now `head***tail@domain`.
 4. **`force` skips only the quota filter.** It still requires enabled, identity,
    home, permission policy, model and the per-account cap. This is stricter than
    a literal "force everything" and safer.
