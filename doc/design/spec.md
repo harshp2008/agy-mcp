@@ -26,7 +26,7 @@ The system enforces defense-in-depth on the host by:
 - Full container virtualization (Docker runner) is deferred to v2.
 
 ## 3. Packaging & Dependencies
-- **Runtime:** Python >= 3.10. Standard `src` layout: package `agy_mcp`, CLI console script entry point `agy-mcp`.
+- **Runtime:** Python >= 3.12. Standard `src` layout: package `agy_mcp`, CLI console script entry point `agy-mcp`.
 - **Dependencies:** `mcp>=1.2,<2` (FastMCP; strictly `<2` as MCP Python SDK 2.x introduces breaking changes), stdlib otherwise.
 - **Development Tooling:** `uv`, `pytest`, `ruff`.
 - **Installation:** `uv tool install git+https://github.com/<user>/agy-mcp`.
@@ -825,7 +825,7 @@ distribution artifact, not a server module: nothing under `src/agy_mcp/` imports
 it. It has three layers:
 
 - **Core layer** (`agy_mcp_install_core`): prerequisite checks (`agy` on `PATH`
-  or at `~/.local/bin/agy`, git, Python >= 3.10), a venv at
+  or at `~/.local/bin/agy`, git, Python >= 3.12), a venv at
   `$CONF_DIR/agymcp/venv`, a non-editable pip install from `AGY_MCP_SRC`
   (default: the repository containing the script) unless
   `AGY_MCP_EDITABLE=1`, a mode-755 `run.sh`, a mode-600 `env`, the config at

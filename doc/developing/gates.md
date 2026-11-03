@@ -209,7 +209,7 @@ network.
 | Job | Steps | Local equivalent |
 |---|---|---|
 | `lint` | install `-e ".[dev]"`, `ruff check src tests scripts`, `python scripts/check_publishable.py`, `python scripts/check_docs.py` | the lint, publish-hygiene and docs gates above |
-| `test` | install `-e ".[dev]"`, `python -m pytest -q --durations=30` on Python 3.10 and 3.12 | the test gate above |
+| `test` | install `-e ".[dev]"`, `python -m pytest -q --durations=30` on Python 3.12 | the test gate above |
 
 The AST baseline gate is not a CI step; the frozen manifest is also enforced by
 `tests/test_frozen_manifest.py` inside the pytest job. Both local commands remain

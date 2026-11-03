@@ -45,7 +45,7 @@ table changes and `scripts/check_docs.py` fails until this page is refreshed.
 | `AGY_MCP_SRC` | Source tree or archive to install from. | The repository containing the installer (`installer/..`). |
 | `AGY_MCP_EDITABLE` | `1` forces an editable (`pip install -e`) install. | off; an editable install already live is left in place. |
 | `AGY_MCP_UPGRADE` | `1` reinstalls from `AGY_MCP_SRC` even when the venv already imports `agy_mcp`. | off. |
-| `AGY_MCP_PYTHON` | Interpreter used to create the venv and run pip; must be Python 3.10 or newer. | `python3`. |
+| `AGY_MCP_PYTHON` | Interpreter used to create the venv and run pip; must be Python 3.12 or newer. | `python3`. |
 | `AGY_MCP_PIP_ARGS` | Extra pip arguments, split on whitespace (for example `--no-index`). | empty. |
 | `AGY_MCP_NO_RESTART` | `1` skips the dsh restart after registration. | off. |
 | `AGY_MCP_AGY_BINARY` | `agy` executable to use; must exist and be executable. | `agy` on `PATH`, then `~/.local/bin/agy`. |

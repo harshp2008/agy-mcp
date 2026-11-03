@@ -17,7 +17,7 @@ wrapper never merges or pushes: landing a change is your decision.
   installer is a bash script and the server uses POSIX process control. See
   [doc/developing/platform-support.md](doc/developing/platform-support.md) for
   the per-platform audit; native Windows is not supported.
-- Python 3.10 or newer. The installer refuses anything older.
+- Python 3.12 or newer. The installer refuses anything older.
 - `git` on `PATH`. Every job is a git worktree and commits are git commits.
 - The `agy` CLI installed and signed in, on `PATH` or at `~/.local/bin/agy`.
   `AGY_MCP_AGY_BINARY` overrides the location. The installer never runs `agy`

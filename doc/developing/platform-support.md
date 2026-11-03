@@ -183,7 +183,7 @@ The wrapper deliberately sets private modes: `src/agy_mcp/jobs.py:51,59,88,104,1
 | `src/agy_mcp/config.py:316-317` | `XDG_CONFIG_HOME` else `~/.config` | config root |
 | `installer/install.sh:219` | `"$HOME/.local/bin/agy"` | agy fallback lookup |
 | `installer/install.sh:655` | `/run/systemd/system` | systemd-user restart guard |
-| `scripts/watch_orphans.py:28` | `"~/agy-mcp-venv/bin/pytest"` | default `PYTEST_BIN` |
+| `scripts/watch_orphans.py:28` | repo `.venv` or `"pytest"` | default `PYTEST_BIN` |
 
 - **Linux:** works.
 - **macOS:** works. `/tmp`, `/dev/null` and the XDG fallbacks are valid; the

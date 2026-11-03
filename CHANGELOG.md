@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Minimum Python is now 3.12 (3.10 is end-of-life).
+
 ## 2026-11-02 — Platform-support audit (read-only)
 
 - **`doc/developing/platform-support.md` (new):** inventoried every

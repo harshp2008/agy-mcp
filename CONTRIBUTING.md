@@ -16,7 +16,7 @@ Read these first:
 
 ## Development setup
 
-Python 3.10 or newer and `git` are required. From a checkout:
+Python 3.12 or newer and `git` are required. From a checkout:
 
 ```bash
 python3 -m venv .venv

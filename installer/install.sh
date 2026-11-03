@@ -226,10 +226,10 @@ agy_mcp_find_agy() {
 agy_mcp_check_python() {
     local python_bin="${AGY_MCP_PYTHON:-python3}"
     if ! command -v "$python_bin" >/dev/null 2>&1; then
-        die "Python 3.10 or newer is required, but '$python_bin' was not found. Set AGY_MCP_PYTHON=/path/to/python3."
+        die "Python 3.12 or newer is required, but '$python_bin' was not found. Set AGY_MCP_PYTHON=/path/to/python3."
     fi
-    if ! env -u PYTHONPATH "$python_bin" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1; then
-        die "Python 3.10 or newer is required; '$python_bin' reported: $("$python_bin" --version 2>&1)"
+    if ! env -u PYTHONPATH "$python_bin" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 12) else 1)' >/dev/null 2>&1; then
+        die "Python 3.12 or newer is required; '$python_bin' reported: $("$python_bin" --version 2>&1)"
     fi
 }
 

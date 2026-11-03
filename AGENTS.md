@@ -58,7 +58,7 @@ Long suites: run once in the foreground and tee to a file; do not poll them.
 
 ## Coding conventions observed in this code
 
-- Python ≥ 3.10, `src/` layout, double quotes, 100-column lines (ruff `E,F,I,T20`).
+- Python ≥ 3.12, `src/` layout, double quotes, 100-column lines (ruff `E,F,I,T20`).
 - Public functions/classes carry type annotations and docstrings; docstrings
   often cite `SPEC section N` or `D-number`.
 - Records are `@dataclass`; enums are `class X(str, Enum)`; errors are custom

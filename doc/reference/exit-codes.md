@@ -59,7 +59,7 @@ Source: `installer/install.sh`.
 | Code | When |
 |---|---|
 | `0` | `--help`/`-h`; a dry run; a successful install/upgrade; `--doctor` or `--uninstall` that passed. |
-| `1` | Any `die`: missing/old Python (needs 3.10+), missing `agy` or `git`, missing `AGY_MCP_SRC`, a failed venv/pip step, an unknown `--client`, unknown option, conflicting `--doctor`/`--uninstall`, or the inside-dsh refusal. `--doctor` returns 1 when it finds any problem and 0 when healthy; `--uninstall` returns 1 on a problem and 0 on success. |
+| `1` | Any `die`: missing/old Python (needs 3.12+), missing `agy` or `git`, missing `AGY_MCP_SRC`, a failed venv/pip step, an unknown `--client`, unknown option, conflicting `--doctor`/`--uninstall`, or the inside-dsh refusal. `--doctor` returns 1 when it finds any problem and 0 when healthy; `--uninstall` returns 1 on a problem and 0 on success. |
 
 ## `scripts/*`
 
