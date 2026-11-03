@@ -9,7 +9,7 @@ description = "MCP server orchestrating autonomous Google Antigravity (agy) CLI 
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 authors = [
     { name = "Harsh Patel" },
 ]
@@ -26,10 +26,10 @@ keywords = [
 # doc/developing/platform-support.md. macOS and Windows are untested.
 classifiers = [
     "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
     "mcp>=1.2,<2",
-    "tomli; python_version<'3.11'",
 ]
 
 [project.optional-dependencies]
