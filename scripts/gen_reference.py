@@ -25,6 +25,7 @@ import argparse
 import json
 import re
 import sys
+import types
 import typing
 from dataclasses import MISSING, fields
 from pathlib import Path
@@ -159,7 +160,7 @@ def _type_label(annotation: object) -> str:
     if origin is typing.Union:
         parts = [_type_label(arg) for arg in typing.get_args(annotation)]
         return " | ".join(parts)
-    if isinstance(annotation, type):
+    if isinstance(annotation, type) and not isinstance(annotation, types.GenericAlias):
         return annotation.__name__
     return str(annotation).replace("typing.", "")
 
