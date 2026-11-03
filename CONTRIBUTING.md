@@ -25,6 +25,8 @@ python -m pip install -e ".[dev]"
 python -m pytest -q
 ```
 
+Parallel: `python -m pytest -q -n 4` (about 2 minutes instead of 6). Use 4 workers locally; 8 overloads the machine and can make timing-sensitive tests such as test_server_e2e_cancel flaky.
+
 The test suite is hermetic: it uses the fake `agy` at `tests/fake_agy/agy` and
 points `HOME`, `XDG_STATE_HOME` and `AGY_MCP_STATE_DIR` at temporary
 directories. Never run the real `agy` CLI as part of a test, and never read or
