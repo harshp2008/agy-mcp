@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from agy_mcp.accounts.env import ISOLATED_DBUS_SESSION_BUS_ADDRESS
 from agy_mcp.accounts.errors import AccountError
 from agy_mcp.accounts.identity import mask_email
 from agy_mcp.accounts.policy import POLICY_DRIFT, POLICY_MISSING, check_policy_parity
@@ -71,15 +70,18 @@ def _check_account(
             )
         )
 
+    # One env builder for every account spawn: the account HOME plus the dead
+    # D-Bus address (D104). Doctor findings previously passed the address as an
+    # ad-hoc override; this keeps doctor and the runtime probes identical.
     reading = get_usage(
         agy_binary,
         home=account.expanded_home,
         timeout_seconds=timeout_seconds,
         use_cache=False,
-        env_overrides={"DBUS_SESSION_BUS_ADDRESS": ISOLATED_DBUS_SESSION_BUS_ADDRESS},
         expected_email=account.expected_email,
         expected_email_sha256=account.expected_email_sha256,
         account_name=account.name,
+        account=account,
     )
     account_info = reading.get("account") if isinstance(reading, dict) else None
     masked = account_info.get("masked_email") if isinstance(account_info, dict) else None

@@ -141,6 +141,10 @@ class AccountSelector:
             expected_email=account.expected_email,
             expected_email_sha256=account.expected_email_sha256,
             auth_error_patterns=self.config.auth_error_patterns or None,
+            # A non-default account must probe with the isolated env (dead
+            # D-Bus); without it agy authenticates through the desktop keyring
+            # as the primary login (human test 2026-11-03).
+            account=account,
         )
         usage = account_usage_from_reading(account.name, reading)
         account_info = reading.get("account") if isinstance(reading, dict) else None

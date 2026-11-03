@@ -781,7 +781,7 @@ class JobManager:
             # 3. Fresh usage reading at launch (D59, Item 5). Kept for the whole job
             # so resume turns do not overwrite the starting point.
             if job.usage_at_launch is None:
-                job.usage_at_launch = self._read_usage(use_cache=False)
+                job.usage_at_launch = self._read_usage(use_cache=False, account=account)
                 save_job(job, self.state_dir)
 
             # 4. Launch child process. A fresh start is a new generation: clear
@@ -835,6 +835,7 @@ class JobManager:
                 account_name=job.account,
                 account_masked_email=job.account_masked_email,
                 account_home=account.expanded_home,
+                account=account,
                 usage_cache=self._usage_cache,
                 quota_error_patterns=self.config.quota_error_patterns,
                 auth_error_patterns=self.config.auth_error_patterns,
@@ -1162,8 +1163,8 @@ class JobManager:
         """Read agy `/usage` through the manager's in-memory cache.
 
         With no account (the single-account path) the call is byte-identical to
-        the pre-multi-account one. With an account the home, cache key and
-        identity expectation are that account's (D103/D107).
+        the pre-multi-account one. With an account the home, child env, cache
+        key and identity expectation are that account's (D103/D104/D107).
         """
         configured = account is not None and self.registry.configured
         return usage_utils.get_usage(
@@ -1177,6 +1178,9 @@ class JobManager:
             expected_email_sha256=(
                 account.expected_email_sha256 if account is not None else None
             ),
+            # None keeps the pre-multi-account env; an account gets the
+            # isolated env too, not only its HOME.
+            account=account,
         )
 
     def usage(self) -> dict[str, Any]:
@@ -1393,6 +1397,7 @@ class JobManager:
                         account_name=job.account,
                         account_masked_email=job.account_masked_email,
                         account_home=account.expanded_home,
+                        account=account,
                         usage_cache=self._usage_cache,
                         quota_error_patterns=self.config.quota_error_patterns,
                         auth_error_patterns=self.config.auth_error_patterns,
@@ -1941,6 +1946,7 @@ class JobManager:
                     account_name=job.account,
                     account_masked_email=job.account_masked_email,
                     account_home=account.expanded_home,
+                    account=account,
                     usage_cache=self._usage_cache,
                     quota_error_patterns=self.config.quota_error_patterns,
                     auth_error_patterns=self.config.auth_error_patterns,

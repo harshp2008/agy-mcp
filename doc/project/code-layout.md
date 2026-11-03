@@ -791,7 +791,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `__init__.py` | 9 | _(no public definitions)_ |
 | `__main__.py` | 14 | _(no public definitions)_ |
 | `accounts.__init__.py` | 25 | _(no public definitions)_ |
-| `accounts.doctor.py` | 221 | `DoctorFinding`; `doctor_report()`; `render_report()`; `main()` |
+| `accounts.doctor.py` | 223 | `DoctorFinding`; `doctor_report()`; `render_report()`; `main()` |
 | `accounts.env.py` | 45 | `build_account_env()` |
 | `accounts.errors.py` | 22 | `AccountError` |
 | `accounts.handoff.py` | 117 | `build_handoff_prompt()` |
@@ -801,7 +801,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `accounts.registry.py` | 306 | `AccountConfig` (`expanded_home`, `agy_home`, `pool_key`); `AccountRegistry` (`all`, `enabled`, `by_name`, `configured`); `parse_accounts()`; `build_registry()`; `validate_account_home()` |
 | `accounts.scheduler.py` | 436 | `estimate_cost()`; `schedule_account()`; `account_eligibility()`; `remaining_until_reset()` |
 | `accounts.scheduler_types.py` | 140 | `parse_utc()`; `format_utc()`; `CostEstimate`; `HistoryCostModel`; `SchedulerConfig`; `AccountState`; `JobRequest` (`validated`); `RankedAccount`; `SchedulerResult` |
-| `accounts.selection.py` | 349 | `RejectedAccount`; `Selection` (`account_name`); `scheduler_config_from_config()`; `AccountSelector` (`select`) |
+| `accounts.selection.py` | 353 | `RejectedAccount`; `Selection` (`account_name`); `scheduler_config_from_config()`; `AccountSelector` (`select`) |
 | `accounts.transfer.py` | 192 | `conversation_db_path()`; `conversation_lock()`; `TransferResult`; `transfer_conversation()` |
 | `audit.py` | 653 | `AuditSeverity`; `HostPathClass`; `classify_host_path()`; `Finding` (`to_dict`); `Findings` (`has_fatal`, `fatal_reason`, `blocked_files`, `passed`); `AuditSnapshot`; `save_snapshot()`; `load_snapshot()`; `take_host_path_snapshot()`; `HostPathAuditResult`; `check_host_path_snapshot()`; `verify_host_path_snapshot()`; `take_snapshot()`; `audit()`; `run_security_audit()` |
 | `cleanup.__init__.py` | 7 | _(no public definitions)_ |
@@ -816,7 +816,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `config.py` | 425 | `ConfigError`; `Config`; `load_config()` |
 | `gitops.py` | 1049 | `GitError` (`args_list`); `GitResult`; `StagingResult`; `SkippedFile` (`path`, `reason`); `merge_skipped_files()`; `is_build_artifact()`; `is_sensitive_path()`; `get_hardened_git_env()`; `run_git()`; `execute_with_index_lock_retry()`; `parse_porcelain_z()`; `stage_changes()`; `commit_with_retry()`; `is_worktree_dirty()`; `sanitize_commit_subject()`; `sanitize_commit_body()`; `build_wrapper_commit_text()`; `commit_message_problem()`; `write_wrapper_commit_msg()`; `checkpoint_commit()`; `find_most_recent_commit_msg()`; `safety_net_commit()`; `get_merge_base()`; `get_ahead_behind()`; `has_base_moved()`; `get_diff_stat()`; `get_commits_list()`; `get_files_modified()`; `take_git_config_snapshot()`; `diff_git_config_snapshots()` |
 | `jobs.py` | 657 | `get_base_state_dir()`; `cap_file_stem()`; `job_belongs_to_account()`; `get_job_dir()`; `append_audit_event()`; `record_cleanup_error()`; `create_job()`; `save_job()`; `get_job()`; `list_jobs()`; `concurrency_lock()`; `count_active_jobs()`; `transition_job_state()`; `record_job_execution_time()`; `get_daily_date()`; `check_and_increment_daily_cap()`; `rebuild_daily_cap_from_audit()`; `get_job_disk_usage()`; `get_total_state_disk_usage()`; `prune_retained_jobs()`; `cleanup_retained_jobs()` |
-| `manager.py` | 2111 | `ManagerError`; `JobManager` (`start`, `usage`, `status`, `wait`, `reconcile`, `result`, `cancel`, `list`, `resume`, `review`, `cleanup`, `shutdown`) |
+| `manager.py` | 2117 | `ManagerError`; `JobManager` (`start`, `usage`, `status`, `wait`, `reconcile`, `result`, `cancel`, `list`, `resume`, `review`, `cleanup`, `shutdown`) |
 | `models.py` | 1124 | `wrap_untrusted_text()`; `unwrap_untrusted_text()`; `TokenUsage` (`to_dict`, `from_dict`); `AuditEvent` (`to_dict`, `from_dict`); `StandardEnvelope` (`to_dict`); `Job` (`to_dict`, `from_dict`); `derive_next_actions()`; `get_effective_verify_envelope()`; `get_plan_envelope()`; `build_facts()`; `build_standard_envelope()`; `standard_envelope_fields()`; `JobStatusResponse` (`to_dict`); `JobResultResponse` (`to_dict`); `build_result_response()`; `JobReviewResponse` (`to_dict`); `build_review_response()`; `JobCleanupResponse` (`to_dict`); `JobListResponse` (`to_dict`) |
 | `parse_result.py` | 346 | `StdoutPayload`; `ParsedResult`; `extract_stdout_payload()`; `parse_agy_output()` |
 | `recovery.py` | 356 | `check_process_liveness()`; `get_liveness_summary()`; `reconcile_on_startup()` |
@@ -824,9 +824,9 @@ by hand. It exists so a stale module list or line count fails CI.
 | `scratchpad.py` | 453 | `ScratchFile` (`ok`); `cap_text_bytes()`; `tail_text_bytes()`; `report_claims_tests_passed()`; `normalize_checklist()`; `build_plan_content()`; `write_metadata_file()`; `seed_scratchpad()`; `parse_plan_text()`; `read_scratchpad_file()`; `read_plan()`; `copy_to_jobdir()`; `format_plan_nudge()`; `format_state_block()` |
 | `server.py` | 608 | `get_manager()`; `set_manager()`; `make_error_envelope()`; `agy_start()`; `agy_status()`; `agy_wait()`; `agy_result()`; `agy_cancel()`; `agy_list()`; `agy_resume()`; `agy_review()`; `agy_cleanup()`; `agy_usage()`; `parse_args()`; `resolve_agy_binary()`; `setup_server()`; `main()` |
 | `states.py` | 180 | `JobState`; `StateTransition` |
-| `supervisor.py` | 1652 | `select_conversation_id()`; `JobSupervisor` (`terminate_group`, `tick`, `stop`, `run_loop`) |
+| `supervisor.py` | 1660 | `select_conversation_id()`; `JobSupervisor` (`terminate_group`, `tick`, `stop`, `run_loop`) |
 | `transcript.py` | 263 | `DeniedCall` (`to_dict`); `cli_step_to_transcript_step()`; `read_denied_calls()` |
-| `usage.py` | 970 | `mask_email()`; `parse_auth_line()`; `parse_usage_payload()`; `parse_usage_output()`; `group_for_model()`; `find_group()`; `low_buckets()`; `exhausted_bucket_reset()`; `matches_patterns()`; `annotate_low_flags()`; `compute_usage_cost()`; `compute_quota_estimate()`; `UsageCache` (`get`, `put`, `clear`); `read_usage_once()`; `usage_cache_key()`; `get_usage()`; `append_audit_event()`; `record_usage()`; `has_usage_record_for_generation()`; `check_daily_cap()` |
+| `usage.py` | 994 | `mask_email()`; `parse_auth_line()`; `parse_usage_payload()`; `parse_usage_output()`; `group_for_model()`; `find_group()`; `low_buckets()`; `exhausted_bucket_reset()`; `matches_patterns()`; `annotate_low_flags()`; `compute_usage_cost()`; `compute_quota_estimate()`; `UsageCache` (`get`, `put`, `clear`); `read_usage_once()`; `usage_cache_key()`; `get_usage()`; `append_audit_event()`; `record_usage()`; `has_usage_record_for_generation()`; `check_daily_cap()` |
 | `util.py` | 297 | `derive_branch_slug()`; `sanitize_absolute_paths()`; `env_allowlist()`; `truncate_tail()`; `truncate_head()`; `read_file_tail()`; `read_file_since()`; `redact_log_text()`; `sha256_file()`; `sha256_bytes()`; `strict_uuid()`; `load_preamble()`; `format_fresh_prompt()`; `format_resume_prompt()` |
 | `verify.py` | 818 | `accepted_verify_forms()`; `verify_rejection_message()`; `is_verify_allowed()`; `VerifyResult` (`status`); `run_verify()`; `diagnose_verify_output()`; `verify_tail_lines()`; `build_verify_excerpt()`; `extract_failing_tests()`; `format_fix_prompt()` |
 | `watcher.py` | 859 | `validate_commit_message()`; `repair_overlong_commit_subject()`; `CommitWatcher` (`tick`, `run_checkpoint_commit`, `run_safety_net_commit`, `final_commit`) |

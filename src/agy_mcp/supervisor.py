@@ -14,7 +14,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from agy_mcp import scratchpad
 from agy_mcp import usage as usage_utils
@@ -64,6 +64,9 @@ from agy_mcp.util import (
     truncate_tail,
 )
 from agy_mcp.watcher import CommitWatcher
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids an accounts import cycle
+    from agy_mcp.accounts.registry import AccountConfig
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +137,7 @@ class JobSupervisor:
         account_name: Optional[str] = None,
         account_masked_email: Optional[str] = None,
         account_home: Optional[Path] = None,
+        account: Optional["AccountConfig"] = None,
         usage_cache: Optional[Any] = None,
         quota_error_patterns: Optional[list[str]] = None,
         auth_error_patterns: Optional[list[str]] = None,
@@ -185,7 +189,10 @@ class JobSupervisor:
         self.account_masked_email = account_masked_email
         # Usage must be read from the job's account HOME, never the host HOME:
         # a non-default account's quota lives under its own home (D104/D107).
+        # The account object also selects the isolated child env for the final
+        # `/usage` reading (dead D-Bus, human test 2026-11-03).
         self.account_home = account_home
+        self.account = account
         self.usage_cache = usage_cache
         self.quota_error_patterns = list(quota_error_patterns or [])
         self.auth_error_patterns = list(auth_error_patterns or [])
@@ -600,6 +607,7 @@ class JobSupervisor:
             use_cache=False,
             auth_error_patterns=self.auth_error_patterns,
             account_name=self.account_name,
+            account=self.account,
         )
 
     def _final_usage_cost(self, final_reading: dict[str, Any]) -> Optional[dict[str, Any]]:

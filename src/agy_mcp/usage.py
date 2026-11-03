@@ -23,11 +23,14 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from agy_mcp.jobs import append_audit_event as _jobs_append_audit_event
 from agy_mcp.jobs import check_and_increment_daily_cap
 from agy_mcp.models import Job, JobState
+
+if TYPE_CHECKING:  # pragma: no cover - typing only, avoids an accounts import cycle
+    from agy_mcp.accounts.registry import AccountConfig
 
 GROUP_GEMINI = "Gemini Models"
 GROUP_CLAUDE_GPT = "Claude and GPT models"
@@ -661,12 +664,18 @@ def read_usage_once(
     auth_error_patterns: Optional[list[str]] = None,
     expected_email: Optional[str] = None,
     expected_email_sha256: Optional[str] = None,
+    account: Optional["AccountConfig"] = None,
 ) -> dict[str, Any]:
     """Invoke `agy --log-file <tmp>/usage.log --output-format json -p "/usage"`.
 
     Runs in a fresh, empty temporary directory with the same sanitized environment and
     process-group handling used for job launches. The account email is parsed from the
     temporary CLI log and masked in memory; it is never written to a persistent file.
+
+    With ``account`` the child env is exactly :func:`build_account_env` (the
+    account's HOME plus, for a non-default account, the dead D-Bus address), so
+    the probe cannot reach the desktop keyring. Without it the pre-multi-account
+    ``env_allowlist`` env is unchanged.
     """
     from agy_mcp.util import env_allowlist
 
@@ -679,7 +688,14 @@ def read_usage_once(
         except OSError:
             pass
         log_file = tmp_dir / "usage.log"
-        env = env_allowlist(job_tmp_dir=tmp_dir, home=home)
+        if account is not None:
+            # One source of truth for a multi-account child env (D104). The
+            # default account's output is byte-identical to env_allowlist.
+            from agy_mcp.accounts.env import build_account_env
+
+            env = build_account_env(account, tmp_dir)
+        else:
+            env = env_allowlist(job_tmp_dir=tmp_dir, home=home)
         if env_overrides:
             env.update(env_overrides)
 
@@ -817,12 +833,19 @@ def get_usage(
     account_name: Optional[str] = None,
     expected_email: Optional[str] = None,
     expected_email_sha256: Optional[str] = None,
+    account: Optional["AccountConfig"] = None,
 ) -> dict[str, Any]:
     """Return a usage reading, served from the in-memory 60 s cache when possible.
 
     Never raises for any agy failure; unavailable readings carry `available: false`
     plus a machine-readable `reason`.
+
+    ``account`` selects the :func:`build_account_env` child env and that
+    account's HOME; the default account's env stays byte-identical. A caller
+    without an :class:`AccountConfig` keeps the historical ``home`` behavior.
     """
+    if account is not None:
+        home = account.expanded_home
     active_cache = cache if cache is not None else _DEFAULT_USAGE_CACHE
     cache_key = usage_cache_key(agy_binary, home=home, account_name=account_name)
     now_val = time.monotonic() if now_monotonic is None else now_monotonic
@@ -841,6 +864,7 @@ def get_usage(
         auth_error_patterns=auth_error_patterns,
         expected_email=expected_email,
         expected_email_sha256=expected_email_sha256,
+        account=account,
     )
     reading["cached"] = False
     # Cache only successful readings: caching an unavailable result would keep
