@@ -9,13 +9,12 @@ from agy_mcp.accounts.identity import email_sha256, mask_email, verify_identity
 
 FULL_EMAIL = "harold.example.08@example.com"
 PLANTED_EMAIL = "planted.person@example.com"
-# The human-reported case, built from parts so the publish gate never sees a
-# literal real-looking address in the source: local "dipal83photos", domain
-# "gmail.com".
-REPORTED_LOCAL = "dipal83photos"
-REPORTED_DOMAIN = "gmail.com"
+# Invented address used for the reported masking-shape case. Never put a real
+# address in tests, docs or fixtures.
+REPORTED_LOCAL = "jordan.lee81"
+REPORTED_DOMAIN = "example.com"
 REPORTED_EMAIL = f"{REPORTED_LOCAL}@{REPORTED_DOMAIN}"
-REPORTED_MASKED = f"dip***os@{REPORTED_DOMAIN}"
+REPORTED_MASKED = f"jor***81@{REPORTED_DOMAIN}"
 
 
 @pytest.mark.parametrize(
@@ -35,8 +34,8 @@ REPORTED_MASKED = f"dip***os@{REPORTED_DOMAIN}"
         ("abcdefghi@example.com", "abc***i@example.com"),
         ("harold.example.08@example.com", "har***08@example.com"),
         (REPORTED_EMAIL, REPORTED_MASKED),
-        ("DIPAL83PHOTOS@EXAMPLE.COM", "DIP***OS@EXAMPLE.COM"),
-        ("dipal83+tag@example.com", "dip***ag@example.com"),
+        ("JORDAN.LEE81@EXAMPLE.COM", "JOR***81@EXAMPLE.COM"),
+        ("jordan81+tag@example.com", "jor***ag@example.com"),
         (PLANTED_EMAIL, "pla***on@example.com"),
     ],
 )

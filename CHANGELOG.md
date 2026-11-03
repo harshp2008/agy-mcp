@@ -5,8 +5,8 @@
 - **Fix: `accounts.identity.mask_email` now emits `head***tail@domain`.** The
   helper kept the intended reveal counts (at most the first three and last two
   local-part characters, never more than half) but printed the revealed head
-  and tail in the wrong order, so the local part `dipal83photos` became
-  `dipos***` instead of `dip***os`. It now renders `dip***os`; short local
+  and tail in the wrong order, so the local part `jordan.lee81` became
+  `jor81***` instead of `jor***81`. It now renders `jor***81`; short local
   parts and the fully-masked form are unchanged, and the legacy
   `usage.mask_email` (first two) is untouched.
 - **Fix: every non-default account's `/usage` probe now uses the isolated child
