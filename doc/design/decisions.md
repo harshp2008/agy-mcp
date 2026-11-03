@@ -750,7 +750,7 @@ Append-only record of architectural, security, and design decisions across agy-m
 - *Rationale:* Accounts must be declarative, validated and testable, and adding the feature must not change a single-account install. A `[[accounts]]` list in the existing config file is the smallest source of truth; one implicit `default` account preserves today's behavior exactly.
 - *Rule:*
   1. `[[accounts]]` entries carry `name`, `home`, optional `pool`, `enabled`, `max_concurrent_jobs`, `expires_at` and `expected_email`/`expected_email_sha256`; `max_accounts` (default 5) caps the list. Unknown/duplicate names and invalid homes fail closed with stable codes.
-  2. When no registry is configured, exactly one implicit `default` account exists and is not declarable; all N≥1 code paths are tested for 1, 2 and 5 accounts, including accounts sharing a `pool`.
+  2. The implicit `default` account always exists (today's real home, no isolation override) and is not declarable or disableable; `[[accounts]]` entries are additional, the total is `1 + len(accounts)` and is tested for 1, 2 and 5 total accounts, including accounts sharing a `pool`.
   3. Accounts sharing a `pool` label are one quota bucket; the CLI exposes no sharing identifier, so sharing is operator-declared only.
 - *Tests:* registry validation matrix (1/2/5, duplicates, pools, bad homes, limit), single-account equivalence class.
 

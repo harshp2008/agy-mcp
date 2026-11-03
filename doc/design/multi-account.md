@@ -36,17 +36,19 @@ Validation (all fail closed with a stable code in
 |---|---|
 | `accounts` is an array of tables; each entry has `name` and `home` | `account_config_invalid` |
 | `name` matches `[a-z0-9][a-z0-9-]{0,31}`, is unique, is not `default` | `account_name_invalid` / `account_name_duplicate` |
-| count ≤ `max_accounts` (default 5, range 1–32) | `account_limit_exceeded` |
+| `1 + len(accounts)` ≤ `max_accounts` (default 5, range 1–32) | `account_limit_exceeded` |
 | `home` is absolute after `~` expansion, exists, is a directory, mode 0700 | `account_home_invalid` / `account_home_permissions` |
 | `enabled` is bool; `max_concurrent_jobs` is int 1..global cap | `account_config_invalid` |
 | `pool`, when set, is a non-empty slug; accounts may share it | `account_config_invalid` |
 | `expires_at` is an ISO-8601 timestamp | `account_config_invalid` |
 | at most one of `expected_email` / `expected_email_sha256`; the hash is 64 lowercase hex | `account_config_invalid` |
 
-When no registry is configured exactly one **implicit `default` account**
-exists, using today's `home`/`agy_home` and no isolation override. It cannot be
-declared explicitly. Every N≥1 path (registry, scheduler, envelopes, tests) is
-exercised for N=1, 2 and 5, including two accounts sharing a `pool`. More than
+The **implicit `default` account always exists**, using today's real
+`home`/`agy_home` and no isolation override; it cannot be declared, renamed or
+disabled. `[[accounts]]` entries are *additional* accounts, so the total is
+`1 + len(accounts)` and must be ≤ `max_accounts` (default 5, i.e. up to four
+extra). Every N≥1 path (registry, scheduler, envelopes, tests) is exercised for
+N=1, 2 and 5 total accounts, including two accounts sharing a `pool`. More than
 `max_accounts` is a startup error, not a silent truncation.
 
 **Rejected alternatives.** A separate per-account config file (two sources of

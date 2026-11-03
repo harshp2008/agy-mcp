@@ -199,6 +199,31 @@ them (it only scans `src/agy_mcp/*.py`).
 - **Tests:** `tests/server/test_server_e2e.py`.
 - **Implements:** packaging/runtime entrypoint (no SPEC section).
 
+### `accounts/` (package)
+- **Purpose:** multi-account foundation: parse/validate `[[accounts]]` from
+  `config.toml`, build the implicit `default` account, mask and verify account
+  emails, and build each account's sanitized child environment (D102–D104).
+- **Modules:**
+  - `registry.py` — `AccountConfig`, `AccountRegistry`, `parse_accounts()`,
+    `build_registry()`, `validate_account_home()`; reserves the `default` name,
+    enforces `1 + len(accounts) <= max_accounts`, and never touches the
+    filesystem during config load.
+  - `identity.py` — `mask_email(head=3, tail=2)`, `email_sha256()`,
+    `IdentityCheck`, `verify_identity()`; the full address stays in memory and
+    every error carries the masked form only.
+  - `env.py` — `build_account_env()`; adds
+    `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null` for non-default accounts and
+    leaves the default account's env byte-identical to `util.env_allowlist()`.
+  - `errors.py` — `AccountError` with a stable `.code`.
+- **Imports from `agy_mcp`:** `config.py` imports the registry; `env.py` imports
+  `util.env_allowlist`; `identity.py` imports only `errors`.
+- **Called by:** `config.py` (parsing); later phases consume the registry,
+  identity and env from the manager, scheduler and doctor.
+- **Tests:** `tests/test_accounts_registry.py`,
+  `tests/test_accounts_identity.py`, `tests/test_accounts_env.py`,
+  `tests/test_accounts_single_account_equivalence.py`.
+- **Implements:** D102–D104; full design in `doc/design/multi-account.md`.
+
 ### `audit.py`
 - **Purpose:** capture and compare the security baseline: worktree `.git`
   pointer, resolved git config, `.agents/**`, instruction files, policy files
@@ -741,6 +766,11 @@ by hand. It exists so a stale module list or line count fails CI.
 | --- | ---: | --- |
 | `__init__.py` | 9 | _(no public definitions)_ |
 | `__main__.py` | 14 | _(no public definitions)_ |
+| `accounts.__init__.py` | 25 | _(no public definitions)_ |
+| `accounts.env.py` | 45 | `build_account_env()` |
+| `accounts.errors.py` | 22 | `AccountError` |
+| `accounts.identity.py` | 123 | `mask_email()`; `email_sha256()`; `IdentityCheck`; `verify_identity()` |
+| `accounts.registry.py` | 306 | `AccountConfig` (`expanded_home`, `agy_home`, `pool_key`); `AccountRegistry` (`all`, `enabled`, `by_name`, `configured`); `parse_accounts()`; `build_registry()`; `validate_account_home()` |
 | `audit.py` | 653 | `AuditSeverity`; `HostPathClass`; `classify_host_path()`; `Finding` (`to_dict`); `Findings` (`has_fatal`, `fatal_reason`, `blocked_files`, `passed`); `AuditSnapshot`; `save_snapshot()`; `load_snapshot()`; `take_host_path_snapshot()`; `HostPathAuditResult`; `check_host_path_snapshot()`; `verify_host_path_snapshot()`; `take_snapshot()`; `audit()`; `run_security_audit()` |
 | `cleanup.__init__.py` | 7 | _(no public definitions)_ |
 | `cleanup.fixtures_cli.py` | 517 | `parse_args()`; `run_cleanup()`; `main()` |
@@ -751,7 +781,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `cleanup_fixtures.py` | 36 | _(no public definitions)_ |
 | `cleanup_jobs.py` | 41 | _(no public definitions)_ |
 | `cli_log.py` | 302 | `Denial` (`to_dict`); `read_cli_log_tail()`; `read_cli_log_head()`; `capture_cli_log_anchor()`; `cli_log_generation_start()`; `read_cli_log_since()`; `extract_conversation_id_from_cli_log()`; `extract_resuming_conversation_id_from_cli_log()`; `extract_model_resolved()`; `extract_denials_from_cli_log()`; `format_denied_commands()` |
-| `config.py` | 335 | `ConfigError`; `Config`; `load_config()` |
+| `config.py` | 366 | `ConfigError`; `Config`; `load_config()` |
 | `gitops.py` | 1049 | `GitError` (`args_list`); `GitResult`; `StagingResult`; `SkippedFile` (`path`, `reason`); `merge_skipped_files()`; `is_build_artifact()`; `is_sensitive_path()`; `get_hardened_git_env()`; `run_git()`; `execute_with_index_lock_retry()`; `parse_porcelain_z()`; `stage_changes()`; `commit_with_retry()`; `is_worktree_dirty()`; `sanitize_commit_subject()`; `sanitize_commit_body()`; `build_wrapper_commit_text()`; `commit_message_problem()`; `write_wrapper_commit_msg()`; `checkpoint_commit()`; `find_most_recent_commit_msg()`; `safety_net_commit()`; `get_merge_base()`; `get_ahead_behind()`; `has_base_moved()`; `get_diff_stat()`; `get_commits_list()`; `get_files_modified()`; `take_git_config_snapshot()`; `diff_git_config_snapshots()` |
 | `jobs.py` | 603 | `get_base_state_dir()`; `get_job_dir()`; `append_audit_event()`; `record_cleanup_error()`; `create_job()`; `save_job()`; `get_job()`; `list_jobs()`; `concurrency_lock()`; `count_active_jobs()`; `transition_job_state()`; `record_job_execution_time()`; `get_daily_date()`; `check_and_increment_daily_cap()`; `rebuild_daily_cap_from_audit()`; `get_job_disk_usage()`; `get_total_state_disk_usage()`; `prune_retained_jobs()`; `cleanup_retained_jobs()` |
 | `manager.py` | 1741 | `ManagerError`; `JobManager` (`start`, `usage`, `status`, `wait`, `reconcile`, `result`, `cancel`, `list`, `resume`, `review`, `cleanup`, `shutdown`) |

@@ -1,4 +1,5 @@
 # Conversation transfer experiment — raw evidence, 2026-11-03
+# Email domains are replaced with <domain> for publication; local-part masks are exact.
 
 All commands ran in `/tmp/agy-multi-test` (scratch, not a repository). Account
 emails in logs were masked with first three and last two local-part characters.
@@ -6,9 +7,9 @@ Token counts are copied from agy's own JSON `usage` objects.
 
 ## Setup
 
-- Primary account: default `HOME`, keyring auth (`har***08@gmail.com` in the auth line).
-- Second account: `HOME=/home/harsh/.local/share/agy-accounts/account-b`,
-  `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null` (`dip***os@gmail.com`).
+- Primary account: default `HOME`, keyring auth (masked `har***08@<domain>` in the auth line).
+- Second account: `HOME=~/.local/share/agy-accounts/account-b`,
+  `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null` (masked `dip***os@<domain>`).
 - Model: `gemini-3.8-flash-medium` on primary, `gemini-3.8-flash` on account-b
   (the medium alias was rejected there — see "Model availability" below).
 

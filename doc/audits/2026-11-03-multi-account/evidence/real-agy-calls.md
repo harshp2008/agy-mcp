@@ -1,6 +1,6 @@
 # Real agy calls made during the multi-account investigation
 
-Every invocation of the real `/home/harsh/.local/bin/agy` in this session is
+Every invocation of the real `agy` binary (`~/.local/bin/agy`) in this session is
 listed below with its purpose and exit code. Account emails in captured logs
 were masked (first three + last two local-part characters); no token, keyring or
 cookie material was read or printed. `agy` is not on this shell's `PATH`; its

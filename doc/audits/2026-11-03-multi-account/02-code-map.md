@@ -11,7 +11,7 @@ assumptions were checked against the code; corrections are at the end.
 
 ## Legend
 
-- **Assumption Y** — the line hard-codes one account/home/state and must change.
+- **Assumption Y** — the line hard-codes one account, home and state path and must change.
 - **Assumption N** — the line is account-agnostic; it only needs the right input.
 - "Required change" is the Phase 3–8 change, not a proposed rewrite.
 
@@ -88,7 +88,7 @@ assumptions were checked against the code; corrections are at the end.
 | File:line | Role | Single-account assumption | Required change |
 |---|---|---|---|
 | `installer/install.sh:125-132` | One `$HOME/.config/agy-mcp/config.toml`, one state dir | Y — one instance | Keep; accounts live in the same config file. The installer never creates a login |
-| `installer/install.sh:722-797` | `doctor_agymcp` checks run.sh, venv, agy, config, client blocks | Y — no account checks | Add read-only registry/home/mode/policy/email/isolation checks |
+| `installer/install.sh:722-797` | `doctor_agymcp` checks run.sh, venv, agy, config, client blocks | Y — no account checks | Add read-only registry, home-mode, policy, email and isolation checks |
 
 ## Corrections to the prior recon
 

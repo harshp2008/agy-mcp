@@ -26,7 +26,7 @@ or changing single-account behavior?
   primary, one recall turn, a missing-id control on account-b, and one transfer
   turn on account-b). Full log: `evidence/real-agy-calls.md` in the audit folder.
 - Account-b ran with
-  `HOME=/home/harsh/.local/share/agy-accounts/account-b DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null`;
+  `HOME=~/.local/share/agy-accounts/account-b DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null`;
   no login or logout was performed.
 - Conversation transfer copied exactly one file,
   `conversations/<id>.db`, from the primary store to account-b's store.

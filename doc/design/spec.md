@@ -777,6 +777,9 @@ Successful audit passes are not individually logged; only violations, state chan
 | `quota_estimate_five_hour_per_1k_tokens` | `float` | `0.011` | 5-hour quota points per 1k agy JSON tokens for `quota_estimate` (>= 0; D83, D85). |
 | `quota_error_patterns` | `List[str]` | `[]` | Regexes matched against stderr and cli.log tail to diagnose quota exhaustion; UNVERIFIED against real agy. |
 | `auth_error_patterns` | `List[str]` | `[]` | Regexes matched against stderr, cli.log tail, and `/usage` output to diagnose an expired login; UNVERIFIED against real agy. MUST NOT contain `not logged in` or a broader match: a healthy job logs `You are not logged into Antigravity.` before keyring auth succeeds (D63). |
+| `accounts` | `List[Table]` | `[]` | Additional accounts beyond the implicit `default` (D102–D104). Each entry: required `name` and absolute `home`; optional `pool`, `enabled`, `max_concurrent_jobs`, `expires_at`, and at most one of `expected_email`/`expected_email_sha256`. Invalid entries fail closed. |
+| `max_accounts` | `int` | `5` | Maximum **total** accounts including the implicit `default` (1..32). `[[accounts]]` may declare at most `max_accounts - 1` entries. |
+
 
 *Fail-Closed Configuration Handling (D56):* Configuration loading strictly enforces fail-closed validation. If `config.toml` contains invalid TOML syntax, unreadable permissions, or type/constraint violations, server initialization fails immediately with an informative message on `stderr` and process exit code 1. Permissive defaults are never silently substituted for broken configurations.
 

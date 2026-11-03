@@ -19,13 +19,24 @@ traceback to `server.log` and returned as `internal_error` without details.
 
 The table below is generated from the `code=` literals and exception defaults in
 `src/agy_mcp/`. The 40 stable codes named by the Part 2 audit are here, plus the
-two server-generated fallbacks (`invalid_input`, `internal_error`).
+account-registry/identity codes and the two server-generated fallbacks
+(`invalid_input`, `internal_error`).
 
 ## Codes by source
 
 <!-- BEGIN GENERATED: error-codes -->
 | Code | Raised in |
 |---|---|
+| `account_config_invalid` | `identity.py`, `registry.py` |
+| `account_error` | `errors.py` |
+| `account_home_invalid` | `registry.py` |
+| `account_home_permissions` | `registry.py` |
+| `account_identity_mismatch` | `identity.py` |
+| `account_identity_unknown` | `identity.py` |
+| `account_limit_exceeded` | `registry.py` |
+| `account_name_duplicate` | `registry.py` |
+| `account_name_invalid` | `registry.py` |
+| `account_not_found` | `registry.py` |
 | `audit_violation` | `manager.py` |
 | `cannot_resume_security_review` | `manager.py` |
 | `cap_exceeded` | `manager.py` |
@@ -117,6 +128,23 @@ two server-generated fallbacks (`invalid_input`, `internal_error`).
 | `invalid_input` | Server fallback for a `ValueError`, `FileNotFoundError` or `PermissionError` that has no `.code` (for example a missing job, an oversized `job.json`, or a missing file). | Fix the input named in the message. A missing `job_id` is returned as this code, not a dedicated one. |
 | `internal_error` | Unexpected server exception; the full traceback is in `server.log`, never in the envelope. | Check `<state>/server.log`, then report the failure with the tool name and job id. Do not retry blindly if the error repeats. |
 
+## Account codes
+
+Stable codes introduced with multi-account support (D102–D114). All are
+fail-closed: a start or resume does not proceed.
+
+| Code | Meaning | How to recover |
+|---|---|---|
+| `account_config_invalid` | An `[[accounts]]` entry has a bad shape, unknown key, bad pool/`expires_at`/`max_concurrent_jobs`, or conflicting expectations. | Fix the entry; see [config keys](config-keys.md) and the [multi-account design](../design/multi-account.md). |
+| `account_limit_exceeded` | `1 + len(accounts)` exceeds `max_accounts`. | Remove an entry or raise `max_accounts` (maximum 32). |
+| `account_name_invalid` | A name is empty, uses `default`, or does not match `[a-z0-9][a-z0-9-]{0,31}`. | Rename the account. |
+| `account_name_duplicate` | Two entries share a name. | Use unique names. |
+| `account_home_invalid` | The home is not absolute after expansion, does not exist, is not a directory, or is unreadable. | Create the directory and use an absolute path. |
+| `account_home_permissions` | The account home is accessible by group or others. | `chmod 700` the home. |
+| `account_identity_mismatch` | The full email parsed from agy does not match `expected_email` or its hash. | Confirm the login, or update the expectation. The message shows only the masked value. |
+| `account_identity_unknown` | An expectation is configured but agy did not report an email. | Re-login the account; check that the CLI still logs `applyAuthResult`. |
+| `account_not_found` | An `account` name was requested that the registry does not contain. | Use a name from the registry or omit the override. |
+
 ## Notes
 
 - Preflight codes (`repo_not_found` through `untrusted_agents_dir`,
@@ -148,5 +176,9 @@ two server-generated fallbacks (`invalid_input`, `internal_error`).
 - `src/agy_mcp/jobs.py` — `get_job` (missing job -> `FileNotFoundError` ->
   `invalid_input`) and the audit/cleanup error paths.
 - `src/agy_mcp/usage.py` — the fail-soft `available: false` reasons.
+- `src/agy_mcp/accounts/errors.py` — `AccountError` and its stable codes.
+- `src/agy_mcp/accounts/registry.py` — registry validation codes.
+- `src/agy_mcp/accounts/identity.py` — identity mismatch/unknown codes.
+- `doc/design/multi-account.md` — the account rules behind the codes.
 - `doc/audits/2026-11-02-part2c-coverage.md` — the 40-code inventory this page
   closes (COV-01).

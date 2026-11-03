@@ -49,6 +49,8 @@ removed; `scripts/check_docs.py` fails until it is.
 | `claim_phrases` | `list[str]` | `["tests pass", "all tests passed", "verified"]` |
 | `agy_home` | `str` | `"~/.gemini/antigravity-cli"` |
 | `timezone` | `str | null` | `null` |
+| `accounts` | `list[AccountConfig]` | `[]` |
+| `max_accounts` | `int` | `5` |
 <!-- END GENERATED: config-keys -->
 
 ## Validator and effect
@@ -82,6 +84,8 @@ removed; `scripts/check_docs.py` fails until it is.
 | `quota_error_patterns` | list of non-empty `str`, each a valid regex | Regexes matched against stderr/cli.log tail to diagnose quota exhaustion. |
 | `auth_error_patterns` | list of non-empty `str`, each a valid regex | Regexes matched against stderr, cli.log tail and `/usage` output to diagnose an expired login. Must not contain `not logged in`; a healthy job logs that line before keyring auth succeeds (D63). |
 | `timezone` | `null`, or a non-empty `str`; `local`/`system` are accepted, otherwise `zoneinfo.ZoneInfo(name)` must resolve | Calendar timezone for `daily_jobs_cap` and for rebuilding `daily_cap.json` (`get_daily_date`). `null`/`local`/`system` use the system zone. It does not change job timestamps: `job.json`, `audit.jsonl` and `usage.jsonl` stay UTC. |
+| `accounts` | array of tables; see [the multi-account design](../design/multi-account.md) | Additional accounts beyond the implicit `default`. Each entry needs `name` and an absolute `home`; optional `pool`, `enabled`, `max_concurrent_jobs`, `expires_at` and one of `expected_email`/`expected_email_sha256`. Invalid entries fail closed (`ConfigError`). |
+| `max_accounts` | `int` (not `bool`), `1..32` | Maximum **total** accounts including the implicit `default`; `[[accounts]]` may declare at most `max_accounts - 1` entries. Exceeding it is `account_limit_exceeded`. |
 
 ## Example
 
@@ -94,6 +98,14 @@ usage_guard = "warn"
 model_allowlist = ["gemini-3.8-flash-medium"]
 verify_allowlist = ["pytest", "ruff"]
 ```
+
+## Accounts
+
+`[[accounts]]` is described in full in
+[the multi-account design](../design/multi-account.md) and the user recipe in
+[accounts](../using/accounts.md). The implicit `default` account always exists
+and is not declared here, so a config with no `[[accounts]]` table is exactly the
+pre-multi-account configuration.
 
 ## Sources
 
@@ -108,5 +120,8 @@ verify_allowlist = ["pytest", "ruff"]
 - `src/agy_mcp/scratchpad.py` — the plan nudge and claim-phrase behaviour.
 - `src/agy_mcp/util.py` — the `agy_home` transcript confinement.
 - `doc/design/spec.md` — §18, the authoritative descriptions this table summarises.
-- `doc/audits/2026-11-02-part2c-coverage.md` — §5, the 27-key inventory and the
-  missing `timezone` row (COV-06).
+- `src/agy_mcp/accounts/registry.py` — account entry validation and the implicit default.
+- `doc/design/multi-account.md` — the registry fields and their rules.
+- `doc/audits/2026-11-02-part2c-coverage.md` — §5, the original 27-key inventory
+  and the missing `timezone` row (COV-06); multi-account adds `accounts` and
+  `max_accounts`.
