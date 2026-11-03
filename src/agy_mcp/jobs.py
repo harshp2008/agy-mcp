@@ -167,6 +167,7 @@ def create_job(
     priority: str = "normal",
     account_masked_email: Optional[str] = None,
     quota_reservation: Optional[dict[str, Any]] = None,
+    decision_trace: Optional[dict[str, Any]] = None,
 ) -> Job:
     """Initialize a new job record and provision its state directory per SPEC section 10."""
     jid = job_id or str(uuid.uuid4())
@@ -222,6 +223,10 @@ def create_job(
         detail_account = {"account": account}
         if account_masked_email is not None:
             detail_account["account_masked_email"] = account_masked_email
+        # Additive decision trace (D115). It is present only when a registry
+        # selection produced one, so the single-account event stays byte-identical.
+        if decision_trace is not None:
+            detail_account["decision_trace"] = decision_trace
         append_audit_event(job_dir, event="account_selected", detail=detail_account)
     return job
 

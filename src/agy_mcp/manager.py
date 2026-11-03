@@ -37,6 +37,7 @@ from agy_mcp.accounts.scheduler import (
 from agy_mcp.accounts.selection import (
     AccountSelector,
     Selection,
+    decision_trace_detail,
     scheduler_config_from_config,
 )
 from agy_mcp.accounts.transfer import transfer_conversation
@@ -520,6 +521,9 @@ class JobManager:
                 priority=priority,
                 account_masked_email=selection_masked_email,
                 quota_reservation=reservation,
+                decision_trace=(
+                    decision_trace_detail(selection.trace) if selection is not None else None
+                ),
             )
             job.source_dirty = source_dirty
             job.warnings.extend(warnings)

@@ -1,9 +1,10 @@
 """Pure quota-aware account scheduler (D108, D109).
 
-Owns the cost estimate, eligibility filter, ranking, burn-before-expiry mode and
-the exhaustion result. Every input is a plain data class and the clock is passed
-in, so a decision is deterministic and testable; this module performs no I/O,
-never sleeps, and never reads a token or an account home.
+Owns the cost estimate, eligibility filter, ranking, burn-before-expiry mode,
+the exhaustion result and the per-account decision trace. Every input is a plain
+data class and the clock is passed in, so a decision is deterministic and
+testable; this module performs no I/O, never sleeps, and never reads a token or
+an account home.
 
 The decision inputs are deliberately narrow:
 
@@ -15,6 +16,7 @@ Accounts that share a ``pool_key`` are one quota bucket: their remaining quota i
 the minimum across the group and their reservations are summed.
 """
 
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -24,38 +26,52 @@ from agy_mcp.accounts.pools import (
     PoolReading,
 )
 from agy_mcp.accounts.scheduler_types import (
+    MAX_TRACE_ACCOUNTS,
     MIN_HOURS,
     PRIORITIES,
     PRIORITY_BACKGROUND,
     PRIORITY_NORMAL,
     AccountState,
     CostEstimate,
+    DecisionTrace,
     HistoryCostModel,
     JobRequest,
     RankedAccount,
     SchedulerConfig,
     SchedulerResult,
+    TraceAccount,
     format_utc,
     parse_utc,
 )
 
 __all__ = [
+    "MAX_TRACE_ACCOUNTS",
     "MIN_HOURS",
     "PRIORITIES",
     "PRIORITY_BACKGROUND",
     "PRIORITY_NORMAL",
     "AccountState",
     "CostEstimate",
+    "DecisionTrace",
     "HistoryCostModel",
     "JobRequest",
     "RankedAccount",
     "SchedulerConfig",
     "SchedulerResult",
+    "TraceAccount",
     "account_eligibility",
     "estimate_cost",
     "remaining_until_reset",
     "schedule_account",
 ]
+
+# A quota window is a percentage in [0, 100]; at 100% it is full (D115).
+_FULL_WINDOW_PCT = 100.0
+
+# Tolerance for comparing two scores, waits or remaining percentages. Inputs are
+# percentages and minutes, so 1e-9 absorbs binary-float noise without hiding any
+# decision a human could see.
+_TIE_EPSILON = 1e-9
 
 
 def estimate_cost(
@@ -172,46 +188,120 @@ def _base_eligible(
     return None
 
 
+@dataclass(frozen=True)
+class _Quota:
+    """One account's group quota after reservations, plus the raw group values.
+
+    ``*_remaining`` are percentage points after subtracting the group's
+    reservations. ``*_raw_pct`` are the group window minimums before
+    reservations; they identify a genuinely full window (a placeholder reset on
+    a 100% window must never look like real expiry pressure).
+    """
+
+    five_remaining: float
+    weekly_remaining: float
+    five_reset: Optional[str]
+    weekly_reset: Optional[str]
+    five_raw_pct: float
+    weekly_raw_pct: float
+
+
 def _group_quota(
     grouped: dict[str, list[AccountState]], state: AccountState, request: JobRequest
-) -> Optional[tuple[float, float, Optional[str], Optional[str]]]:
-    """Return (five remaining, weekly remaining, five reset, weekly reset) after reservations."""
+) -> Optional[_Quota]:
+    """Return the group's quota after reservations, or None when unreportable."""
     group = grouped[state.pool_key]
     five = _group_window(group, request, WINDOW_FIVE_HOUR)
     weekly = _group_window(group, request, WINDOW_WEEKLY)
     if five is None or weekly is None:
         return None
-    five_remaining = five[0] * 100.0 - sum(member.reserved_five_hour_pct for member in group)
-    weekly_remaining = weekly[0] * 100.0 - sum(member.reserved_weekly_pct for member in group)
-    return five_remaining, weekly_remaining, five[1], weekly[1]
+    five_raw = five[0] * 100.0
+    weekly_raw = weekly[0] * 100.0
+    return _Quota(
+        five_remaining=five_raw - sum(member.reserved_five_hour_pct for member in group),
+        weekly_remaining=weekly_raw - sum(member.reserved_weekly_pct for member in group),
+        five_reset=five[1],
+        weekly_reset=weekly[1],
+        five_raw_pct=five_raw,
+        weekly_raw_pct=weekly_raw,
+    )
 
 
-def _wait_minutes(
-    five_remaining: float,
-    weekly_remaining: float,
-    five_reset: Optional[str],
-    weekly_reset: Optional[str],
+def _is_full_window(remaining_pct: float, config: SchedulerConfig) -> bool:
+    """Return True when a window is at (or within the margin of) 100% remaining.
+
+    A full window has no quota at risk of expiring: whatever remains is already
+    the maximum, so it contributes zero urgency and must never become the
+    binding window for burn mode (D115). The margin is the tunable
+    ``full_window_margin_pct`` config key.
+    """
+    return remaining_pct >= _FULL_WINDOW_PCT - config.full_window_margin_pct
+
+
+def _window_waits(
+    quota: _Quota,
     cost: CostEstimate,
     config: SchedulerConfig,
     now: datetime,
-) -> Optional[float]:
-    """Minutes until both windows are usable for a burn job; None when unknown."""
+) -> Optional[tuple[float, float]]:
+    """Return ``(five-hour wait, weekly wait)`` in minutes, or None when unknown."""
     required_five = max(config.five_hour_floor_pct, cost.five_hour_pct * config.safety_factor)
     required_weekly = cost.weekly_pct * config.safety_factor
 
-    def wait_for(remaining: float, required: float, reset: Optional[str]) -> Optional[float]:
-        if remaining >= required:
+    def wait_for(
+        remaining: float, required: float, reset: Optional[str], full: bool
+    ) -> Optional[float]:
+        # A full window is usable regardless of the cost estimate: its reset is
+        # a rolling placeholder, not a real wait.
+        if full or remaining >= required:
             return 0.0
         reset_dt = parse_utc(reset)
         if reset_dt is None:
             return None
         return max(0.0, (reset_dt - now).total_seconds() / 60.0)
 
-    five_wait = wait_for(five_remaining, required_five, five_reset)
-    weekly_wait = wait_for(weekly_remaining, required_weekly, weekly_reset)
+    five_wait = wait_for(
+        quota.five_remaining,
+        required_five,
+        quota.five_reset,
+        _is_full_window(quota.five_raw_pct, config),
+    )
+    weekly_wait = wait_for(
+        quota.weekly_remaining,
+        required_weekly,
+        quota.weekly_reset,
+        _is_full_window(quota.weekly_raw_pct, config),
+    )
     if five_wait is None or weekly_wait is None:
         return None
-    return max(five_wait, weekly_wait)
+    return five_wait, weekly_wait
+
+
+def _wait_minutes(
+    quota: _Quota,
+    cost: CostEstimate,
+    config: SchedulerConfig,
+    now: datetime,
+) -> Optional[float]:
+    """Minutes until both windows are usable for a burn job; None when unknown."""
+    waits = _window_waits(quota, cost, config, now)
+    if waits is None:
+        return None
+    return max(waits)
+
+
+def _binding_window(
+    quota: _Quota, five_wait: float, weekly_wait: float
+) -> tuple[str, Optional[str]]:
+    """Return the window with the larger wait and its reset.
+
+    A full window always has a zero wait, so it can never be the binding window;
+    when both windows are immediately usable the weekly reset is used because it
+    is the denominator of the normal urgency score.
+    """
+    if weekly_wait >= five_wait:
+        return WINDOW_WEEKLY, quota.weekly_reset
+    return WINDOW_FIVE_HOUR, quota.five_reset
 
 
 def _hours_to(reset: Optional[str], now: datetime, default: float = 1.0) -> float:
@@ -232,15 +322,34 @@ def _expiry_boost(state: AccountState, config: SchedulerConfig, now: datetime) -
     return (horizon - hours) / horizon * 100.0
 
 
+def _urgency(
+    weekly_remaining: float,
+    weekly_reset: Optional[str],
+    config: SchedulerConfig,
+    now: datetime,
+) -> float:
+    """Remaining weekly quota per hour to its reset, or zero for a full window.
+
+    ``remaining / hours`` rewards quota that is both plentiful and close to a
+    reset. A full window must not win that comparison on a placeholder reset:
+    nothing is at risk of expiring, so its urgency is exactly zero (D115).
+    """
+    if _is_full_window(weekly_remaining, config):
+        return 0.0
+    return weekly_remaining / _hours_to(weekly_reset, now)
+
+
 def _score(
     state: AccountState,
     weekly_remaining: float,
     weekly_reset: Optional[str],
     config: SchedulerConfig,
     now: datetime,
-) -> float:
-    hours = _hours_to(weekly_reset, now)
-    return weekly_remaining / hours + _expiry_boost(state, config, now)
+) -> tuple[float, float, float]:
+    """Return ``(score, urgency, expiry_boost)`` for one account."""
+    urgency = _urgency(weekly_remaining, weekly_reset, config, now)
+    boost = _expiry_boost(state, config, now)
+    return urgency + boost, urgency, boost
 
 
 def _sort_key(rank: RankedAccount, state: AccountState, background: bool) -> tuple:
@@ -278,13 +387,12 @@ def _earliest_resume(
         quota = _group_quota(grouped, state, request)
         if quota is None:
             continue
-        five_remaining, weekly_remaining, five_reset, weekly_reset = quota
         required_five = max(config.five_hour_floor_pct, cost.five_hour_pct * config.safety_factor)
         required_weekly = cost.weekly_pct * config.safety_factor
         candidate = now
         for remaining, required, reset in (
-            (five_remaining, required_five, five_reset),
-            (weekly_remaining, required_weekly, weekly_reset),
+            (quota.five_remaining, required_five, quota.five_reset),
+            (quota.weekly_remaining, required_weekly, quota.weekly_reset),
         ):
             if remaining >= required:
                 continue
@@ -298,6 +406,49 @@ def _earliest_resume(
     if not candidates:
         return None
     return format_utc(min(candidates))
+
+
+def _hours_until(reset: Optional[str], now: datetime) -> Optional[float]:
+    """Hours from ``now`` to a reset (zero when past), or None when unparseable."""
+    reset_dt = parse_utc(reset)
+    if reset_dt is None:
+        return None
+    return max(0.0, (reset_dt - now).total_seconds() / 3600.0)
+
+
+def _deciding_rule(
+    ranked: list[tuple[RankedAccount, AccountState]],
+    background: bool,
+    scores: dict[str, tuple[float, float, float]],
+) -> str:
+    """Name the first ranking criterion that separated the winner from second.
+
+    ``urgency`` covers the normal urgency score and, for background jobs, the
+    burn-first/nearest-reset/smallest-remaining order. ``expires_at`` means the
+    billing-expiry boost flipped an otherwise-lower urgency. ``lru`` also covers
+    the final deterministic account-name tie-break.
+    """
+    if len(ranked) == 1:
+        return "only_candidate"
+    winner, winner_state = ranked[0]
+    runner, runner_state = ranked[1]
+    winner_load = winner_state.active_jobs + winner_state.reserved_jobs
+    runner_load = runner_state.active_jobs + runner_state.reserved_jobs
+    if background:
+        if (winner.reason == "burn") != (runner.reason == "burn"):
+            return "urgency"
+        if abs(winner.wait_minutes - runner.wait_minutes) > _TIE_EPSILON:
+            return "urgency"
+        if abs(winner.remaining_weekly_pct - runner.remaining_weekly_pct) > _TIE_EPSILON:
+            return "urgency"
+        return "load" if winner_load != runner_load else "lru"
+    winner_score, winner_urgency, _ = scores[winner.account]
+    runner_score, runner_urgency, _ = scores[runner.account]
+    if abs(winner_score - runner_score) > _TIE_EPSILON:
+        if winner_urgency > runner_urgency + _TIE_EPSILON:
+            return "urgency"
+        return "expires_at"
+    return "load" if winner_load != runner_load else "lru"
 
 
 def schedule_account(
@@ -315,6 +466,7 @@ def schedule_account(
     quota. Background jobs may burn an account whose windows are not yet usable
     when the longest wait is within ``burn_horizon_minutes``, and never take the
     last slot while a normal job waits for that account. The clock is injected.
+    The result carries a bounded per-account trace for the audit event (D115).
     """
     config = config or SchedulerConfig()
     request = request.validated()
@@ -326,37 +478,83 @@ def schedule_account(
     background = request.priority == PRIORITY_BACKGROUND
     grouped = _groups(states)
     ranked: list[tuple[RankedAccount, AccountState]] = []
+    scores: dict[str, tuple[float, float, float]] = {}
+    trace_rows: list[TraceAccount] = []
 
     for state in sorted(states, key=lambda item: item.name):
         rejection = _base_eligible(state, request, normal_waiters)
         if rejection is not None:
+            trace_rows.append(
+                TraceAccount(name=state.name, eligible=False, rejection=rejection)
+            )
             continue
         quota = _group_quota(grouped, state, request)
         if quota is None:
+            trace_rows.append(
+                TraceAccount(
+                    name=state.name, eligible=False, rejection="usage_unavailable"
+                )
+            )
             continue
-        five_remaining, weekly_remaining, five_reset, weekly_reset = quota
         required_five = max(config.five_hour_floor_pct, cost.five_hour_pct * config.safety_factor)
         required_weekly = cost.weekly_pct * config.safety_factor
-        strict = five_remaining >= required_five and weekly_remaining >= required_weekly
-        wait = _wait_minutes(
-            five_remaining,
-            weekly_remaining,
-            five_reset,
-            weekly_reset,
-            cost,
-            config,
-            now,
+        strict = (
+            quota.five_remaining >= required_five
+            and quota.weekly_remaining >= required_weekly
         )
+        waits = _window_waits(quota, cost, config, now)
+        wait = max(waits) if waits is not None else None
+        score, _urgency_value, boost = _score(
+            state, quota.weekly_remaining, quota.weekly_reset, config, now
+        )
+        scores[state.name] = (score, _urgency_value, boost)
         if strict:
-            score = _score(state, weekly_remaining, weekly_reset, config, now)
-            ranked.append(
-                (RankedAccount(state.name, score, "strict", 0.0, weekly_remaining), state)
-            )
+            eligible = True
+            rejection_code: Optional[str] = None
+            reason = "strict"
+            rank_wait = 0.0
         elif background and wait is not None and wait <= config.burn_horizon_minutes:
-            score = _score(state, weekly_remaining, weekly_reset, config, now)
+            eligible = True
+            rejection_code = None
+            reason = "burn"
+            rank_wait = wait
+        else:
+            eligible = False
+            rejection_code = "quota_exhausted"
+            reason = ""
+            rank_wait = 0.0
+        hours_to_binding_reset: Optional[float] = None
+        binding_window: Optional[str] = None
+        if eligible:
+            five_wait, weekly_wait = waits if waits is not None else (0.0, 0.0)
+            binding_window, binding_reset = _binding_window(quota, five_wait, weekly_wait)
+            hours_to_binding_reset = _hours_until(binding_reset, now)
             ranked.append(
-                (RankedAccount(state.name, score, "burn", wait, weekly_remaining), state)
+                (
+                    RankedAccount(
+                        state.name, score, reason, rank_wait, quota.weekly_remaining
+                    ),
+                    state,
+                )
             )
+        trace_rows.append(
+            TraceAccount(
+                name=state.name,
+                eligible=eligible,
+                rejection=rejection_code,
+                pool=state.pool_key,
+                weekly_remaining_pct=round(quota.weekly_remaining, 4),
+                five_hour_remaining_pct=round(quota.five_remaining, 4),
+                hours_to_binding_reset=(
+                    round(hours_to_binding_reset, 4)
+                    if hours_to_binding_reset is not None
+                    else None
+                ),
+                binding_window=binding_window,
+                urgency_score=round(score, 4),
+                expiry_boost=round(boost, 4),
+            )
+        )
 
     if not ranked:
         return SchedulerResult(
@@ -365,15 +563,27 @@ def schedule_account(
             exhausted=True,
             resume_after=_earliest_resume(states, request, cost, config, now),
             reason="quota_exhausted",
+            trace=DecisionTrace(accounts=tuple(trace_rows[:MAX_TRACE_ACCOUNTS])),
         )
 
     ranked.sort(key=lambda pair: _sort_key(pair[0], pair[1], background))
+    rank_by_name = {
+        rank.account: position for position, (rank, _) in enumerate(ranked, start=1)
+    }
+    traced = tuple(replace(row, rank=rank_by_name.get(row.name)) for row in trace_rows)
+    truncated = len(traced) > MAX_TRACE_ACCOUNTS
     return SchedulerResult(
         account=ranked[0][0].account,
         estimated_cost=cost,
         exhausted=False,
         reason=ranked[0][0].reason,
         candidates=tuple(rank for rank, _ in ranked),
+        trace=DecisionTrace(
+            accounts=traced[:MAX_TRACE_ACCOUNTS],
+            winner=ranked[0][0].account,
+            rule=_deciding_rule(ranked, background, scores),
+            truncated=truncated,
+        ),
     )
 
 
@@ -408,21 +618,15 @@ def account_eligibility(
     if quota is None:
         return "usage_unavailable"
     cost = estimate_cost(request, config)
-    five_remaining, weekly_remaining, five_reset, weekly_reset = quota
     required_five = max(config.five_hour_floor_pct, cost.five_hour_pct * config.safety_factor)
     required_weekly = cost.weekly_pct * config.safety_factor
-    if five_remaining >= required_five and weekly_remaining >= required_weekly:
+    if (
+        quota.five_remaining >= required_five
+        and quota.weekly_remaining >= required_weekly
+    ):
         return None
     if allow_burn:
-        wait = _wait_minutes(
-            five_remaining,
-            weekly_remaining,
-            five_reset,
-            weekly_reset,
-            cost,
-            config,
-            now,
-        )
+        wait = _wait_minutes(quota, cost, config, now)
         if wait is not None and wait <= config.burn_horizon_minutes:
             return None
     return "quota_exhausted"

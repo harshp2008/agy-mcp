@@ -5,21 +5,24 @@ parity, read that account's ``/usage`` with the right cache key and identity
 expectation, count its active jobs and reservations, then call
 ``schedule_account``. It must never log in/out, never read a token or keyring,
 never write into an account home, and never invent an eligible account when the
-scheduler says the quota is exhausted.
+scheduler says the quota is exhausted. It is the only layer that attaches masked
+emails to the scheduler's decision trace.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 from agy_mcp.accounts.errors import AccountError
 from agy_mcp.accounts.policy import PolicyCheck, check_policy_parity
 from agy_mcp.accounts.pools import AccountUsage, account_usage_from_reading
 from agy_mcp.accounts.registry import AccountConfig, AccountRegistry, validate_account_home
 from agy_mcp.accounts.scheduler import (
+    MAX_TRACE_ACCOUNTS,
     PRIORITY_BACKGROUND,
     AccountState,
+    DecisionTrace,
     JobRequest,
     SchedulerConfig,
     SchedulerResult,
@@ -64,6 +67,7 @@ class Selection:
     masked_email: Optional[str] = None
     policy: Optional[PolicyCheck] = None
     rejections: tuple[RejectedAccount, ...] = ()
+    trace: Optional[DecisionTrace] = None
 
     @property
     def account_name(self) -> Optional[str]:
@@ -78,11 +82,71 @@ def scheduler_config_from_config(config: Config) -> SchedulerConfig:
         expected_minutes=int(config.account_cost_expected_minutes),
         safety_factor=float(config.account_cost_safety_factor),
         five_hour_floor_pct=float(config.account_five_hour_floor_pct),
+        full_window_margin_pct=float(config.account_full_window_margin_pct),
         burn_horizon_minutes=int(config.account_burn_horizon_minutes),
         expires_boost_horizon_hours=int(config.account_expires_boost_horizon_hours),
         five_hour_per_1k_tokens=float(config.quota_estimate_five_hour_per_1k_tokens),
         weekly_per_1k_tokens=float(config.quota_estimate_weekly_per_1k_tokens),
     )
+
+
+def _trace_with_emails(
+    trace: Optional[DecisionTrace], masked_by_name: dict[str, Optional[str]]
+) -> Optional[DecisionTrace]:
+    """Return the trace with each row's masked email filled in.
+
+    The scheduler never sees an address; this module owns the usage readings, so
+    it is the only place that can attach the masked form. ``replace`` keeps the
+    pure trace immutable.
+    """
+    if trace is None:
+        return None
+    rows = tuple(
+        replace(row, masked_email=masked_by_name.get(row.name)) for row in trace.accounts
+    )
+    return replace(trace, accounts=rows)
+
+
+def decision_trace_detail(trace: Optional[DecisionTrace]) -> Optional[dict[str, Any]]:
+    """Render a :class:`DecisionTrace` as the additive audit detail (D115).
+
+    The shape is JSON-serializable and bounded by ``MAX_TRACE_ACCOUNTS``. A row
+    for an ineligible account carries only its name, eligibility and rejection
+    code; an eligible row also carries the ranking inputs and its 1-based rank.
+    The winner's masked email is already in the parent event detail, and every
+    row repeats only the masked form, never a full address.
+    """
+    if trace is None:
+        return None
+    accounts: list[dict[str, Any]] = []
+    for row in trace.accounts[:MAX_TRACE_ACCOUNTS]:
+        item: dict[str, Any] = {
+            "account": row.name,
+            "eligible": row.eligible,
+        }
+        if row.masked_email is not None:
+            item["account_masked_email"] = row.masked_email
+        if not row.eligible:
+            item["rejection"] = row.rejection
+            accounts.append(item)
+            continue
+        item["pool"] = row.pool
+        item["weekly_remaining_pct"] = row.weekly_remaining_pct
+        item["five_hour_remaining_pct"] = row.five_hour_remaining_pct
+        item["hours_to_binding_reset"] = row.hours_to_binding_reset
+        item["binding_window"] = row.binding_window
+        item["urgency_score"] = row.urgency_score
+        item["expiry_boost"] = row.expiry_boost
+        item["rank"] = row.rank
+        accounts.append(item)
+    detail: dict[str, Any] = {"accounts": accounts}
+    if trace.winner is not None:
+        detail["winner"] = trace.winner
+    if trace.rule:
+        detail["rule"] = trace.rule
+    if trace.truncated:
+        detail["truncated"] = True
+    return detail
 
 
 def _is_active(job: Job) -> bool:
@@ -293,11 +357,27 @@ class AccountSelector:
                     f"account '{account}' cannot take this job: {reason}",
                     code=code,
                 )
+            # The automatic ranking is still computed so the audit trace records
+            # every considered account; the explicit override only replaces the
+            # winner and the deciding rule (D115).
+            ranking = schedule_account(
+                state_tuple,
+                request,
+                now,
+                scheduler_config,
+                normal_waiters=frozenset(),
+            )
+            trace = replace(
+                ranking.trace,
+                winner=account,
+                rule="force" if force else "explicit_account",
+            )
             result = SchedulerResult(
                 account=account,
                 estimated_cost=estimate_cost(request, scheduler_config),
                 exhausted=False,
                 reason="forced" if force else "override",
+                trace=trace,
             )
             return Selection(
                 account=config_account,
@@ -306,6 +386,7 @@ class AccountSelector:
                 masked_email=masked_by_name.get(account),
                 policy=policies.get(account),
                 rejections=rejections,
+                trace=_trace_with_emails(trace, masked_by_name),
             )
 
         result = schedule_account(
@@ -350,4 +431,5 @@ class AccountSelector:
             masked_email=masked_by_name.get(result.account) if result.account else None,
             policy=policies.get(result.account) if result.account else None,
             rejections=rejections,
+            trace=_trace_with_emails(result.trace, masked_by_name),
         )

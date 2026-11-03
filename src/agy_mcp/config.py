@@ -94,6 +94,7 @@ class Config:
     account_cost_expected_minutes: int = 30
     account_cost_safety_factor: float = 1.5
     account_five_hour_floor_pct: float = 15.0
+    account_full_window_margin_pct: float = 0.1
     account_burn_horizon_minutes: int = 90
     account_handoff_min_wait_minutes: int = 120
     account_usage_max_age_seconds: int = 60
@@ -153,6 +154,7 @@ def _validate_config_dict(data: dict[str, Any]) -> tuple[dict[str, Any], list[st
         "account_cost_expected_minutes",
         "account_cost_safety_factor",
         "account_five_hour_floor_pct",
+        "account_full_window_margin_pct",
         "account_burn_horizon_minutes",
         "account_handoff_min_wait_minutes",
         "account_usage_max_age_seconds",
@@ -334,7 +336,10 @@ def _validate_config_dict(data: dict[str, Any]) -> tuple[dict[str, Any], list[st
                 raise ConfigError(f"'{key}' must be >= 1.0, got {factor}")
             validated[key] = factor
 
-        elif key == "account_five_hour_floor_pct":
+        elif key in (
+            "account_five_hour_floor_pct",
+            "account_full_window_margin_pct",
+        ):
             if isinstance(val, bool) or not isinstance(val, (int, float)):
                 raise ConfigError(
                     f"Expected number (float/int) for '{key}', got {type(val).__name__}: {val!r}"
