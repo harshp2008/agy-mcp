@@ -327,10 +327,12 @@ The `plan`, `facts`, `agent_report` and `scratchpad` fields are wrapper-owned (D
   - `job_id`: `str` (Required)
   - `answer`: `str` (Required, response to decision prompt, fix direction, or continue)
   - `follow_up`: `bool` = `False` (optional; D81). When `true`, a `done` or `cancelled` job may continue the same conversation on the same worktree. When `false` (default) those states remain `invalid_state_for_resume`.
+  - `allow_handoff`: `bool` = `False` (optional; D111). When the pinned account is still exhausted and this is true (or the pause exceeds `account_handoff_min_wait_minutes`), the job may move to another eligible account. The conversation db is copied and locked; if it is missing, corrupt, incomplete or locked, a summary handoff runs on the target instead. The job keeps its worktree and branch; a dirty worktree is checkpoint-committed first.
 - **Returns:** Standard envelope with `state="running"` and the additive field `conversation_continued`:
   - `true`: a strict-UUID conversation id was passed to agy as `--conversation`.
   - `false`: no valid id existed; the run started a fresh conversation with a self-contained prompt (original task summary, current HEAD, files changed) and `warnings` contains `conversation_not_continued: ...`. The wrapper never passes a non-UUID.
 - The answer-prefix audit trigger (`Resumed with answer: <answer[:40]>`; `Follow-up resumed with answer: ...` for a follow-up) is unchanged.
+- A transfer updates `job.account`, `transferred_from`, `transferred_to` and the envelope's `account`/`account_email` (masked); it records `conversation_transferred` or `handoff_summary` in `audit.jsonl`. The source db is never deleted, and a non-empty `-wal` sidecar refuses the copy.
 
 #### 8. `agy_review`
 - **Parameters:**

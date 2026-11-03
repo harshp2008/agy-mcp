@@ -18,7 +18,7 @@ continues from its "next step" instead of redoing finished phases.
 | 4 | Usage pools | done | 5d6830e | ruff, frozen 13, docs 89, publish 877, reference/codemap fresh, AST 36, 103 tests | Phase 5 scheduler |
 | 5 | Scheduler | done | a6b146c | ruff, frozen 13, docs 89, publish 880, reference/codemap fresh, AST 37, full suite `-n 4` 1935 passed (106 s) | Phase 6 job wiring |
 | 6 | Job model and wiring | done | c3adc70 | ruff, frozen 13, docs 89, publish 882, reference/codemap fresh, AST 39, full suite `-n 4` 1950 passed (134 s) | Phase 7 transfer |
-| 7 | Exhaustion, transfer, handoff | pending | — | — | conversation copy + lock |
+| 7 | Exhaustion, transfer, handoff | done | (this commit) | ruff, frozen 13, docs 89, publish 885, reference/codemap fresh, AST 41, full suite `-n 4` 1967 passed (103 s) | Phase 8 installer/doctor |
 | 8 | Installer, doctor, user docs | pending | — | — | `--doctor` account checks |
 | 9 | Hardening and final review | pending | — | — | final gates |
 

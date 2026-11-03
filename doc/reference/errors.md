@@ -38,6 +38,12 @@ account-registry/identity codes and the two server-generated fallbacks
 | `account_name_duplicate` | `registry.py` |
 | `account_name_invalid` | `registry.py` |
 | `account_not_found` | `manager.py`, `registry.py` |
+| `account_transfer_conflict` | `transfer.py` |
+| `account_transfer_corrupt` | `transfer.py` |
+| `account_transfer_incomplete` | `transfer.py` |
+| `account_transfer_invalid_id` | `transfer.py` |
+| `account_transfer_locked` | `transfer.py` |
+| `account_transfer_source_missing` | `transfer.py` |
 | `audit_violation` | `manager.py` |
 | `cannot_resume_security_review` | `manager.py` |
 | `cap_exceeded` | `manager.py` |
@@ -46,6 +52,7 @@ account-registry/identity codes and the two server-generated fallbacks
 | `cleanup_failed` | `manager.py` |
 | `concurrency_limit_exceeded` | `manager.py` |
 | `forbidden_flag` | `runner.py` |
+| `handoff_checkpoint_failed` | `manager.py` |
 | `home_prohibited` | `worktree.py` |
 | `insufficient_disk_space` | `manager.py`, `worktree.py` |
 | `internal_error` | `server.py` |
@@ -156,6 +163,13 @@ fail-closed: a start or resume does not proceed.
 | `account_concurrency_limit` | The account's own `max_concurrent_jobs` is reached. | Wait for a job to leave `queued`/`running`, or raise the account cap. |
 | `invalid_priority` | `priority` is not `normal` or `background`. | Pass one of those two values. |
 | `no_account_eligible` | The scheduler found no account that can take the job; the message names the earliest reset. | Wait for the reset, add/enable an account, or use `force=true` with a specific `account`. |
+| `account_transfer_invalid_id` | The job's conversation id is not a strict UUID. | Resume without a conversation id (a summary handoff is used) or start a new job. |
+| `account_transfer_source_missing` | The source account has no `conversations/<id>.db`. | The wrapper falls back to a summary handoff automatically. |
+| `account_transfer_corrupt` | The db is not a SQLite file, or the copy failed its header check. | The wrapper falls back to a summary handoff; inspect the file if this repeats. |
+| `account_transfer_incomplete` | A non-empty `-wal` sidecar means the db is not fully checkpointed. | Let the writing process exit, then retry; the wrapper falls back to a handoff. |
+| `account_transfer_conflict` | The target already has a different file for the same conversation id. | The wrapper falls back to a summary handoff; remove the stale target file only after review. |
+| `account_transfer_locked` | Another transfer of the same conversation is in progress. | Retry after the other transfer finishes; the wrapper falls back to a summary handoff. |
+| `handoff_checkpoint_failed` | The pre-handoff WIP commit failed. | Inspect the worktree; the job is not switched, so no work is lost. |
 
 ## Notes
 

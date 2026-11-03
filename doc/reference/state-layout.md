@@ -110,6 +110,8 @@ envelopes read them.
 | `priority` | `str` |
 | `account_masked_email` | `str | null` |
 | `quota_reservation` | `dict[str, Any] | null` |
+| `transferred_from` | `str | null` |
+| `transferred_to` | `str | null` |
 | `max_minutes` | `int` |
 | `verify` | `str | null` |
 | `verify_timeout_seconds` | `int` |
@@ -162,6 +164,8 @@ envelopes read them.
 additive and **conditional**: they are written only when a registry selected an
 account (or, for `priority`, when it is not `normal`), so a single-account
 `job.json` is byte-identical to the pre-multi-account record (D110).
+`transferred_from`/`transferred_to` are written only after a conversation
+transfer or summary handoff (D111).
 
 ## Safety rules
 

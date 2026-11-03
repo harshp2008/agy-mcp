@@ -31,7 +31,7 @@ client shows to a model) are the canonical "when to call / next action" wording.
 | `agy_result` | `job_id`: string (required) |
 | `agy_cancel` | `job_id`: string (required) |
 | `agy_list` | none |
-| `agy_resume` | `job_id`: string (required), `answer`: string (required), `follow_up`: boolean = false |
+| `agy_resume` | `job_id`: string (required), `answer`: string (required), `follow_up`: boolean = false, `allow_handoff`: boolean = false |
 | `agy_review` | `job_id`: string (required) |
 | `agy_cleanup` | `job_id`: string (required), `remove_worktree`: boolean = true, `delete_branch`: boolean = false, `force`: boolean = false |
 | `agy_usage` | none |

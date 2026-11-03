@@ -9,11 +9,10 @@ what the wrapper will and will not do with it. The normative rules are D102–D1
 in [the decisions log](../design/decisions.md); the full design is
 [the multi-account design](../design/multi-account.md).
 
-> **Implementation status (Phase 6 of the multi-account work).** The registry,
-> per-account usage, the quota-aware scheduler and account selection in
-> `agy_start` are implemented, including explicit `account`, `priority` and
-> `force`. Pinning across resumes is implemented. Conversation transfer/summary
-> handoff and the `--doctor` account checks arrive in later phases.
+> **Implementation status (Phase 7 of the multi-account work).** The registry,
+> per-account usage, the quota-aware scheduler, account selection in `agy_start`,
+> pinning across resumes, conversation transfer and the summary handoff are
+> implemented. The `--doctor` account checks arrive in Phase 8.
 
 ## What the wrapper never does
 

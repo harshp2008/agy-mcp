@@ -65,6 +65,11 @@ The event names are generated from the `event="..."` literals in
 registry account; `account_rejected` is written once per account the scheduler
 could not use (at most five). Their details carry the registry `name`, the
 machine-readable reason and a **masked** email only, never the full address.
+`conversation_transferred` records a successful db copy (conversation id, size,
+source and target account); `handoff_summary` records the fallback, with
+`fallback_reason` carrying one of the `account_transfer_*` codes. Those two event
+names are passed through a variable, so the generated table above does not list
+them.
 
 | Event | Meaning |
 |---|---|

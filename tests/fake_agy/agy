@@ -364,6 +364,49 @@ def detect_usage_scenario() -> str:
     return "usage_real"
 
 
+CONVERSATIONS_REL = Path(".gemini") / "antigravity-cli" / "conversations"
+
+
+def _conversation_store_enabled() -> bool:
+    """True when the HOME opts into the fake conversation-store behaviour.
+
+    Disabled by default so the pre-existing resume-echo tests keep their old
+    contract; a multi-account test enables it by touching
+    ``$HOME/.fake_agy_conversation_store``.
+    """
+    home = os.environ.get("HOME")
+    return bool(home) and (Path(home) / ".fake_agy_conversation_store").is_file()
+
+
+def _conversation_db_path(conversation_id: str) -> Path | None:
+    home = os.environ.get("HOME")
+    if not home:
+        return None
+    return Path(home) / CONVERSATIONS_REL / f"{conversation_id}.db"
+
+
+def _write_conversation_db(conversation_id: str) -> None:
+    """Create a SQLite-header conversation file for this HOME (fake, not a real DB)."""
+    if not _conversation_store_enabled():
+        return
+    path = _conversation_db_path(conversation_id)
+    if path is None or path.is_file():
+        return
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        os.chmod(path.parent, 0o700)
+        corrupt = (Path(os.environ["HOME"]) / ".fake_agy_corrupt_conversation").is_file()
+        payload = (
+            b"not a sqlite database\n"
+            if corrupt
+            else b"SQLite format 3\x00" + f"fake conversation {conversation_id}\n".encode()
+        )
+        path.write_bytes(payload)
+        os.chmod(path, 0o600)
+    except Exception:
+        pass
+
+
 def _fake_usage_email() -> str:
     """Return the per-HOME synthetic email, or the default test address."""
     home = os.environ.get("HOME")
@@ -574,7 +617,14 @@ def main() -> None:
     fresh_seed = _fake_setting(
         log_file, "FAKE_AGY_FRESH_UUID_SEED", ".fake_agy_fresh_uuid_seed"
     )
-    if resumed:
+    if resumed and conversation_id is not None and _conversation_store_enabled():
+        db_path = _conversation_db_path(conversation_id)
+        if db_path is not None and not db_path.is_file():
+            # Mirror the real CLI: warn and silently start a NEW conversation.
+            sys.stderr.write(f'warning: conversation "{conversation_id}" not found\n')
+            conversation_id = None
+            resumed = False
+    if resumed and conversation_id is not None:
         log_entry(log_file, f"Print mode: resuming conversation {conversation_id}")
     else:
         seed = "fake-agy:" + str(log_file or os.getcwd())
@@ -584,6 +634,7 @@ def main() -> None:
             seed += "|ignored"
         conversation_id = str(uuid.uuid5(uuid.NAMESPACE_URL, seed))
         log_entry(log_file, f"Created conversation {conversation_id}")
+    _write_conversation_db(conversation_id)
     scenario = detect_scenario(prompt, log_file)
     log_entry(log_file, f"Detected simulation scenario: {scenario}")
 

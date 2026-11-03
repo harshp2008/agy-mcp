@@ -22,13 +22,24 @@ from agy_mcp import scratchpad
 from agy_mcp import usage as usage_utils
 from agy_mcp.accounts.env import build_account_env
 from agy_mcp.accounts.errors import AccountError
+from agy_mcp.accounts.handoff import build_handoff_prompt
 from agy_mcp.accounts.policy import check_policy_parity
 from agy_mcp.accounts.registry import (
     AccountConfig,
     build_registry,
     validate_account_home,
 )
-from agy_mcp.accounts.selection import AccountSelector, Selection
+from agy_mcp.accounts.scheduler import (
+    JobRequest,
+    account_eligibility,
+    remaining_until_reset,
+)
+from agy_mcp.accounts.selection import (
+    AccountSelector,
+    Selection,
+    scheduler_config_from_config,
+)
+from agy_mcp.accounts.transfer import transfer_conversation
 from agy_mcp.audit import (
     AuditSeverity,
     Finding,
@@ -543,6 +554,159 @@ class JobManager:
         prov_thread.start()
 
         return build_standard_envelope(job, 0.0)
+
+    def _build_handoff_prompt(
+        self, job: Job, from_account: str, to_account: str
+    ) -> str:
+        """Build the summary handoff from wrapper facts only (D111)."""
+        job_dir = get_job_dir(job.job_id, self.state_dir)
+        original = ""
+        prompt_file = job_dir / "prompt.txt"
+        if prompt_file.is_file():
+            try:
+                original = prompt_file.read_text(encoding="utf-8", errors="replace")[:4000]
+            except OSError:
+                original = ""
+        plan = job.plan_summary if isinstance(job.plan_summary, dict) else {}
+        remaining = plan.get("remaining") if isinstance(plan.get("remaining"), list) else []
+        total = int(plan.get("total", 0) or 0)
+        done_count = int(plan.get("done", 0) or 0)
+        done = [f"{done_count} of {total} plan items completed"] if total else []
+        worktree = job.worktree_path
+        base = worktree if worktree and worktree.is_dir() else job.repo_path
+        git_log = run_git(["log", "--oneline", "-n", "20"], base, check=False).stdout
+        diff_stat = run_git(
+            ["diff", "--stat", f"{job.base_commit}..HEAD"], base, check=False
+        ).stdout
+        return build_handoff_prompt(
+            title=job.title,
+            original_prompt=original,
+            branch=job.branch,
+            worktree=str(worktree) if worktree else None,
+            base_commit=job.base_commit,
+            head_commit=job.head_commit,
+            plan_done=done,
+            plan_remaining=[str(item) for item in remaining],
+            git_log=git_log,
+            diff_stat=diff_stat,
+            last_report=job.agent_report,
+            verify=job.verify,
+            from_account=from_account,
+            to_account=to_account,
+        )
+
+    def _maybe_switch_account(
+        self, job: Job, allow_handoff: bool
+    ) -> Optional[str]:
+        """Switch a quota-paused job to another account, or return a handoff prompt.
+
+        Returns None when the job stays on its pinned account (quota recovered, or
+        the pause is short and the caller did not ask). When a target exists and
+        the conversation db can be copied, the job is re-pinned and the same
+        conversation continues there. Otherwise the conversation id is dropped and
+        the returned summary prompt resumes the work on the target (D111).
+        """
+        if not self.registry.configured:
+            return None
+        pinned = job.account or "default"
+        try:
+            selection = self._get_account_selector().select(
+                job.model, job.max_minutes, job.priority
+            )
+        except AccountError:
+            return None
+        now = datetime.now(timezone.utc)
+        request = JobRequest(job.model, job.max_minutes, job.priority)
+        scheduler_config = scheduler_config_from_config(self.config)
+        pinned_reason = account_eligibility(
+            selection.states,
+            pinned,
+            request,
+            now,
+            scheduler_config,
+            allow_burn=job.priority == "background",
+        )
+        if pinned_reason is None:
+            return None
+        target = selection.account
+        if target is None or target.name == pinned:
+            return None
+
+        wait_minutes: Optional[float] = None
+        if job.resume_after:
+            remaining = remaining_until_reset(job.resume_after, now)
+            if remaining is not None:
+                wait_minutes = remaining.total_seconds() / 60.0
+        if not allow_handoff and (
+            wait_minutes is None
+            or wait_minutes <= self.config.account_handoff_min_wait_minutes
+        ):
+            return None
+
+        source_account = self._account_for_job(job)
+        if job.worktree_path and job.worktree_path.is_dir():
+            from agy_mcp.gitops import is_worktree_dirty
+
+            try:
+                if is_worktree_dirty(job.worktree_path):
+                    checkpoint_commit(job.worktree_path, job=job)
+            except Exception as exc:
+                raise ManagerError(
+                    "failed to checkpoint work before switching accounts",
+                    code="handoff_checkpoint_failed",
+                ) from exc
+
+        handoff_prompt: Optional[str] = None
+        audit_event = "handoff_summary"
+        audit_detail: dict[str, Any] = {
+            "from_account": source_account.name,
+            "to_account": target.name,
+        }
+        if selection.masked_email is not None:
+            audit_detail["account_masked_email"] = selection.masked_email
+        conversation_id = strict_uuid(job.conversation_id)
+        if conversation_id is not None:
+            try:
+                transfer = transfer_conversation(
+                    source_account.expanded_home,
+                    target.expanded_home,
+                    conversation_id,
+                    self.state_dir,
+                )
+            except AccountError as exc:
+                audit_detail["fallback_reason"] = exc.code
+                handoff_prompt = self._build_handoff_prompt(
+                    job, source_account.name, target.name
+                )
+                job.conversation_id = None
+            else:
+                audit_event = "conversation_transferred"
+                audit_detail["conversation_id"] = transfer.conversation_id
+                audit_detail["size_bytes"] = transfer.size_bytes
+        else:
+            handoff_prompt = self._build_handoff_prompt(
+                job, source_account.name, target.name
+            )
+
+        job.account = target.name
+        job.account_masked_email = selection.masked_email
+        if selection.result.estimated_cost is not None:
+            cost = selection.result.estimated_cost
+            job.quota_reservation = {
+                "five_hour_pct": cost.five_hour_pct,
+                "weekly_pct": cost.weekly_pct,
+                "estimated_minutes": cost.estimated_minutes,
+            }
+        if job.transferred_from is None:
+            job.transferred_from = source_account.name
+        job.transferred_to = target.name
+        save_job(job, self.state_dir)
+        append_audit_event(
+            get_job_dir(job.job_id, self.state_dir),
+            event=audit_event,
+            detail=audit_detail,
+        )
+        return handoff_prompt
 
     def _provision_and_launch(
         self,
@@ -1558,12 +1722,15 @@ class JobManager:
         answer: str,
         is_trusted: bool = False,
         follow_up: bool = False,
+        allow_handoff: bool = False,
     ) -> StandardEnvelope:
         """Resume a conversation after decision, timeout, or non-security review.
 
         ``follow_up=True`` is the explicit opt-in that also permits done and
         cancelled jobs to continue the same conversation on the same worktree.
-        The default gate is unchanged.
+        The default gate is unchanged. ``allow_handoff=True`` lets a
+        quota-paused job move to another account immediately instead of waiting
+        for the configured handoff threshold (D111).
         """
         self._validate_job_id(job_id)
         # Do not start a new generation while the previous supervisor is still
@@ -1613,9 +1780,15 @@ class JobManager:
             if job.cumulative_minutes >= effective_limit:
                 raise ManagerError("Cumulative job time budget exhausted", code="cap_exceeded")
 
-            # Pinned account: verify home/policy, then guard against its quota.
+            # Pinned account: verify home/policy, then consider a handoff to a
+            # different account when the pinned one is still exhausted (D111).
             account = self._account_for_job(job)
             self._check_account_ready(account)
+            handoff_prompt = self._maybe_switch_account(job, allow_handoff)
+            if handoff_prompt is not None:
+                answer = f"{handoff_prompt}\n\n## Caller answer\n{answer}"
+                account = self._account_for_job(job)
+                self._check_account_ready(account)
 
             # Usage guard on resume (D59, Item 4).
             self._apply_usage_guard(job.model, job.warnings, account=account)
