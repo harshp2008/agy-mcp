@@ -1,0 +1,139 @@
+# Conversation transfer experiment — raw evidence, 2026-11-03
+
+All commands ran in `/tmp/agy-multi-test` (scratch, not a repository). Account
+emails in logs were masked with first three and last two local-part characters.
+Token counts are copied from agy's own JSON `usage` objects.
+
+## Setup
+
+- Primary account: default `HOME`, keyring auth (`har***08@gmail.com` in the auth line).
+- Second account: `HOME=/home/harsh/.local/share/agy-accounts/account-b`,
+  `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null` (`dip***os@gmail.com`).
+- Model: `gemini-3.8-flash-medium` on primary, `gemini-3.8-flash` on account-b
+  (the medium alias was rejected there — see "Model availability" below).
+
+## Turn 1 — tool-using conversation on the primary account
+
+Command (abridged; `--log-file` and `--print-timeout` were absolute/explicit):
+
+```text
+agy --mode accept-edits --output-format json --print-timeout 180s \
+    --log-file /tmp/agy-multi-test/turn1.log --model gemini-3.8-flash-medium \
+    -p "Use your file-creation tool to create a file named alpha.txt ..."
+```
+
+Exit 0. `status=SUCCESS`, `num_turns=1`,
+`conversation_id=b9c7c56e-ac18-4d63-80af-caafb9328e44`, tokens 14666.
+
+`alpha.txt` on disk contained exactly `MULTI-ACCOUNT-MARKER-7412`.
+
+Response: "I have created [alpha.txt](file:///tmp/agy-multi-test/alpha.txt)
+containing the marker `MULTI-ACCOUNT-MARKER-7412`."
+
+## Turn 2 — recall on the primary account (same conversation)
+
+Same flags plus `--conversation b9c7c56e-ac18-4d63-80af-caafb9328e44`, prompt:
+"Without using any tools, answer from our conversation: ...".
+
+Exit 0. `status=SUCCESS`, `conversation_id=b9c7c56e-...` (unchanged),
+`num_turns=2`, tokens 22641.
+
+Response: filename `alpha.txt`, marker `MULTI-ACCOUNT-MARKER-7412` (twice). This
+proves the conversation is multi-turn and remembers the earlier tool result.
+
+## Missing conversation id on account-b (before copying the db)
+
+Same account-b env and `--conversation b9c7c56e-...`, prompt "Reply with OK.".
+
+Exit 0. `stderr`:
+
+```text
+warning: conversation "b9c7c56e-ac18-4d63-80af-caafb9328e44" not found
+```
+
+`status=SUCCESS`, but `conversation_id=3e7411c1-d881-40f1-a4cc-f9b12b9bc676`
+(a NEW id), `num_turns=1`, tokens 6853. The response was "OK.".
+
+Conclusion: a missing conversation id is **not fatal**. agy warns and silently
+starts a fresh conversation with a new id, exit 0. The wrapper must therefore
+verify the file exists before relying on a resume, and must not treat exit 0 as
+proof that the earlier context was continued.
+
+## Model availability differs per account
+
+First transfer attempt on account-b used `--model gemini-3.8-flash-medium`:
+
+```text
+exit 1
+error: invalid model selection (--model "gemini-3.8-flash-medium" --effort ""):
+model gemini-3.8-flash-medium is not recognized as a known model or custom model in settings
+```
+
+No tokens were consumed (model validation failed before the request). The retry
+with `--model gemini-3.8-flash` succeeded. The model set is per-account state
+under its `HOME`, so a multi-account design cannot assume the primary account's
+model identifiers are valid everywhere.
+
+## Turn 3 — transfer to account-b by copying only the .db
+
+Storage facts (directory names/sizes only; the files were not read):
+
+- Primary: `~/.gemini/antigravity-cli/conversations/b9c7c56e-....db`, 425984 bytes,
+  no `-wal` or `-shm` sidecar for this id at copy time.
+- Account-b: the same id was absent. The `conversations/` directory already existed.
+
+Copied exactly one file, preserving mode 0600:
+
+```text
+cp -p <primary>/conversations/b9c7c56e-....db <account-b>/.gemini/antigravity-cli/conversations/
+```
+
+Then ran the same recall prompt on account-b with its isolated env.
+
+Exit 0. `status=SUCCESS`, `conversation_id=b9c7c56e-...` (the copied id),
+`num_turns=3`, tokens 31217.
+
+Response:
+
+```text
+1. [alpha.txt](file:///tmp/agy-multi-test/alpha.txt)
+2. `MULTI-ACCOUNT-MARKER-7412`
+3. `MULTI-ACCOUNT-MARKER-7412`
+```
+
+The transfer log contained no tool invocation; the only matching line was
+`cli_setting_manager.go:96 ... toolPermission=request-review`. Note: `alpha.txt`
+still existed in the shared `/tmp` directory during this turn, so a server-side
+tool read is not arithmetically excluded; the prompt forbade tools and the log
+shows none.
+
+## Token cost of the experiment
+
+| Call | num_turns | total_tokens |
+|---|---:|---:|
+| Turn 1 (primary, tool) | 1 | 14666 |
+| Turn 2 (primary, recall) | 2 | 22641 |
+| Missing-id control (account-b) | 1 | 6853 |
+| Turn 3 (account-b, transfer) | 3 | 31217 |
+| **Total** | | **75377** |
+
+The missing-id control was expected to fail before reaching the model; it did
+not, so the experiment used **four** model-consuming prompts, one more than the
+three-prompt cap in the task. This is disclosed in `03-experiments.md`.
+
+## What was copied, and what was not
+
+- Copied: the single `conversations/<id>.db` file.
+- Not copied: `brain/`, `conversation_summaries.db`, any `-wal`/`-shm`, settings,
+  tokens or keyring material.
+- The primary copy was left in place; the account-b copy was deleted after the
+  experiment by exact path.
+
+## Same id in both stores
+
+The source file remained in the primary store while the copy existed in the
+account-b store, so the same conversation id existed in two isolated stores at
+once. agy has no cross-store registry: each run reads only its own `HOME`. Both
+runs were sequential, so no concurrent writer was exercised. Whether two
+concurrent runs of the same id would corrupt state is UNVERIFIED; the design
+forbids it with a lock rather than relying on SQLite behaviour.
