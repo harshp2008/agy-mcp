@@ -176,6 +176,61 @@ The same module can be run directly:
   --config ~/.config/agy-mcp/config.toml --agy-binary ~/.local/bin/agy
 ```
 
+## How to read the decision trace
+
+Every job started on a registry account writes an `account_selected` line to
+`<state>/jobs/<job-id>/audit.jsonl`. When a registry is configured that line
+also carries a `decision_trace` object, so you can see **why** an account won
+without re-running the scheduler (D115). With no `[[accounts]]` registry the
+event is not written, exactly as before.
+
+```bash
+python -c 'import json,sys; [print(json.dumps(json.loads(l)["detail"], indent=2))
+  for l in open(sys.argv[1]) if json.loads(l)["event"] == "account_selected"]' \
+  "$STATE/jobs/<job-id>/audit.jsonl"
+```
+
+The trace has one row per registered account considered:
+
+- `eligible: false` rows carry a `rejection` code such as `disabled`,
+  `quota_exhausted`, `account_concurrency` or `usage_unavailable`.
+- `eligible: true` rows carry the ranking inputs: the shared `pool`, the
+  effective `weekly_remaining_pct` / `five_hour_remaining_pct` (after
+  reservations), `hours_to_binding_reset`, `binding_window`, `urgency_score`
+  (urgency plus the optional `expires_at` boost), `expiry_boost` and `rank`
+  (`1` is the winner).
+- `winner` is the chosen registry name and `rule` is the first criterion that
+  separated it from the runner-up: `urgency`, `expires_at`, `load`, `lru`,
+  `only_candidate`, `explicit_account` or `force`.
+
+A worked read of the 2026-11-04 human test:
+
+```json
+{"winner": "default", "rule": "urgency", "accounts": [
+  {"account": "default", "eligible": true, "weekly_remaining_pct": 58.0,
+   "hours_to_binding_reset": 0.6667, "urgency_score": 87.0, "rank": 1},
+  {"account": "account-b", "eligible": true, "weekly_remaining_pct": 88.0,
+   "hours_to_binding_reset": 96.0, "urgency_score": 0.9167, "rank": 2}
+]}
+```
+
+The default account won because 58% of its weekly quota was resetting in 40
+minutes (87 points/hour) while `account-b`'s 88% was four days away (0.92
+points/hour). A `rule` of `expires_at` means the optional billing-expiry boost,
+not raw quota, flipped the order. A `rule` of `lru` is the deterministic
+last-used/name tie-break.
+
+A window reported at 100% remaining is **full**: its `reset_time` is a rolling
+placeholder, not a real expiry, so its urgency component is 0 (the score can
+still carry a separate `expires_at` boost) and it is never the binding window
+for a background burn (D115). If a full window shows a `binding_window` other
+than `weekly` with no other real constraint, that would be a bug.
+
+The trace is capped at `MAX_TRACE_ACCOUNTS` (32) rows, the maximum
+`max_accounts`; a `truncated: true` key would appear only if a future change
+exceeded it. Emails appear only in the masked form already used by
+`usage.jsonl`; the full address is never written.
+
 ## Common problems
 
 | Symptom | Cause | Fix |

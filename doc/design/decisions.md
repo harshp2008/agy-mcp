@@ -1,4 +1,4 @@
-# Architectural and security decisions: D1–D114
+# Architectural and security decisions: D1–D115
 
 Status: current
 Audience: maintainers, contributors
@@ -852,9 +852,18 @@ Append-only record of architectural, security, and design decisions across agy-m
   3. Adding an account is a human login performed outside the wrapper; the wrapper only runs jobs on the resulting login and never reads or copies a token, keyring entry or cookie.
 - *Tests:* documentation review; no credential-access code path.
 
+### D115: Full windows have no urgency and account selection carries a decision trace
+- *Rationale:* Two 2026-11-04 human-test findings. (1) A live `/usage` window at 100% remaining carries a rolling placeholder reset (for example, both pools' five-hour rows on an untouched account show the same reset five hours out). The urgency formula `remaining_weekly_pct / hours_to_reset` therefore scored a full window highest precisely when nothing was at risk, so a placeholder reset could outrank quota that was really about to expire. (2) `account_selected` recorded only the winner's name, so an operator could not tell why it won.
+- *Rule:*
+  1. A window whose remaining percentage is at or above `100 - account_full_window_margin_pct` (default `0.1`) is **full**. A full weekly window contributes zero urgency; the `expires_at` boost is unaffected. A full window's wait is zero, so it is never the binding window for a background burn.
+  2. `schedule_account` returns a `DecisionTrace`: one bounded row per considered account with `eligible`, a `rejection` code when not, and for eligible accounts the pool, effective weekly/five-hour remaining, hours to the binding reset, urgency score (with the boost), and 1-based rank, plus the `winner` and the deciding `rule` (`urgency`, `expires_at`, `load`, `lru`, `only_candidate`, `explicit_account`, `force`). Rows are capped at `MAX_TRACE_ACCOUNTS` (32) and masked emails are attached only by `selection.py` from the usage reading.
+  3. `create_job` appends `decision_trace` to `account_selected.detail` only when a registry selection produced one. With no registry the event is unchanged (and normally absent), and a supplied trace never changes the existing `account`/`account_masked_email` keys.
+  4. The full-window margin is a validated config key, not a buried literal; the trace cap is a named constant with a docstring.
+- *Tests:* table-driven urgency/full-window cases including the 96%-used/1-hour worked example and a full-window alternative, the tunable-margin boundary, burn-binding-window selection, N=1/2/5 accounts, a shared pool, background priority, trace content/rule/rank, the audit emission and no-registry byte-identical detail, the trace cap, and the planted-email hygiene test.
+
 ## Sources
 
-- `src/agy_mcp/` — codebase architecture and implementations corresponding to D1–D114.
+- `src/agy_mcp/` — codebase architecture and implementations corresponding to D1–D115.
 - `tests/` — automated test suites validating architectural and security decisions.
 
 

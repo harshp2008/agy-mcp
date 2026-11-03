@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- **Fix: a full quota window no longer counts as expiring quota.** Real `/usage`
+  reports an untouched window at `100%` remaining with a rolling placeholder
+  reset (for example, both five-hour rows on an untouched account show the same
+  reset five hours out). The scheduler scored `weekly_remaining / hours_to_reset`,
+  so that placeholder could outrank quota that was genuinely about to reset. A
+  window at or within `account_full_window_margin_pct` (default `0.1`) of 100%
+  now contributes zero urgency and, because its wait is zero, can never be the
+  binding window for a background burn (D115).
+- **Additive: `account_selected` now records a decision trace.** For every
+  registered account considered it records name, eligibility, a rejection code,
+  and for eligible accounts the pool, effective weekly/five-hour remaining,
+  hours to the binding reset, urgency score and rank, plus the winner and the
+  rule that decided it (`urgency`, `expires_at`, `load`, `lru`,
+  `only_candidate`, `explicit_account`, `force`). Only masked emails are
+  included and the list is capped at 32. With no `[[accounts]]` registry the
+  audit event is unchanged (in practice it is absent), so single-account output
+  is byte-identical (D115).
 - **Fix: `accounts.identity.mask_email` now emits `head***tail@domain`.** The
   helper kept the intended reveal counts (at most the first three and last two
   local-part characters, never more than half) but printed the revealed head

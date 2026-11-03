@@ -225,7 +225,8 @@ remaining of the group and one shared reservation total.
 ### F3 Ranking
 
 ```text
-urgency      = remaining_weekly_pct / max(hours_to_weekly_reset, 0.0167)
+full = remaining_weekly_pct >= 100 - account_full_window_margin_pct
+urgency      = 0 if full else remaining_weekly_pct / max(hours_to_weekly_reset, 0.0167)
 expiry_boost = 0
 if expires_at is set and hours_to_expires <= 168:
     expiry_boost = (168 - hours_to_expires) / 168 * 100
@@ -235,6 +236,17 @@ score        = urgency + expiry_boost
 Higher score first; ties break by lower recent load (active + reserved), then
 oldest `last_used`, then account name ascending. The clock is injected; no
 `sleep` participates in a decision.
+
+**Full windows have no expiry urgency (D115).** Real `/usage` reports an
+untouched window at `100%` remaining with a rolling placeholder reset (for
+example, both pools' five-hour rows on an untouched account show the same reset
+five hours out). That reset is not a real expiry, so a full window contributes
+exactly zero urgency. Without this guard the score would be largest precisely
+when nothing is at risk, and a full window could outrank an account whose quota
+really is about to reset. The same rule applies to burn mode: a full window's
+wait is zero, so it can never become the binding window. The margin is tunable
+(`account_full_window_margin_pct`, default `0.1` percentage points) so float
+noise in a `99.95%` reading still counts as full.
 
 ### F4 Exhaustion
 
@@ -260,6 +272,12 @@ nearest binding reset, then smallest remaining quota;
 while a normal job is queued for that account. The queue is the set of
 `queued`-state jobs plus the current caller's pending normal start.
 
+A full window's wait is zero, so it is never the binding window and can never
+make a background job wait for a placeholder reset. The binding reset reported
+in the decision trace is the window with the larger real wait; only when both
+windows are immediately usable is the weekly reset used (it is the denominator
+of the normal urgency score).
+
 Worked example: account A is at 96% weekly used (4% left) with that window
 resetting in 1 hour; its five-hour window is healthy. A normal job estimated at
 12 weekly points cannot fit (4 < 12 × 1.5), so it goes to account B, which has
@@ -274,6 +292,21 @@ change is proposed.
 remaining first" (burns the account you need later); a hard-coded token cost
 (does not age); letting background jobs ignore concurrency caps (starves normal
 work).
+
+### F6 Decision trace
+
+The scheduler returns a bounded `DecisionTrace` alongside its choice (D115). For
+every registered account considered it records the name, whether it was
+eligible, and a rejection code when not; every eligible account also records its
+pool, effective weekly/five-hour remaining, hours to the binding reset, the
+urgency score (including the `expires_at` boost), and its 1-based rank. The
+trace names the winner and the rule that separated it from the runner-up
+(`urgency`, `expires_at`, `load`, `lru`, `only_candidate`, `explicit_account` or
+`force`). `selection.py` attaches only the masked email already present in the
+usage reading; the pure scheduler never sees an address. `create_job` appends
+the trace as an additive `decision_trace` key on `account_selected`; with no
+registry there is no selection and no event, so single-account audit output is
+byte-identical.
 
 ## G. Job pinning and transfer
 

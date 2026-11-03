@@ -71,6 +71,53 @@ source and target account); `handoff_summary` records the fallback, with
 names are passed through a variable, so the generated table above does not list
 them.
 
+### `account_selected` decision trace (D115)
+
+When a registry account is chosen, `account_selected.detail` also carries an
+additive `decision_trace` object. With no `[[accounts]]` registry the event is
+not written at all, so single-account audit output is unchanged; when no trace
+is present the detail is exactly the pre-existing
+`{account, account_masked_email?}` shape. The trace is bounded to
+`MAX_TRACE_ACCOUNTS` (32) rows, which is the maximum `max_accounts`, so the cap
+never truncates a valid registry; if it ever does, `truncated: true` is added.
+
+```json
+"decision_trace": {
+  "accounts": [
+    {"account": "default", "account_masked_email": "jo***@example.com", "eligible": true,
+     "pool": "default", "weekly_remaining_pct": 58.0, "five_hour_remaining_pct": 91.0,
+     "hours_to_binding_reset": 0.6667, "binding_window": "weekly",
+     "urgency_score": 87.0, "expiry_boost": 0.0, "rank": 1},
+    {"account": "account-b", "account_masked_email": "av***@example.com", "eligible": true,
+     "pool": "account-b", "weekly_remaining_pct": 88.0, "five_hour_remaining_pct": 90.0,
+     "hours_to_binding_reset": 96.0, "binding_window": "weekly",
+     "urgency_score": 0.9167, "expiry_boost": 0.0, "rank": 2},
+    {"account": "account-c", "eligible": false, "rejection": "disabled"}
+  ],
+  "winner": "default",
+  "rule": "urgency"
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `accounts` | One row per registered account the scheduler considered, in name order (capped). |
+| `account` | Registry name. |
+| `account_masked_email` | The masked form already produced by the `/usage` reading; omitted when the account was not probed. Never a full address. |
+| `eligible` | Whether the account could take this job (strict fit, or burn-eligible for a background job). |
+| `rejection` | Present only when `eligible` is false: the scheduler's machine-readable reason (`disabled`, `identity_unverified`, `policy_unverified`, `model_unavailable`, `usage_unavailable`, `account_concurrency`, `reserved_for_normal`, `quota_exhausted`). |
+| `pool` | The quota-bucket key; accounts sharing it show the group minimum. |
+| `weekly_remaining_pct` / `five_hour_remaining_pct` | Effective remaining percentage after the group's reservations, rounded to 4 decimals. |
+| `hours_to_binding_reset` | Hours to the reset of the window that bound the decision. For a background burn this is the later of the two window resets; for a strict fit it is the weekly reset used by the urgency score. |
+| `binding_window` | `weekly` or `5h`: which window produced `hours_to_binding_reset`. A full window is never chosen. |
+| `urgency_score` | `urgency + expiry_boost`; a full (100%, within the configured margin) weekly window contributes zero urgency. |
+| `expiry_boost` | The optional `expires_at` boost component of the score. |
+| `rank` | 1-based position among eligible accounts; `1` is the winner. |
+| `winner` | The selected registry name (omitted when no account won). |
+| `rule` | The first ranking criterion that separated the winner from the runner-up: `urgency`, `expires_at`, `load`, `lru` (also the final name tie-break), `only_candidate`, `explicit_account` or `force`. |
+| `truncated` | Present and `true` only when the row list hit the bound. |
+
+
 | Event | Meaning |
 |---|---|
 | `audit_error_during_tick_error` | The audit step raised during a supervisor tick. The tick handles it and records the exception class; it does not silently pass. |

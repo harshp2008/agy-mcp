@@ -55,6 +55,7 @@ removed; `scripts/check_docs.py` fails until it is.
 | `account_cost_expected_minutes` | `int` | `30` |
 | `account_cost_safety_factor` | `float` | `1.5` |
 | `account_five_hour_floor_pct` | `float` | `15.0` |
+| `account_full_window_margin_pct` | `float` | `0.1` |
 | `account_burn_horizon_minutes` | `int` | `90` |
 | `account_handoff_min_wait_minutes` | `int` | `120` |
 | `account_usage_max_age_seconds` | `int` | `60` |
@@ -98,6 +99,7 @@ removed; `scripts/check_docs.py` fails until it is.
 | `account_cost_expected_minutes` | `int` (not `bool`), `>= 1` | Expected job duration used as the cost horizon; `max_minutes` is a ceiling, so the horizon is `min(max_minutes, this)`. |
 | `account_cost_safety_factor` | number (not `bool`), `>= 1.0` | Both windows must exceed `estimated cost * factor` before an account is strictly eligible. |
 | `account_five_hour_floor_pct` | number (not `bool`), `0..100` | Minimum five-hour remaining percentage for any start. |
+| `account_full_window_margin_pct` | number (not `bool`), `0..100` | A window at or within this many percentage points of 100% remaining counts as **full**: it contributes zero expiry urgency and is never the binding window for burn mode (D115). |
 | `account_burn_horizon_minutes` | `int`, `>= 0` | Background jobs may burn an account when all its binding windows are usable again within this many minutes. |
 | `account_handoff_min_wait_minutes` | `int`, `>= 0` | Reserved for the conversation-transfer threshold in Phase 7. |
 | `account_usage_max_age_seconds` | `int`, `>= 0` | Use the in-memory usage cache when > 0; 0 forces a fresh `/usage` read. The cache TTL itself is 60 s. |
