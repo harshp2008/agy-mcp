@@ -329,3 +329,130 @@ def test_decision_is_deterministic() -> None:
     results = {schedule_account(states, _request(), NOW).account for _ in range(20)}
     assert results == {schedule_account(states, _request(), NOW).account}
     assert len(results) == 1
+
+
+# ---------------------------------------------------------------------------
+# Full windows have no expiry pressure (D115)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("weekly_remaining", [1.0, 0.9999, 0.9995, 0.999])
+@pytest.mark.parametrize(
+    "placeholder_reset",
+    ["2026-11-03T12:05:00Z", "2026-11-03T13:00:00Z", "2026-11-03T17:00:00Z"],
+)
+def test_full_weekly_window_contributes_zero_urgency(
+    weekly_remaining: float, placeholder_reset: str
+) -> None:
+    """A 100% (or within 0.1%) window must not win on a placeholder reset."""
+    full = _account(
+        "full",
+        usage=_usage(gemini_weekly=weekly_remaining, weekly_reset=placeholder_reset),
+    )
+    partly_used = _account(
+        "partly-used",
+        usage=_usage(gemini_weekly=0.20, weekly_reset="2026-11-03T13:00:00Z"),
+    )
+    result = schedule_account((full, partly_used), _request(), NOW)
+    assert result.account == "partly-used"
+    rows = {row.name: row for row in result.trace.accounts}
+    assert rows["full"].urgency_score == pytest.approx(0.0)
+    assert rows["partly-used"].urgency_score > 0.0
+
+
+def test_a_window_just_below_full_still_has_urgency() -> None:
+    """The 0.1% margin is a boundary, not a blanket "high quota" discount."""
+    almost_full = _account(
+        "almost-full",
+        usage=_usage(gemini_weekly=0.998, weekly_reset="2026-11-03T12:05:00Z"),
+    )
+    ordinary = _account(
+        "ordinary",
+        usage=_usage(gemini_weekly=0.20, weekly_reset="2026-11-03T13:00:00Z"),
+    )
+    result = schedule_account((almost_full, ordinary), _request(), NOW)
+    assert result.account == "almost-full"
+    rows = {row.name: row for row in result.trace.accounts}
+    assert rows["almost-full"].urgency_score > 0.0
+
+
+def test_full_window_margin_is_tunable() -> None:
+    """Raising the margin makes a 96%-remaining window count as full."""
+    config = SchedulerConfig(full_window_margin_pct=5.0)
+    nearly_full = _account(
+        "nearly-full",
+        usage=_usage(gemini_weekly=0.96, weekly_reset="2026-11-03T12:05:00Z"),
+    )
+    ordinary = _account(
+        "ordinary",
+        usage=_usage(gemini_weekly=0.50, weekly_reset="2026-11-03T18:00:00Z"),
+    )
+    result = schedule_account((nearly_full, ordinary), _request(), NOW, config)
+    assert result.account == "ordinary"
+    rows = {row.name: row for row in result.trace.accounts}
+    assert rows["nearly-full"].urgency_score == pytest.approx(0.0)
+
+
+def test_worked_example_with_a_full_alternative() -> None:
+    """96% weekly used + reset in 1 h vs an untouched full window.
+
+    A normal job cannot fit the 4%-left account and uses the alternative; a
+    background job burns the expiring quota. The full window's near placeholder
+    reset must not make it the urgent winner.
+    """
+    expiring = _account(
+        "expiring",
+        usage=_usage(gemini_weekly=0.04, weekly_reset="2026-11-03T13:00:00Z"),
+    )
+    untouched = _account(
+        "untouched",
+        usage=_usage(gemini_weekly=1.0, weekly_reset="2026-11-03T12:30:00Z"),
+    )
+    normal = schedule_account((expiring, untouched), _request(PRIORITY_NORMAL), NOW)
+    assert normal.account == "untouched"
+
+    background = schedule_account(
+        (expiring, untouched), _request(PRIORITY_BACKGROUND), NOW
+    )
+    assert background.account == "expiring"
+    assert background.reason == "burn"
+    rows = {row.name: row for row in background.trace.accounts}
+    assert rows["expiring"].rank == 1
+    assert rows["untouched"].urgency_score == pytest.approx(0.0)
+    assert rows["untouched"].rank == 2
+
+
+def test_full_window_is_never_the_burn_binding_window() -> None:
+    """A full five-hour placeholder reset must not bind a weekly burn."""
+    state = _account(
+        "a",
+        usage=_usage(
+            gemini_weekly=1.0,
+            weekly_reset="2026-11-03T12:05:00Z",
+            gemini_five=0.04,
+            five_reset="2026-11-03T13:00:00Z",
+        ),
+    )
+    result = schedule_account((state,), _request(PRIORITY_BACKGROUND), NOW)
+    assert result.account == "a"
+    assert result.reason == "burn"
+    row = result.trace.accounts[0]
+    assert row.binding_window == "5h"
+    assert row.hours_to_binding_reset == pytest.approx(1.0)
+    assert row.urgency_score == pytest.approx(0.0)
+
+
+def test_expires_at_boost_flips_an_otherwise_lower_urgency() -> None:
+    """The trace rule names the deciding criterion, not just the winner."""
+    boosted = _account(
+        "boosted",
+        usage=_usage(gemini_weekly=0.10, weekly_reset="2026-11-03T13:00:00Z"),
+        expires_at="2026-11-03T13:00:00Z",
+    )
+    urgent = _account(
+        "urgent",
+        usage=_usage(gemini_weekly=0.80, weekly_reset="2026-11-03T14:00:00Z"),
+    )
+    result = schedule_account((boosted, urgent), _request(), NOW)
+    assert result.account == "boosted"
+    assert result.trace.rule == "expires_at"
