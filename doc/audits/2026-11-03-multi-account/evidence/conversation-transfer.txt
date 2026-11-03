@@ -7,9 +7,9 @@ Token counts are copied from agy's own JSON `usage` objects.
 
 ## Setup
 
-- Primary account: default `HOME`, keyring auth (masked `har***08@<domain>` in the auth line).
+- Primary account: default `HOME`, keyring auth.
 - Second account: `HOME=~/.local/share/agy-accounts/account-b`,
-  `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null` (masked `dip***os@<domain>`).
+  `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null`.
 - Model: `gemini-3.8-flash-medium` on primary, `gemini-3.8-flash` on account-b
   (the medium alias was rejected there — see "Model availability" below).
 
