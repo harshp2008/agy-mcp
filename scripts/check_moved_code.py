@@ -45,6 +45,29 @@ OLD_SOURCE_FIXTURES = {
 }
 
 
+@dataclass(frozen=True)
+class ExpectedEdit:
+    """An intentional post-move edit to a moved cleaner symbol."""
+
+    symbol: str
+    old_snippet: str
+    new_snippet: str
+    reason: str
+
+
+EXPECTED_EDITS: tuple[ExpectedEdit, ...] = (
+    ExpectedEdit(
+        symbol="_check_worktree_status",
+        old_snippet="entries = list(wt_root.iterdir())",
+        new_snippet="entries = sorted(wt_root.iterdir(), key=lambda p: p.name)",
+        reason=(
+            "Deterministic iteration order for git worktree registrations "
+            "(AGY-fix-deterministic-worktree-order)"
+        ),
+    ),
+)
+
+
 def symbols(source: str) -> dict[str, str]:
     """Return ``name -> ast.dump`` for top-level defs, classes and constants.
 
@@ -63,14 +86,14 @@ def symbols(source: str) -> dict[str, str]:
     return out
 
 
-def old_symbols(from_git: bool = False) -> dict[str, dict[str, str]]:
-    """Load and parse the old modules at run time.
+def old_symbols(from_git: bool = False) -> tuple[dict[str, dict[str, str]], int]:
+    """Load and parse the old modules at run time after applying expected edits.
 
     By default the saved source text in ``tests/fixtures`` is used, so the gate
     needs no git history and no stored ``ast.dump`` output.  ``from_git`` reads
     the two files from the ``main`` ref instead.
     """
-    out: dict[str, dict[str, str]] = {}
+    raw_sources: dict[str, str] = {}
     for path in OLD_PATHS:
         if from_git:
             source = subprocess.check_output(
@@ -78,8 +101,31 @@ def old_symbols(from_git: bool = False) -> dict[str, dict[str, str]]:
             )
         else:
             source = OLD_SOURCE_FIXTURES[path].read_text(encoding="utf-8")
+        raw_sources[path] = source
+
+    applied_count = 0
+    for edit in EXPECTED_EDITS:
+        matching_paths = [
+            path for path, text in raw_sources.items() if edit.old_snippet in text
+        ]
+        total_occurrences = sum(
+            text.count(edit.old_snippet) for text in raw_sources.values()
+        )
+        if total_occurrences != 1 or len(matching_paths) != 1:
+            raise ValueError(
+                f"Expected edit for {edit.symbol!r} old_snippet must occur exactly once across "
+                f"old sources, found {total_occurrences} occurrences across {len(matching_paths)} files"
+            )
+        target_path = matching_paths[0]
+        raw_sources[target_path] = raw_sources[target_path].replace(
+            edit.old_snippet, edit.new_snippet, 1
+        )
+        applied_count += 1
+
+    out: dict[str, dict[str, str]] = {}
+    for path, source in raw_sources.items():
         out[path] = symbols(source)
-    return out
+    return out, applied_count
 
 
 def new_symbols() -> dict[str, dict[str, str]]:
@@ -107,6 +153,7 @@ class Report:
     matched: int = 0
     moved: int = 0
     kept: int = 0
+    expected_edits_applied: int = 0
     missing: list[str] = field(default_factory=list)
     changed: list[str] = field(default_factory=list)
     ambiguous: list[str] = field(default_factory=list)
@@ -119,10 +166,10 @@ class Report:
 
 def check(from_git: bool = False) -> Report:
     """Compare the old modules with the new package and return a report."""
-    old = old_symbols(from_git)
+    old, applied_edits = old_symbols(from_git)
     new = new_symbols()
     shims = shim_symbols()
-    report = Report()
+    report = Report(expected_edits_applied=applied_edits)
 
     for origin_path, old_symbols_map in old.items():
         for name, dump in old_symbols_map.items():
@@ -157,13 +204,14 @@ def check(from_git: bool = False) -> Report:
             else:
                 report.missing.append(f"{origin_path}:{name}")
 
-    print(f"old symbols: {report.total}")
-    print(f"matched:     {report.matched}")
-    print(f"moved:       {report.moved}")
-    print(f"kept:        {report.kept}")
-    print(f"missing:     {len(report.missing)}")
-    print(f"changed:     {len(report.changed)}")
-    print(f"ambiguous:   {len(report.ambiguous)}")
+    print(f"old symbols:            {report.total}")
+    print(f"matched:                {report.matched}")
+    print(f"moved:                  {report.moved}")
+    print(f"kept:                   {report.kept}")
+    print(f"expected edits applied: {report.expected_edits_applied}")
+    print(f"missing:                {len(report.missing)}")
+    print(f"changed:                {len(report.changed)}")
+    print(f"ambiguous:              {len(report.ambiguous)}")
     for line in report.missing:
         print(f"  MISSING {line}")
     for line in report.changed:

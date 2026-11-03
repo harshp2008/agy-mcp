@@ -23,5 +23,7 @@ def test_cleaner_split_is_a_pure_move(capsys) -> None:
     assert report.changed == []
     assert report.ambiguous == []
     assert report.moved + report.kept == report.total
-    assert "missing:     0" in output
-    assert "changed:     0" in output
+    assert report.expected_edits_applied == 1
+    assert "missing:                0" in output
+    assert "changed:                0" in output
+    assert "expected edits applied: 1" in output

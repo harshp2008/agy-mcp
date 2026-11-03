@@ -7,7 +7,7 @@
   "src/agy_mcp/cleanup/git_metadata.py": "1257f0d603b5b6b56807f3486629846c99a1887ec41929c01a2830b93a72a8d9",
   "src/agy_mcp/cleanup/jobs_cli.py": "2572ca9ea60cfa7d4d1e97efa9c783160ed38a660eaf8dfbdbe05be52039528e",
   "src/agy_mcp/cleanup/store_io.py": "7872bcef67348a47cb0ec97ab833fe01c20d54d075ee11d6dd0c31fc171e889b",
-  "src/agy_mcp/cleanup/worktree_status.py": "bfd18060465144604da7004796095fdc9efc828688f4ca51329634bab33a577c",
+  "src/agy_mcp/cleanup/worktree_status.py": "800cfeeeb4b81f3c99670d853253e9f0baed3a57cd391b5a626458a90ea5bfd5",
   "src/agy_mcp/cleanup_fixtures.py": "00733bfedc43036be0d607b8f78386b49bd2e12c12179a0ea35811702739350b",
   "src/agy_mcp/cleanup_jobs.py": "c2e251ea7643b85c3a69edc6aa2d8240a8dbcb3831d35c8f8cdb0569c8de0248",
   "src/agy_mcp/cli_log.py": "b5c90f501f2ad483e06429a3a9fca908a3239fa66ecc4043898274dace5aa55e",
