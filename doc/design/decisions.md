@@ -825,7 +825,7 @@ Append-only record of architectural, security, and design decisions across agy-m
 - *Rule:*
   1. Transfer triggers when the pinned account's wait exceeds `handoff_min_wait_minutes` (default 120) or the caller sets `allow_handoff=True`; the target must be eligible.
   2. Copy only the conversation `db` while no process uses it, after a SQLite header check and a source-existence check; resume with `--conversation <id>` on the target. Hold a per-conversation lock so one id is never on two accounts at once; keep the source until the new run finishes.
-  3. If the target is also exhausted, or the db is missing/corrupt/locked, build a summary handoff from wrapper facts only (goal/constraints, plan done/remaining, branch, git log/diff stat, capped delimited report excerpt, verify command) and link the jobs. Reuse the worktree/branch and WIP-commit dirty work.
+  3. If the target is also exhausted, or the db is missing/corrupt/locked, continue the **same job** with a summary handoff run built from wrapper facts only (goal/constraints, plan done/remaining, branch, git log/diff stat, capped delimited report excerpt, verify command). Reuse the worktree/branch, WIP-commit dirty work first, and record `transferred_from`/`transferred_to` as account names.
   4. A shared or symlinked conversation store is explicitly unsupported (SQLite contention, desktop app, cleaner conflicts).
 - *Tests:* copy success, corrupt/locked db, missing id, B also exhausted, id collision, repo changed, concurrent-use lock, handoff prompt bounds.
 

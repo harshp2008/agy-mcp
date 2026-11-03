@@ -15,142 +15,47 @@ Accounts that share a ``pool_key`` are one quota bucket: their remaining quota i
 the minimum across the group and their reservations are summed.
 """
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from agy_mcp.accounts.pools import (
     WINDOW_FIVE_HOUR,
     WINDOW_WEEKLY,
-    AccountUsage,
     PoolReading,
 )
+from agy_mcp.accounts.scheduler_types import (
+    MIN_HOURS,
+    PRIORITIES,
+    PRIORITY_BACKGROUND,
+    PRIORITY_NORMAL,
+    AccountState,
+    CostEstimate,
+    HistoryCostModel,
+    JobRequest,
+    RankedAccount,
+    SchedulerConfig,
+    SchedulerResult,
+    format_utc,
+    parse_utc,
+)
 
-PRIORITY_NORMAL = "normal"
-PRIORITY_BACKGROUND = "background"
-PRIORITIES = (PRIORITY_NORMAL, PRIORITY_BACKGROUND)
-
-_MIN_HOURS = 1.0 / 60.0
-
-
-def _parse_utc(value: Optional[str]) -> Optional[datetime]:
-    """Parse an ISO-8601 timestamp into an aware UTC datetime, or None."""
-    if not isinstance(value, str) or not value.strip():
-        return None
-    try:
-        parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
-
-
-def _format_utc(value: datetime) -> str:
-    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-@dataclass(frozen=True)
-class CostEstimate:
-    """A pre-launch estimate of one job's quota cost, in percentage points."""
-
-    five_hour_pct: float
-    weekly_pct: float
-    estimated_minutes: int
-    tokens: int
-
-
-@dataclass(frozen=True)
-class HistoryCostModel:
-    """Optional history-derived refinement for the cost estimate.
-
-    ``rate_p75_tokens_per_minute`` is the conservative (upper-quartile) observed
-    rate; ``median_minutes`` is the observed median duration. Both are computed
-    outside the scheduler so the decision stays pure.
-    """
-
-    rate_p75_tokens_per_minute: float
-    median_minutes: float
-
-
-@dataclass(frozen=True)
-class SchedulerConfig:
-    """Tunable scheduler thresholds; defaults are heuristics from finding 08."""
-
-    tokens_per_minute: float = 35300.0
-    expected_minutes: int = 30
-    safety_factor: float = 1.5
-    five_hour_floor_pct: float = 15.0
-    burn_horizon_minutes: int = 90
-    expires_boost_horizon_hours: int = 168
-    five_hour_per_1k_tokens: float = 0.011
-    weekly_per_1k_tokens: float = 0.0031
-
-
-@dataclass(frozen=True)
-class AccountState:
-    """Everything the scheduler may consider about one account.
-
-    ``reserved_*`` are the estimated costs of the account's running/queued jobs.
-    ``last_used_epoch`` is any monotonic or wall-clock value; only comparisons
-    matter. ``expires_at`` is the optional billing expiry (informational).
-    """
-
-    name: str
-    pool_key: str
-    enabled: bool = True
-    identity_ok: bool = True
-    policy_ok: bool = True
-    home_error: Optional[str] = None
-    model_ok: bool = True
-    usage: Optional[AccountUsage] = None
-    active_jobs: int = 0
-    reserved_jobs: int = 0
-    max_concurrent_jobs: int = 2
-    reserved_five_hour_pct: float = 0.0
-    reserved_weekly_pct: float = 0.0
-    last_used_epoch: Optional[float] = None
-    expires_at: Optional[str] = None
-
-
-@dataclass(frozen=True)
-class JobRequest:
-    """The scheduling request for one job."""
-
-    model: Optional[str]
-    max_minutes: int
-    priority: str = PRIORITY_NORMAL
-
-    def validated(self) -> "JobRequest":
-        """Return self after checking the priority and minute budget."""
-        if self.priority not in PRIORITIES:
-            raise ValueError(f"priority must be one of {PRIORITIES}, got {self.priority!r}")
-        if self.max_minutes < 1:
-            raise ValueError("max_minutes must be >= 1")
-        return self
-
-
-@dataclass(frozen=True)
-class RankedAccount:
-    """One eligible account and why it ranked where it did."""
-
-    account: str
-    score: float
-    reason: str
-    wait_minutes: float
-    remaining_weekly_pct: float = 0.0
-
-
-@dataclass(frozen=True)
-class SchedulerResult:
-    """The scheduler's decision or its exhaustion reason."""
-
-    account: Optional[str]
-    estimated_cost: Optional[CostEstimate]
-    exhausted: bool
-    resume_after: Optional[str] = None
-    reason: str = "ok"
-    candidates: tuple[RankedAccount, ...] = ()
+__all__ = [
+    "MIN_HOURS",
+    "PRIORITIES",
+    "PRIORITY_BACKGROUND",
+    "PRIORITY_NORMAL",
+    "AccountState",
+    "CostEstimate",
+    "HistoryCostModel",
+    "JobRequest",
+    "RankedAccount",
+    "SchedulerConfig",
+    "SchedulerResult",
+    "account_eligibility",
+    "estimate_cost",
+    "remaining_until_reset",
+    "schedule_account",
+]
 
 
 def estimate_cost(
@@ -192,8 +97,8 @@ def _pool_for(state: AccountState, request: JobRequest) -> Optional[PoolReading]
 
 
 def _later(left: Optional[str], right: Optional[str]) -> Optional[str]:
-    left_dt = _parse_utc(left)
-    right_dt = _parse_utc(right)
+    left_dt = parse_utc(left)
+    right_dt = parse_utc(right)
     if left_dt is None:
         return right
     if right_dt is None:
@@ -297,7 +202,7 @@ def _wait_minutes(
     def wait_for(remaining: float, required: float, reset: Optional[str]) -> Optional[float]:
         if remaining >= required:
             return 0.0
-        reset_dt = _parse_utc(reset)
+        reset_dt = parse_utc(reset)
         if reset_dt is None:
             return None
         return max(0.0, (reset_dt - now).total_seconds() / 60.0)
@@ -310,14 +215,14 @@ def _wait_minutes(
 
 
 def _hours_to(reset: Optional[str], now: datetime, default: float = 1.0) -> float:
-    reset_dt = _parse_utc(reset)
+    reset_dt = parse_utc(reset)
     if reset_dt is None:
         return default
-    return max((reset_dt - now).total_seconds() / 3600.0, _MIN_HOURS)
+    return max((reset_dt - now).total_seconds() / 3600.0, MIN_HOURS)
 
 
 def _expiry_boost(state: AccountState, config: SchedulerConfig, now: datetime) -> float:
-    expires = _parse_utc(state.expires_at)
+    expires = parse_utc(state.expires_at)
     if expires is None or expires <= now:
         return 0.0
     hours = (expires - now).total_seconds() / 3600.0
@@ -383,7 +288,7 @@ def _earliest_resume(
         ):
             if remaining >= required:
                 continue
-            reset_dt = _parse_utc(reset)
+            reset_dt = parse_utc(reset)
             if reset_dt is None:
                 candidate = None
                 break
@@ -392,7 +297,7 @@ def _earliest_resume(
             candidates.append(candidate)
     if not candidates:
         return None
-    return _format_utc(min(candidates))
+    return format_utc(min(candidates))
 
 
 def schedule_account(
@@ -525,7 +430,7 @@ def account_eligibility(
 
 def remaining_until_reset(reset_time_utc: Optional[str], now: datetime) -> Optional[timedelta]:
     """Return the time until a reset, clamped at zero, or None when unparseable."""
-    reset_dt = _parse_utc(reset_time_utc)
+    reset_dt = parse_utc(reset_time_utc)
     if reset_dt is None:
         return None
     return max(timedelta(0), reset_dt - now)

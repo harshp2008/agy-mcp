@@ -1,6 +1,6 @@
 # Multi-account design: selecting among several owned Google accounts
 
-Status: proposed
+Status: accepted
 Audience: maintainers, contributors, orchestrators
 
 Design for running `agy` jobs across several Google accounts the user
@@ -292,11 +292,13 @@ work).
   `transferred_to` and an audit event. Never delete the source copy until the
   new run finishes. If the target also lacks quota, or the db is missing,
   corrupt or locked, fall back.
-- **Summary handoff (fallback).** Start a new job on the target whose prompt is
-  built only from wrapper facts: original goal/constraints, the plan checklist
-  done/remaining, branch, `git log`/diff stat, a capped excerpt of the last
-  report as delimited untrusted text, and the verify command. Link the jobs with
-  `transferred_from`/`transferred_to`.
+- **Summary handoff (fallback).** Continue the **same job** with a new run whose
+  prompt is built only from wrapper facts: original goal/constraints, the plan
+  checklist done/remaining, branch, `git log`/diff stat, a capped excerpt of the
+  last report as delimited untrusted text, and the verify command. The same
+  worktree and branch are reused so uncommitted work is not lost (a WIP
+  checkpoint is committed first). `transferred_from`/`transferred_to` record the
+  source and target **account names** on the job.
 - **Worktree.** Reuse the same worktree and branch on the target (same UID).
   Before switching, create a WIP checkpoint commit if the worktree is dirty so
   no work is lost; never touch the default branch.

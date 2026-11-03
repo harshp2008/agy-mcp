@@ -14,15 +14,10 @@ its open questions, then the phase-by-phase implementation reports. Start with
 |---|---|
 | [PROGRESS.md](PROGRESS.md) | Which phase is done, at which commit, with which gate results |
 | [00-baseline.md](00-baseline.md) | What the repository looked like before Phase 3: HEAD, tests, gates |
-| 01-investigation.md | Every single-account assumption, mapped to a file and a required change |
-| 02-code-map.md | File:line table of env, HOME, state, usage, worktree, installer touchpoints |
-| 03-experiments.md | What the fake agy supports and what the real-agy experiments showed |
-| 04-implementation-review.md | What was built, deviations, residual risks, unverified items |
-
-`01-investigation.md`, `02-code-map.md`, `03-experiments.md` and
-`04-implementation-review.md` are created by Phases 1, 1, 1 and 9; this index
-names them before they exist so the intended structure is explicit, but does
-not link them until they do.
+| [01-investigation.md](01-investigation.md) | Every single-account assumption, mapped to a file and a required change |
+| [02-code-map.md](02-code-map.md) | File:line table of env, HOME, state, usage, worktree, installer touchpoints |
+| [03-experiments.md](03-experiments.md) | What the fake agy supports and what the real-agy experiments showed |
+| [04-implementation-review.md](04-implementation-review.md) | What was built, deviations, residual risks, unverified items |
 
 ## Evidence
 
@@ -38,11 +33,12 @@ The real-agy call log, required by the phase rules, lives at
 ## Findings and experiments
 
 The user-facing experiment summary is
-`doc/findings-and-experiments/15-multi-account-recon.md`, created by Phase 1.
+[15-multi-account-recon.md](../../findings-and-experiments/15-multi-account-recon.md).
 
 ## Sources
 
 - `doc/audits/2026-11-03-multi-account/PROGRESS.md` — the phase table this index points at.
+- `doc/audits/2026-11-03-multi-account/04-implementation-review.md` — the final review.
 - `doc/audits/2026-11-03-multi-account/00-baseline.md` — the baseline record.
 - `doc/audits/README.md` — the audit index row this folder adds.
 

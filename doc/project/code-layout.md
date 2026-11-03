@@ -218,10 +218,12 @@ them (it only scans `src/agy_mcp/*.py`).
     leaves the default account's env byte-identical to `util.env_allowlist()`.
   - `pools.py` — `WindowReading`, `PoolReading`, `AccountUsage` and
     `account_usage_from_reading()`; the typed view of both pools and windows.
-  - `scheduler.py` — `SchedulerConfig`, `AccountState`, `JobRequest`,
-    `estimate_cost()`, `schedule_account()`, `account_eligibility()` and
-    `remaining_until_reset()`; the pure, clock-injected cost/filter/ranking/burn
-    decision (D108, D109).
+  - `scheduler.py` — `estimate_cost()`, `schedule_account()`,
+    `account_eligibility()` and `remaining_until_reset()`; the pure,
+    clock-injected cost/filter/ranking/burn decision (D108, D109).
+  - `scheduler_types.py` — the immutable scheduler inputs/outputs
+    (`SchedulerConfig`, `AccountState`, `JobRequest`, `CostEstimate`,
+    `SchedulerResult`) and their UTC helpers.
   - `policy.py` — read-only permission-policy parity between an account home and
     the primary (D106).
   - `selection.py` — `AccountSelector`, `Selection`, `RejectedAccount`; the I/O
@@ -797,7 +799,8 @@ by hand. It exists so a stale module list or line count fails CI.
 | `accounts.policy.py` | 81 | `PolicyCheck` (`account_rule_count`); `check_policy_parity()` |
 | `accounts.pools.py` | 208 | `WindowReading` (`remaining_pct`); `PoolReading` (`window`, `weekly`, `five_hour`); `AccountUsage` (`pool`, `pool_for_model`); `pool_for_model()`; `account_usage_from_reading()` |
 | `accounts.registry.py` | 306 | `AccountConfig` (`expanded_home`, `agy_home`, `pool_key`); `AccountRegistry` (`all`, `enabled`, `by_name`, `configured`); `parse_accounts()`; `build_registry()`; `validate_account_home()` |
-| `accounts.scheduler.py` | 531 | `CostEstimate`; `HistoryCostModel`; `SchedulerConfig`; `AccountState`; `JobRequest` (`validated`); `RankedAccount`; `SchedulerResult`; `estimate_cost()`; `schedule_account()`; `account_eligibility()`; `remaining_until_reset()` |
+| `accounts.scheduler.py` | 436 | `estimate_cost()`; `schedule_account()`; `account_eligibility()`; `remaining_until_reset()` |
+| `accounts.scheduler_types.py` | 140 | `parse_utc()`; `format_utc()`; `CostEstimate`; `HistoryCostModel`; `SchedulerConfig`; `AccountState`; `JobRequest` (`validated`); `RankedAccount`; `SchedulerResult` |
 | `accounts.selection.py` | 349 | `RejectedAccount`; `Selection` (`account_name`); `scheduler_config_from_config()`; `AccountSelector` (`select`) |
 | `accounts.transfer.py` | 192 | `conversation_db_path()`; `conversation_lock()`; `TransferResult`; `transfer_conversation()` |
 | `audit.py` | 653 | `AuditSeverity`; `HostPathClass`; `classify_host_path()`; `Finding` (`to_dict`); `Findings` (`has_fatal`, `fatal_reason`, `blocked_files`, `passed`); `AuditSnapshot`; `save_snapshot()`; `load_snapshot()`; `take_host_path_snapshot()`; `HostPathAuditResult`; `check_host_path_snapshot()`; `verify_host_path_snapshot()`; `take_snapshot()`; `audit()`; `run_security_audit()` |
