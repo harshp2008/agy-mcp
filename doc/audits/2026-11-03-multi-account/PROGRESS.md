@@ -41,5 +41,12 @@ continues from its "next step" instead of redoing finished phases.
 
 ## Open questions
 
-Recorded and decided in [doc/design/multi-account.md](../../design/multi-account.md)
-during Phase 2; the answered defaults are copied here when Phase 2 lands.
+Recorded and decided in `doc/design/multi-account.md` during Phase 2; the
+answered defaults are copied here when Phase 2 lands.
+
+## Sources
+
+- `doc/audits/2026-11-03-multi-account/00-baseline.md` — the baseline numbers this table references.
+- `AGENTS.md` — the gate commands and the frozen-test rule.
+- `tests/frozen.sha256` — the 13 frozen test digests.
+

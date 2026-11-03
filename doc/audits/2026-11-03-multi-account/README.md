@@ -19,8 +19,10 @@ its open questions, then the phase-by-phase implementation reports. Start with
 | 03-experiments.md | What the fake agy supports and what the real-agy experiments showed |
 | 04-implementation-review.md | What was built, deviations, residual risks, unverified items |
 
-`01`, `02`, `03` and `04` are created by Phases 1, 1 and 9; this index lists them
-before they exist so the intended structure is explicit.
+`01-investigation.md`, `02-code-map.md`, `03-experiments.md` and
+`04-implementation-review.md` are created by Phases 1, 1, 1 and 9; this index
+names them before they exist so the intended structure is explicit, but does
+not link them until they do.
 
 ## Evidence
 
@@ -36,5 +38,11 @@ The real-agy call log, required by the phase rules, lives at
 ## Findings and experiments
 
 The user-facing experiment summary is
-[doc/findings-and-experiments/15-multi-account-recon.md](../../findings-and-experiments/15-multi-account-recon.md),
-created by Phase 1.
+`doc/findings-and-experiments/15-multi-account-recon.md`, created by Phase 1.
+
+## Sources
+
+- `doc/audits/2026-11-03-multi-account/PROGRESS.md` — the phase table this index points at.
+- `doc/audits/2026-11-03-multi-account/00-baseline.md` — the baseline record.
+- `doc/audits/README.md` — the audit index row this folder adds.
+
