@@ -410,8 +410,9 @@ def test_non_utf8_gitdir_in_worktrees_fails_closed(store: Path, tmp_path: Path) 
     e2_new.mkdir()
     (e2_new / "gitdir").write_bytes(saved_e2_gitdir)
 
-    # Ensure e1 is visited before e2
-    assert [p.name for p in wt_root.iterdir() if p.is_dir()] == ["e1", "e2"]
+    # The cleaner iterates worktree entries sorted by name, so e1 is visited
+    # first regardless of filesystem order; this only asserts both entries exist.
+    assert sorted(p.name for p in wt_root.iterdir() if p.is_dir()) == ["e1", "e2"]
 
     # Dry-run: exit 0, job kept, reason mentions worktree registered OR unreadable registrations
     dry = _run_json("--store", store, "--project", repo_path, expect=0)

@@ -144,6 +144,14 @@ A failure means a frozen file changed. Restore it; do not edit a frozen test to
 make a change pass. `tests/frozen.sha256` is itself not frozen and may be
 extended only by the maintainer.
 
+*Exception (2026-11-03):* Line 414 of `tests/test_cleanup_jobs_fixes2.py`
+was edited to sort `wt_root.iterdir()` (`sorted(p.name for p in wt_root.iterdir() if p.is_dir()) == ["e1", "e2"]`).
+The test's own precondition assertion previously assumed directory creation order from
+unsorted `iterdir()`, which failed on filesystems that do not return creation
+order in CI. Because the cleaner implementation sorts worktree entries deterministically
+by name, the test only requires asserting that both entries exist. `tests/frozen.sha256`
+was updated with the new hash.
+
 ## Codemap freshness
 
 ```bash
