@@ -15,7 +15,7 @@ continues from its "next step" instead of redoing finished phases.
 | 1 | Investigate and test the system | done | d43b0ca | docs OK (87 pages), ruff pass, frozen 13, no src change so tests unchanged | Phase 2 design |
 | 2 | Design docs | done | 2f2aa82 | docs gate | Phase 3 foundation |
 | 3 | Foundation (registry, identity, env) | done | 6e2c958 | ruff, frozen 13, docs 89, publish 867, reference/codemap fresh, AST 35, 68 new + 30 config tests | Phase 4 usage pools |
-| 4 | Usage pools | done | (this commit) | ruff, frozen 13, docs 89, publish 877, reference/codemap fresh, AST 36, 103 tests | Phase 5 scheduler |
+| 4 | Usage pools | done | 5d6830e | ruff, frozen 13, docs 89, publish 877, reference/codemap fresh, AST 36, 103 tests | Phase 5 scheduler |
 | 5 | Scheduler | pending | — | — | pure decision function |
 | 6 | Job model and wiring | pending | — | — | `account`/`priority` |
 | 7 | Exhaustion, transfer, handoff | pending | — | — | conversation copy + lock |
