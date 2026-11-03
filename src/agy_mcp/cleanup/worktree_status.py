@@ -387,7 +387,7 @@ def _check_worktree_status(job_dir: Path, data: dict[str, Any]) -> tuple[bool, O
                     if not wt_root.exists() or not wt_root.is_dir():
                         continue
                     try:
-                        entries = list(wt_root.iterdir())
+                        entries = sorted(wt_root.iterdir(), key=lambda p: p.name)
                     except (OSError, UnicodeDecodeError) as exc:
                         return True, f"worktree registrations directory unreadable ({exc})"
 
