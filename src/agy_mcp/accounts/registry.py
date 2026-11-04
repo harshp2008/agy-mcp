@@ -36,6 +36,21 @@ _ENTRY_KEYS = {
 
 
 @dataclass(frozen=True)
+class DefaultAccountConfig:
+    """The optional ``[default_account]`` table for the implicit default.
+
+    Every field defaults to today's behavior: enabled with no identity
+    expectation. A configured expectation is the same email/hash pair an
+    ``[[accounts]]`` entry accepts, so the implicit default becomes verifiable
+    too (D116).
+    """
+
+    enabled: bool = True
+    expected_email: Optional[str] = None
+    expected_email_sha256: Optional[str] = None
+
+
+@dataclass(frozen=True)
 class AccountConfig:
     """One account from the registry, or the implicit ``default`` account.
 
@@ -120,6 +135,74 @@ def _parse_iso_timestamp(value: Any) -> str:
     return text
 
 
+def _parse_expectations(
+    entry: dict[str, Any], label: str
+) -> tuple[Optional[str], Optional[str]]:
+    """Validate one entry's optional email expectation pair.
+
+    ``label`` names the entry in an error message ("account 'a'" or "the default
+    account"). At most one of ``expected_email`` / ``expected_email_sha256`` may
+    be set, exactly as an ``[[accounts]]`` entry; messages never echo the email.
+    """
+    expected_email = entry.get("expected_email")
+    expected_hash = entry.get("expected_email_sha256")
+    if expected_email is not None and expected_hash is not None:
+        raise AccountError(
+            f"{label} may set at most one of expected_email and expected_email_sha256",
+            code="account_config_invalid",
+        )
+    if expected_email is not None:
+        expected_email = _require_string(expected_email, "expected_email")
+        local, _, domain = expected_email.rpartition("@")
+        if not local or not domain or expected_email.count("@") != 1:
+            raise AccountError(
+                f"{label} expected_email is not a valid address",
+                code="account_config_invalid",
+            )
+    if expected_hash is not None:
+        expected_hash = _require_string(expected_hash, "expected_email_sha256")
+        if not _SHA256_RE.match(expected_hash):
+            raise AccountError(
+                f"{label} expected_email_sha256 must be 64 lowercase hex characters",
+                code="account_config_invalid",
+            )
+    return expected_email, expected_hash
+
+
+def parse_default_account(raw: Any) -> Optional[DefaultAccountConfig]:
+    """Validate the optional ``[default_account]`` table.
+
+    ``None`` (no table) returns ``None`` so the registry can keep today's
+    implicit account byte-identical. Otherwise ``enabled`` must be a bool
+    (default true) and the email/hash pair follows the same rule as an
+    ``[[accounts]]`` entry. Pure and filesystem-free; raises
+    :class:`AccountError` with a stable code on any violation.
+    """
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise AccountError(
+            "'default_account' must be a table", code="account_config_invalid"
+        )
+    unknown = sorted(set(raw) - {"enabled", "expected_email", "expected_email_sha256"})
+    if unknown:
+        raise AccountError(
+            "unknown [default_account] key(s): " + ", ".join(unknown),
+            code="account_config_invalid",
+        )
+    enabled = raw.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise AccountError(
+            "the default account enabled must be a bool", code="account_config_invalid"
+        )
+    expected_email, expected_hash = _parse_expectations(raw, "the default account")
+    return DefaultAccountConfig(
+        enabled=enabled,
+        expected_email=expected_email,
+        expected_email_sha256=expected_hash,
+    )
+
+
 def _parse_account_entry(entry: Any) -> AccountConfig:
     if not isinstance(entry, dict):
         raise AccountError("each [[accounts]] entry must be a table", code="account_config_invalid")
@@ -189,29 +272,7 @@ def _parse_account_entry(entry: Any) -> AccountConfig:
     if expires_at is not None:
         expires_at = _parse_iso_timestamp(expires_at)
 
-    expected_email = entry.get("expected_email")
-    expected_hash = entry.get("expected_email_sha256")
-    if expected_email is not None and expected_hash is not None:
-        raise AccountError(
-            f"account '{name}' may set at most one of expected_email and "
-            "expected_email_sha256",
-            code="account_config_invalid",
-        )
-    if expected_email is not None:
-        expected_email = _require_string(expected_email, "expected_email")
-        local, _, domain = expected_email.rpartition("@")
-        if not local or not domain or expected_email.count("@") != 1:
-            raise AccountError(
-                f"account '{name}' expected_email is not a valid address",
-                code="account_config_invalid",
-            )
-    if expected_hash is not None:
-        expected_hash = _require_string(expected_hash, "expected_email_sha256")
-        if not _SHA256_RE.match(expected_hash):
-            raise AccountError(
-                f"account '{name}' expected_email_sha256 must be 64 lowercase hex characters",
-                code="account_config_invalid",
-            )
+    expected_email, expected_hash = _parse_expectations(entry, f"account '{name}'")
 
     return AccountConfig(
         name=name,
@@ -261,14 +322,28 @@ def parse_accounts(raw_accounts: Any, max_accounts: int = 5) -> list[AccountConf
 def build_registry(config: Any, default_home: Path) -> AccountRegistry:
     """Build the registry from a parsed config and the invoking user's home.
 
-    The implicit default always exists and keeps today's real home and env. The
-    config may add accounts but can never replace, rename or disable the default.
+    The implicit default always exists and keeps today's real home and env. An
+    optional ``[default_account]`` table may disable it or give it an identity
+    expectation (D116); without that table the built account is byte-identical
+    to the pre-D116 one. The config may add accounts but can never replace or
+    rename the default.
     """
-    default = AccountConfig(
-        name=DEFAULT_ACCOUNT_NAME,
-        home=str(Path(default_home)),
-        is_default=True,
-    )
+    default_config = getattr(config, "default_account", None)
+    if isinstance(default_config, DefaultAccountConfig):
+        default = AccountConfig(
+            name=DEFAULT_ACCOUNT_NAME,
+            home=str(Path(default_home)),
+            is_default=True,
+            enabled=default_config.enabled,
+            expected_email=default_config.expected_email,
+            expected_email_sha256=default_config.expected_email_sha256,
+        )
+    else:
+        default = AccountConfig(
+            name=DEFAULT_ACCOUNT_NAME,
+            home=str(Path(default_home)),
+            is_default=True,
+        )
     accounts = tuple(getattr(config, "accounts", ()) or ())
     return AccountRegistry(default=default, accounts=accounts)
 

@@ -16,8 +16,13 @@ from typing import Any, Callable, Optional
 
 from agy_mcp.accounts.errors import AccountError
 from agy_mcp.accounts.policy import PolicyCheck, check_policy_parity
-from agy_mcp.accounts.pools import AccountUsage, account_usage_from_reading
-from agy_mcp.accounts.registry import AccountConfig, AccountRegistry, validate_account_home
+from agy_mcp.accounts.pools import AccountUsage, account_usage_from_reading, identity_pool_key
+from agy_mcp.accounts.registry import (
+    DEFAULT_ACCOUNT_NAME,
+    AccountConfig,
+    AccountRegistry,
+    validate_account_home,
+)
 from agy_mcp.accounts.scheduler import (
     MAX_TRACE_ACCOUNTS,
     PRIORITY_BACKGROUND,
@@ -167,6 +172,62 @@ def _reservation(job: Job) -> tuple[float, float]:
         return 0.0, 0.0
 
 
+def shared_identity_pools(
+    states: tuple[AccountState, ...],
+    masked_by_name: dict[str, Optional[str]],
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Return the shared-pool keys and representatives for one verified login.
+
+    Enabled accounts whose ``/usage`` readings report the identical masked email
+    are one Google login when at least one of them verified an identity
+    expectation. The scheduler already merges accounts by ``pool_key``; the first
+    returned map supplies the matching key for the observed collision (the
+    2026-11-05 observation, D116). The second maps each shared key to a
+    representative: the lowest declared account, because its isolated HOME
+    reading is the authoritative one.
+
+    A group whose members all have an unverified masked value is not merged: the
+    implicit default's value comes from the shared keyring and can change under
+    the desktop app, so it is not evidence that two independent quotas are one.
+    The doctor reports that case for every enabled account.
+    """
+    by_identity: dict[str, list[str]] = {}
+    verified: set[str] = set()
+    masked_by_identity: dict[str, str] = {}
+    for state in states:
+        if not state.enabled:
+            continue
+        usage = state.usage
+        if usage is None:
+            continue
+        identity_key = usage.identity_sha256
+        if not identity_key:
+            identity_key = masked_by_name.get(state.name)
+        if not identity_key:
+            continue
+        by_identity.setdefault(identity_key, []).append(state.name)
+        masked = masked_by_name.get(state.name)
+        if masked:
+            masked_by_identity.setdefault(identity_key, masked)
+        if usage.identity == "matched":
+            verified.add(state.name)
+    overrides: dict[str, str] = {}
+    representatives: dict[str, str] = {}
+    for identity_key, names in by_identity.items():
+        if len(names) < 2 or not any(name in verified for name in names):
+            continue
+        declared = sorted(name for name in names if name != DEFAULT_ACCOUNT_NAME)
+        representative = declared[0] if declared else sorted(names)[0]
+        label = masked_by_name.get(representative) or masked_by_identity.get(identity_key)
+        if not label:
+            continue
+        key = identity_pool_key(label)
+        representatives[key] = representative
+        for name in names:
+            overrides[name] = key
+    return overrides, representatives
+
+
 class AccountSelector:
     """Read the live account state and delegate the decision to the scheduler."""
 
@@ -289,8 +350,21 @@ class AccountSelector:
         """Choose an account for one start, or return the exhaustion result.
 
         An explicit ``account`` must pass the same checks unless ``force`` skips
-        only the quota filter; it never skips identity, policy, home or cap.
+        only the quota filter; it never skips identity, policy, home or cap. A
+        disabled implicit default is rejected with ``default_account_disabled``,
+        and a registry with no enabled account with ``account_none_enabled``
+        (D116).
         """
+        if account == DEFAULT_ACCOUNT_NAME and not self.registry.default.enabled:
+            raise AccountError(
+                "the default account is disabled; pass a configured account",
+                code="default_account_disabled",
+            )
+        if not any(candidate.enabled for candidate in self.registry.all()):
+            raise AccountError(
+                "no configured account is enabled; enable one or the default account",
+                code="account_none_enabled",
+            )
         now = self._now()
         request = JobRequest(model, max_minutes, priority)
         scheduler_config = scheduler_config_from_config(self.config)
@@ -310,7 +384,31 @@ class AccountSelector:
             states.append(state)
             masked_by_name[config_account.name] = masked
         state_tuple = tuple(states)
-
+        pool_overrides, representatives = shared_identity_pools(
+            state_tuple, masked_by_name
+        )
+        if pool_overrides:
+            # The scheduler sees one pool key per observed login, so a duplicate
+            # identity can never be counted as two independent quota buckets. The
+            # implicit default is the shared-keyring alias: when it collides with
+            # a declared account, that account's isolated reading is authoritative
+            # for the shared login, because the keyring reading can change under
+            # the desktop app (D116).
+            by_name = {state.name: state for state in state_tuple}
+            adjusted: list[AccountState] = []
+            for state in state_tuple:
+                pool_key = pool_overrides.get(state.name, state.pool_key)
+                usage = state.usage
+                if state.name == DEFAULT_ACCOUNT_NAME and state.name in pool_overrides:
+                    representative = by_name.get(representatives.get(pool_key, ""), None)
+                    if (
+                        representative is not None
+                        and representative.name != state.name
+                        and representative.usage is not None
+                    ):
+                        usage = replace(representative.usage, account=state.name)
+                adjusted.append(replace(state, pool_key=pool_key, usage=usage))
+            state_tuple = tuple(adjusted)
         rejections = tuple(
             RejectedAccount(
                 name=state.name,

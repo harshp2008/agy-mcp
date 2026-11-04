@@ -11,8 +11,10 @@ from agy_mcp.accounts.registry import (
     DEFAULT_ACCOUNT_NAME,
     AccountConfig,
     AccountRegistry,
+    DefaultAccountConfig,
     build_registry,
     parse_accounts,
+    parse_default_account,
 )
 
 __all__ = [
@@ -20,6 +22,8 @@ __all__ = [
     "AccountError",
     "AccountRegistry",
     "DEFAULT_ACCOUNT_NAME",
+    "DefaultAccountConfig",
     "build_registry",
     "parse_accounts",
+    "parse_default_account",
 ]

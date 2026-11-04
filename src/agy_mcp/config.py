@@ -19,7 +19,12 @@ else:
     import tomli as tomllib  # type: ignore[no-redef]
 
 from agy_mcp.accounts.errors import AccountError
-from agy_mcp.accounts.registry import AccountConfig, parse_accounts
+from agy_mcp.accounts.registry import (
+    AccountConfig,
+    DefaultAccountConfig,
+    parse_accounts,
+    parse_default_account,
+)
 
 # Real agy loads its shared permission config from this path under HOME. The
 # literal path stays in config.py so the transcript-reading scope guard stays
@@ -85,9 +90,12 @@ class Config:
     )
     agy_home: str = "~/.gemini/antigravity-cli"
     timezone: Optional[str] = None
-    # Additional accounts; the implicit "default" account always exists and is
-    # not configurable, so this list is everything beyond the primary login.
+    # Additional accounts; the implicit "default" account is not declared here
+    # and is optional since D116, so this list is everything beyond it.
     accounts: list[AccountConfig] = field(default_factory=list)
+    # Optional [default_account] table: enabled and an email expectation for the
+    # implicit account (D116). None is today's behavior byte-for-byte.
+    default_account: Optional[DefaultAccountConfig] = None
     max_accounts: int = 5
     # Multi-account scheduler thresholds (D108/D109). Heuristics, not facts.
     account_cost_tokens_per_minute: int = 35300
@@ -149,6 +157,7 @@ def _validate_config_dict(data: dict[str, Any]) -> tuple[dict[str, Any], list[st
         "agy_home",
         "timezone",
         "accounts",
+        "default_account",
         "max_accounts",
         "account_cost_tokens_per_minute",
         "account_cost_expected_minutes",
@@ -355,6 +364,15 @@ def _validate_config_dict(data: dict[str, Any]) -> tuple[dict[str, Any], list[st
             except AccountError as exc:
                 # AccountError messages are already value-safe (masked email).
                 raise ConfigError(f"Invalid [[accounts]] configuration: {exc.message}") from exc
+
+        elif key == "default_account":
+            try:
+                validated[key] = parse_default_account(val)
+            except AccountError as exc:
+                # AccountError messages are already value-safe (masked email).
+                raise ConfigError(
+                    f"Invalid [default_account] configuration: {exc.message}"
+                ) from exc
 
         elif key == "agy_home":
             if not isinstance(val, str) or not val.strip():

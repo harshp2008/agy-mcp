@@ -25,6 +25,7 @@ from agy_mcp.accounts.errors import AccountError
 from agy_mcp.accounts.handoff import build_handoff_prompt
 from agy_mcp.accounts.policy import check_policy_parity
 from agy_mcp.accounts.registry import (
+    DEFAULT_ACCOUNT_NAME,
     AccountConfig,
     build_registry,
     validate_account_home,
@@ -173,15 +174,33 @@ class JobManager:
         return self._account_selector_instance
 
     def _account_for_job(self, job: Job) -> AccountConfig:
-        """Return the account a job is pinned to (default for legacy records)."""
-        name = job.account or "default"
+        """Return the account a job is pinned to (default for legacy records).
+
+        A disabled account is a refusal, never a silent move: a legacy record
+        (``account=None``) that is pinned to a disabled default fails with
+        ``default_account_disabled`` and a record pinned to a disabled declared
+        account fails with ``account_disabled`` (D116).
+        """
+        name = job.account or DEFAULT_ACCOUNT_NAME
         try:
-            return self.registry.by_name(name)
+            account = self.registry.by_name(name)
         except AccountError as exc:
             raise ManagerError(
                 f"job is pinned to account '{name}' which is no longer configured",
                 code="account_not_found",
             ) from exc
+        if not account.enabled:
+            if account.is_default:
+                raise ManagerError(
+                    "the job is pinned to the default account, which is disabled; "
+                    "resume is refused rather than moving the job to another account",
+                    code="default_account_disabled",
+                )
+            raise ManagerError(
+                f"job is pinned to account '{account.name}' which is disabled",
+                code="account_disabled",
+            )
+        return account
 
     def _agy_home_for(self, account: AccountConfig) -> Path:
         """Return the agy state dir for an account (config override only for default)."""
@@ -190,7 +209,20 @@ class JobManager:
         return account.agy_home
 
     def _check_account_ready(self, account: AccountConfig) -> None:
-        """Fail closed when an account home or its permission policy is unusable."""
+        """Fail closed when an account home, policy or identity is unusable.
+
+        The implicit default skips the home/policy checks (its mode is not the
+        wrapper's to enforce), but a configured identity expectation applies to
+        every account: a mismatch stops the run instead of only warning (D116).
+        """
+        if account.expected_email is not None or account.expected_email_sha256 is not None:
+            reading = self._read_usage(use_cache=True, account=account)
+            reason = reading.get("reason") if reading.get("available") is not True else None
+            if reason in ("account_identity_mismatch", "account_identity_unknown"):
+                raise ManagerError(
+                    f"account '{account.name}' identity check failed ({reason})",
+                    code=str(reason),
+                )
         if account.is_default:
             return
         try:
@@ -430,10 +462,23 @@ class JobManager:
 
         # 7b. Account selection (D102, D108, D109). With no registry this is the
         # implicit default account and the pre-multi-account path is unchanged.
+        # The implicit default is optional (D116): an explicit default is
+        # refused when it is disabled, and a registry with nothing enabled has
+        # no candidate at all.
         selection: Optional[Selection] = None
         selected_account = self.registry.default
         selection_masked_email: Optional[str] = None
         reservation: Optional[dict[str, Any]] = None
+        if account == DEFAULT_ACCOUNT_NAME and not self.registry.default.enabled:
+            raise ManagerError(
+                "the default account is disabled; pass a configured account",
+                code="default_account_disabled",
+            )
+        if not any(candidate.enabled for candidate in self.registry.all()):
+            raise ManagerError(
+                "no configured account is enabled; enable one or the default account",
+                code="account_none_enabled",
+            )
         if self.registry.configured:
             try:
                 selection = self._get_account_selector().select(
@@ -462,6 +507,11 @@ class JobManager:
                 "An account override requires an [accounts] registry",
                 code="account_not_found",
             )
+
+        # The identity expectation also applies to the implicit default on the
+        # single-account path, which never runs the scheduler (D116).
+        if selected_account.is_default:
+            self._check_account_ready(selected_account)
 
         # 7c. Usage guard (D59, Item 4): warn or block before consuming a launch slot.
         self._apply_usage_guard(model, warnings, account=selected_account)
@@ -612,7 +662,12 @@ class JobManager:
         """
         if not self.registry.configured:
             return None
-        pinned = job.account or "default"
+        try:
+            pinned = self._account_for_job(job).name
+        except ManagerError:
+            # A disabled pinned account must never be moved by a handoff; the
+            # resume gate reports the stable code instead (D116).
+            return None
         try:
             selection = self._get_account_selector().select(
                 job.model, job.max_minutes, job.priority
@@ -1187,18 +1242,62 @@ class JobManager:
             account=account,
         )
 
-    def usage(self) -> dict[str, Any]:
-        """Return the read-only agy_usage payload (D59, Item 3)."""
-        reading = self._read_usage(use_cache=True)
+    def usage(self, account: Optional[str] = None) -> dict[str, Any]:
+        """Return the read-only agy_usage payload (D59, Item 3).
+
+        With no ``account`` the historical default reading is unchanged. When
+        the implicit default is disabled, the first enabled account by name is
+        used and ``account_name`` reports which one. An explicit name reads that
+        account with its isolated env; a disabled name is a refusal, never a
+        silent fallback (D116).
+        """
+        selected: Optional[AccountConfig] = None
+        reading_account: Optional[AccountConfig] = None
+        if account is not None:
+            try:
+                selected = self.registry.by_name(account)
+            except AccountError as exc:
+                raise ManagerError(exc.message, code=exc.code) from exc
+            if not selected.enabled:
+                if selected.is_default:
+                    raise ManagerError(
+                        "the default account is disabled; pass a configured account",
+                        code="default_account_disabled",
+                    )
+                raise ManagerError(
+                    f"account '{selected.name}' is disabled", code="account_disabled"
+                )
+            # An explicit default keeps the historical no-account reading path so
+            # the payload is the same as an unqualified call (only the additive
+            # account_name reports the choice).
+            reading_account = None if selected.is_default else selected
+        elif not self.registry.default.enabled:
+            enabled = sorted(self.registry.enabled(), key=lambda item: item.name)
+            if not enabled:
+                raise ManagerError(
+                    "no configured account is enabled; enable one or the default account",
+                    code="account_none_enabled",
+                )
+            selected = enabled[0]
+            reading_account = selected
+        reading = self._read_usage(use_cache=True, account=reading_account)
         annotated = usage_utils.annotate_low_flags(reading, self.config)
-        return {
+        account_payload = annotated.get("account")
+        if isinstance(account_payload, dict):
+            # The digest is an internal grouping aid (D116), not part of the
+            # public agy_usage payload; keep the documented shape stable.
+            account_payload = dict(account_payload)
+            account_payload.pop("identity_sha256", None)
+        payload: dict[str, Any] = {
             "available": bool(annotated.get("available")),
             "reason": annotated.get("reason"),
             "cached": bool(annotated.get("cached")),
-            "account": annotated.get("account")
-            or {"masked_email": None, "auth_method": None},
+            "account": account_payload or {"masked_email": None, "auth_method": None},
             "groups": annotated.get("groups", []),
         }
+        if selected is not None:
+            payload["account_name"] = selected.name
+        return payload
 
     def status(self, job_id: str, tail_lines: int = 20) -> JobStatusResponse:
         """Return status telemetry and recent redacted logs for a job."""

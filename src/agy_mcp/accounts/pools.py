@@ -74,6 +74,7 @@ class AccountUsage:
     fetched_at: Optional[str] = None
     cached: bool = False
     identity: str = "unchecked"
+    identity_sha256: Optional[str] = None
 
     def pool(self, name: str) -> Optional[PoolReading]:
         """Return the named pool or None."""
@@ -105,6 +106,17 @@ def pool_for_model(model: Optional[str]) -> Optional[str]:
     if name.startswith("claude") or name.startswith("gpt"):
         return POOL_CLAUDE_GPT
     return None
+
+
+def identity_pool_key(masked_email: str) -> str:
+    """Return the shared pool key for accounts that report the same login.
+
+    Two named accounts that authenticate as the same masked email are one quota
+    pool even when they have different HOMEs: the provider counts the login, not
+    the directory. The masked form is already the only identity this wrapper
+    keeps, so it can become the key without storing a full address (D116).
+    """
+    return f"identity:{masked_email}"
 
 
 def _window_reading(raw: Any) -> Optional[WindowReading]:
@@ -151,6 +163,9 @@ def account_usage_from_reading(account_name: str, reading: Any) -> AccountUsage:
     identity = account_info.get("identity", "unchecked")
     if not isinstance(identity, str):
         identity = "unchecked"
+    identity_sha256 = account_info.get("identity_sha256")
+    if not isinstance(identity_sha256, str):
+        identity_sha256 = None
 
     if reading.get("available") is not True:
         reason = reading.get("reason")
@@ -164,6 +179,7 @@ def account_usage_from_reading(account_name: str, reading: Any) -> AccountUsage:
             else None,
             cached=bool(reading.get("cached", False)),
             identity=identity,
+            identity_sha256=identity_sha256,
         )
 
     pools: list[PoolReading] = []
@@ -193,6 +209,7 @@ def account_usage_from_reading(account_name: str, reading: Any) -> AccountUsage:
             masked_email=masked_email if isinstance(masked_email, str) else None,
             cached=bool(reading.get("cached", False)),
             identity=identity,
+            identity_sha256=identity_sha256,
         )
 
     return AccountUsage(
@@ -205,4 +222,5 @@ def account_usage_from_reading(account_name: str, reading: Any) -> AccountUsage:
         ),
         cached=bool(reading.get("cached", False)),
         identity=identity,
+        identity_sha256=identity_sha256,
     )

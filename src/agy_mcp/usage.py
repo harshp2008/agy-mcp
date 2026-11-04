@@ -679,6 +679,10 @@ def read_usage_once(
     """
     from agy_mcp.util import env_allowlist
 
+    # ``account`` is overwritten by the parsed account dict below; remember
+    # whether this was a registry-scoped probe so the digest is added only there
+    # (the single-account reading shape stays byte-identical, D107/D116).
+    scoped_account = account is not None
     tmp_dir = Path(tempfile.mkdtemp(prefix="agy-usage-"))
     # Run in an empty throwaway cwd and parse the auth line from a throwaway log:
     # the raw email must never touch a persistent path (D59 item 2).
@@ -755,6 +759,14 @@ def read_usage_once(
 
         email, auth_method = parse_auth_line(log_text)
         account = _account_dict(email, auth_method)
+        if scoped_account and email:
+            # A stable, non-reversible key for the observed login. Selection and
+            # the doctor use it to recognise two names that are really one
+            # account even when their mask shapes differ; the full address is
+            # still never stored (D116).
+            from agy_mcp.accounts.identity import email_sha256
+
+            account["identity_sha256"] = email_sha256(email)
 
         # Multi-account identity hook (D103): when a registry expectation is
         # supplied, compare the FULL parsed address (never the masked value) and

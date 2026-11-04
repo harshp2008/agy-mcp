@@ -107,13 +107,19 @@ def test_usage_tool_unavailable_payload(tmp_path: Path) -> None:
 
 
 def test_agy_usage_registered() -> None:
-    """agy_usage is registered as a read-only parameterless tool."""
+    """agy_usage is registered as a read-only tool with an optional account."""
     tools = mcp._tool_manager.list_tools()
     by_name = {tool.name: tool for tool in tools}
     assert "agy_usage" in by_name
     tool = by_name["agy_usage"]
     assert tool.parameters == {
-        "properties": {},
+        "properties": {
+            "account": {
+                "anyOf": [{"type": "string"}, {"type": "null"}],
+                "default": None,
+                "title": "Account",
+            }
+        },
         "title": "agy_usageArguments",
         "type": "object",
     }
