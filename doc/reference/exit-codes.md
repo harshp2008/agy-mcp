@@ -3,7 +3,7 @@
 Status: current
 Audience: operators, contributors
 
-There are five entry points. The server does not exit because a job failed; a
+There are six entry points. The server does not exit because a job failed; a
 job failure is an envelope state (`failed`, `needs_review`, `timeout`). The
 cleaners and the installer use the exit status to say whether the command
 itself succeeded.
@@ -11,6 +11,7 @@ itself succeeded.
 | Entry point | 0 | 1 | 2 (or other) |
 |---|---|---|---|
 | `agy-mcp` server | normal run, `--help`, `--version`, clean SIGTERM | configuration error | missing/non-executable `agy`, argparse usage error |
+| `agy-mcp account` | success, including every dry run and no-op | unexpected internal failure | usage/validation (2), safety refusal (3), conflict/missing (4), identity/isolation (5), config I/O (6); see the [account CLI page](cli-accounts.md#exit-codes) |
 | `python -m agy_mcp.cleanup_jobs` | success, including every dry run | partial deletion in `--yes` mode | refusal or bad usage |
 | `python -m agy_mcp.cleanup_fixtures` | success, including every dry run | partial deletion in `--yes` mode | refusal or bad usage |
 | `installer/install.sh` | success (`--help`, dry run, install, doctor/uninstall pass) | any fatal installer error | not used |
@@ -28,6 +29,25 @@ Source: `src/agy_mcp/server.py`.
 
 The server must never write logs to stdout: stdout is the MCP JSON-RPC stream.
 Logs go to stderr and `<state>/server.log`.
+
+## `agy-mcp account`
+
+Source: `src/agy_mcp/accounts/cli.py`, reached through `agy_mcp.server.main`
+only when the literal first argument is `account`.
+
+| Code | When |
+|---|---|
+| `0` | `list`, every dry run, a `--yes` write that succeeded, and every no-op. |
+| `1` | An unexpected internal failure without a stable account code. |
+| `2` | Bad usage/validation: invalid name, home, pool or cap, `max_accounts` reached, missing `agy`, missing or empty expected email, argparse error. |
+| `3` | Safety refusal: `add` without a TTY, `remove` with an active job, wrong/missing typed phrase, `remove default`, ambiguous/corrupt block, config changed under the lock, unsafe `--delete-home`. |
+| `4` | Unknown account, duplicate name, or no matching `[[accounts]]` block. |
+| `5` | Isolation/keyring leak, login failure, expected-email mismatch, or a failed per-account doctor check after the block was written. |
+| `6` | Invalid/unreadable config, backup/lock/temp write failure, or provisioning failure. |
+
+`--yes` is the only way to write; without it every writing command is a dry run
+that returns 0. See [the account CLI page](cli-accounts.md) for the full code
+table.
 
 ## `python -m agy_mcp.cleanup_jobs`
 
@@ -89,7 +109,8 @@ removed after their evidence rounds; their committed outputs stay under
 ## Sources
 
 - `src/agy_mcp/server.py` — `main`, `resolve_agy_binary`, `parse_args`, the
-  SIGTERM handler and the config-error path.
+  SIGTERM handler and the config-error path; `main` also dispatches `account`.
+- `src/agy_mcp/accounts/cli.py` — every `agy-mcp account` return code.
 - `src/agy_mcp/cleanup/jobs_cli.py` — `main` and every `return 0/1/2`.
 - `src/agy_mcp/cleanup/fixtures_cli.py` — `main` and every `return 0/1/2`.
 - `src/agy_mcp/config.py` — `ConfigError`.

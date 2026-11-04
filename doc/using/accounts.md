@@ -5,29 +5,36 @@ Audience: users, orchestrators, maintainers
 
 How to add a second (or further) Google account that you legitimately own, how
 `agy-mcp` isolates it from the primary login and the Antigravity desktop app, and
-what the wrapper will and will not do with it. The normative rules are D102–D114
-in [the decisions log](../design/decisions.md); the full design is
+what the wrapper will and will not do with it. The recommended path is the
+human-run `agy-mcp account` command (D117); the manual recipe it automates is
+kept below as **what the command does**. The normative rules are D102–D117 in
+[the decisions log](../design/decisions.md); the full design is
 [the multi-account design](../design/multi-account.md).
 
-> **Implementation status (Phase 8 of the multi-account work).** The registry,
+> **Implementation status (Phase 9 of the multi-account work).** The registry,
 > per-account usage, the quota-aware scheduler, account selection in `agy_start`,
-> pinning across resumes, conversation transfer, the summary handoff and the
-> read-only `--doctor` account checks are implemented.
+> pinning across resumes, conversation transfer, the summary handoff, the
+> read-only `--doctor` account checks and the human `agy-mcp account` CLI are
+> implemented.
 
 ## What the wrapper never does
 
-- It never logs in or out of an account.
+- It never logs in or out of an account and never automates sign-up. `account
+  add` hands **your terminal** to an isolated `agy`; you complete the browser
+  login.
 - It never reads, copies or prints a token, keyring entry, cookie or credential
   file.
-- It never creates or registers a Google account, and never automates sign-up.
-- It never prints a full email address; logs, job records and MCP responses show
-  a masked form (`head***tail@domain`: first three and last two local-part
-  characters at most, never more than half the local part).
+- It never creates or registers a Google account.
+- It never prints a full email address; logs, job records, MCP responses and the
+  account CLI show a masked form (`head***tail@domain`: first three and last two
+  local-part characters at most, never more than half the local part). `account
+  add` asks for the expected email with hidden input and stores only its
+  SHA-256.
 
 Only use accounts you are entitled to use. The registry is a selection list, not
 a credential store.
 
-## Recommended setup: all accounts isolated
+## Recommended setup: every account isolated
 
 The implicit `default` account is the one agy reads through the **shared desktop
 keyring**. The Antigravity chat app writes that keyring whenever the user
@@ -39,92 +46,155 @@ recommended setup is: **every** account agy-mcp uses — including the main
 account — gets its own isolated home, and the shared-keyring `default` is
 disabled.
 
-This is the same verified isolation recipe as [Recipe: add an account](#recipe-add-an-account),
-applied to the primary login once:
+### 1. Add the main account under a non-`default` name
 
-1. Create a private home for the main account. Use a name other than `default`:
+Run this yourself in a terminal. `add` needs a terminal because it launches the
+login; without `--yes` it only prints the plan.
 
-   ```bash
-   MAIN_HOME="$HOME/.local/share/agy-accounts/main"
-   mkdir -p "$MAIN_HOME"
-   chmod 700 "$MAIN_HOME"
-   ```
+```bash
+agy-mcp account add main --pool main --max-concurrent 2 --yes
+```
 
-2. Prove the home is isolated **before** logging in:
+`python -m agy_mcp account add main --yes` is the same command when the console
+script is not on `PATH`. The command:
 
-   ```bash
-   HOME="$MAIN_HOME" DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null \
-     timeout 45 agy -p "/usage"
-   ```
+1. creates `~/.local/share/agy-accounts/main` with mode 0700;
+2. proves the fresh home is isolated by running the isolated `/usage`
+   (`HOME=<home>` plus `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null`) and
+   requiring `Authentication required` with **no** quota rows. If quota rows
+   appear, it stops with `account_cli_isolation_leak` and does not log in;
+3. launches interactive `agy` in that isolated environment. Complete the browser
+   login for the main account, then exit;
+4. verifies the login, asks for the expected email with hidden input, and stores
+   only `expected_email_sha256`;
+5. copies the primary permission policy and writes a minimal
+   `.gemini/antigravity-cli/settings.json` (trusted workspaces from
+   `allowed_workdir_roots`), both mode 0600 and neither overwriting an existing
+   file;
+6. appends the `[[accounts]]` block and runs the per-account doctor checks.
 
-   Expected: `Authentication required. Please visit the URL to log in:` and no
-   quota rows. Quota rows here mean the isolation is broken — stop.
+If any step fails after the home exists, the home is kept and the command prints
+what was done plus the exact command to resume. Re-running it is safe: an
+identical block is not duplicated.
 
-3. Log in as the human, in the isolated home:
+### 2. Disable the shared-keyring default
 
-   ```bash
-   HOME="$MAIN_HOME" DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null agy
-   ```
+```bash
+agy-mcp account disable default --yes
+```
 
-   Complete the browser login for the main account, then exit. The wrapper never
-   does this step.
+This writes `[default_account] enabled = false`. The default is still reserved
+and can never be declared in `[[accounts]]`; disabling it removes it from
+scheduling and makes an explicit `account="default"` a refusal.
 
-4. Verify the login shows the main account's own pools and reset times:
+### 3. Check the result
 
-   ```bash
-   HOME="$MAIN_HOME" DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null \
-     agy -p "/usage"
-   ```
+```bash
+agy-mcp account list --probe
+./installer/install.sh --doctor
+```
 
-5. Copy the permission policy the primary login uses (D106):
-
-   ```bash
-   mkdir -p "$MAIN_HOME/.gemini/config"
-   cp "$HOME/.gemini/config/config.json" "$MAIN_HOME/.gemini/config/config.json"
-   chmod 600 "$MAIN_HOME/.gemini/config/config.json"
-   ```
-
-6. Declare it and disable the shared-keyring default:
-
-   ```toml
-   max_accounts = 5
-
-   [[accounts]]
-   name = "main"
-   home = "~/.local/share/agy-accounts/main"
-   expected_email_sha256 = "<sha256 of the main address, lowercase>"
-
-   [default_account]
-   enabled = false
-   ```
-
-   `main` is an ordinary registry name; `default` stays reserved for the
-   implicit account. The expectation makes a wrong login fail closed. With the
-   default disabled, an explicit `account="default"` is refused with
-   `default_account_disabled`, a job pinned to `default` fails on resume with the
-   same code rather than moving, and at least one enabled account must remain
-   (`account_none_enabled`). Any later account you add follows the same recipe.
-
-7. Check the result:
-
-   ```bash
-   ./installer/install.sh --doctor
-   ```
-
-   The doctor probes every enabled account and reports a `shared_keyring`
-   warning if the default is still enabled without an expectation, and a
-   `shared_identity` warning when two enabled names report the same login.
-   Neither warning fails the doctor; both mean "fix the setup", not "the install
-   is broken".
+`list` is offline by default. `--probe` runs one isolated `/usage` per account
+and shows the masked observed email and quota. The doctor probes every enabled
+account and reports a `shared_keyring` warning if the default is still enabled
+without an expectation, and a `shared_identity` warning when two enabled names
+report the same login. Neither warning fails the doctor; both mean "fix the
+setup", not "the install is broken".
 
 The wrapper never touches the shared keyring for a declared account, because
 every spawn gets `HOME=<account home>` plus
 `DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null`. The default account's env stays
 the historical one, which is exactly why it is the one to disable.
 
-## Recipe: add an account
+### 4. Add further accounts
 
-Run these steps yourself in a terminal. Replace `account-b` and the path as
+```bash
+agy-mcp account add account-b --pool family --max-concurrent 1 --yes
+```
+
+Use `--home PATH` for a different location (the registry requires an absolute
+path after `~` expansion). Use the same `--pool` label for accounts that share
+one quota pool (for example family members).
+
+## What the commands do
+
+### `agy-mcp account add`
+
+| Flag | Meaning |
+|---|---|
+| `name` | Registry name: `[a-z0-9][a-z0-9-]{0,31}`, unique, not `default`. |
+| `--pool L` | Optional shared quota-bucket label. |
+| `--max-concurrent N` | Optional per-account cap (integer >= 1). |
+| `--home PATH` | Optional home; default `~/.local/share/agy-accounts/<name>`. |
+| `--yes` | Apply. Without it the command is a dry run. |
+
+`add` validates `max_accounts` (the total includes the implicit default),
+refuses a duplicate name, a symlinked home and a non-terminal shell. It never
+supplies credentials; the browser login is yours. `expected_email_sha256` is the
+only identity value written, and it is the SHA-256 of the address you type at
+the hidden prompt (normalized with `strip().casefold()`), compared with the
+digest of the login agy reports.
+
+A failed run is resumable. The home is left in place and the command prints a
+resume line such as:
+
+```text
+to resume: agy-mcp account add main --yes
+```
+
+### `agy-mcp account remove`
+
+```bash
+agy-mcp account remove account-b --yes
+```
+
+`remove` deletes **only** the `[[accounts]]` block, after a timestamped
+`config.toml.<UTC>.bak`; it never deletes the home or the login in this mode.
+
+- If any job pinned to the account is `queued` or `running`, it refuses (exit 3):
+  `A task is currently running on this account: <ids/titles>. Wait for it to
+  finish or cancel it first.`
+- If `needs_decision`, `needs_review` (including a quota-paused job) or
+  `timeout` jobs are pinned, it warns that they will become unresumable and
+  requires you to type `remove account <name>`.
+- `remove default` is refused; use `account disable default`.
+
+`--delete-home` also removes the home, but only when the resolved path is a real
+directory (not a symlink) directly under the agy-accounts root (default
+`~/.local/share/agy-accounts`, override with `--accounts-root`), and no
+non-terminal job is pinned to it. It requires the extra phrase
+`delete account home <name>`, never follows symlinks, and prints that the
+Google login may still be valid server-side and can be revoked on the Google
+account security page.
+
+### `agy-mcp account enable / disable`
+
+```bash
+agy-mcp account disable account-b --yes
+agy-mcp account enable account-b --yes
+```
+
+These flip only `enabled`, preserving comments and every other line. `disable`
+never refuses, but warns when active jobs are pinned: they finish and no new
+ones start. It also warns if no enabled account would remain. `disable default`
+writes `[default_account] enabled = false`.
+
+### `agy-mcp account list`
+
+```text
+account default: enabled=no pool=- max_concurrent=2 home=real-home active=0 paused=0 identity=none expected_hash=no
+account main: enabled=yes pool=main max_concurrent=2 home=~/.local/share/agy-accounts/main mode 0700 active=1 paused=0 identity=sha256-present expected_hash=yes
+```
+
+`active` counts `queued`/`running`; `paused` counts `needs_decision`,
+`needs_review` (including quota-paused) and `timeout`. `identity` reports
+`sha256-present`, a masked legacy `expected_email`, or `none`. No full email is
+ever printed.
+
+## What `account add` does (the manual recipe)
+
+The command is a convenience wrapper around these steps; run them yourself if
+you prefer, or to understand a failure. Replace `account-b` and the path as
 needed. The path below is the one used in the 2026-11-03 human test.
 
 ### 1. Create a private home
@@ -170,7 +240,21 @@ You should see that account's own two pools and reset times. With the desktop ap
 still open, run `agy -p "/usage"` with your normal environment and confirm the
 primary account is unchanged.
 
-### 5. Copy the permission policy
+### 5. Record the expected email as a hash
+
+The command asks for the expected email with hidden input, compares the SHA-256
+of what you typed with the digest agy reports for the login, and stores only the
+hash. To compute it yourself:
+
+```bash
+python -c 'import hashlib,sys; print(hashlib.sha256(sys.stdin.readline().strip().casefold().encode()).hexdigest())'
+```
+
+Then add `expected_email_sha256 = "<64 lowercase hex>"` to the block. Use
+`expected_email` (the full address) **or** the hash, never both. The hash keeps
+the address out of the file.
+
+### 6. Copy the permission policy
 
 `agy` headless runs rely on the policy at `$HOME/.gemini/config/config.json`
 (human test 2026-11-03: a fresh account auto-denied a command tool). Copy the
@@ -182,13 +266,24 @@ cp "$HOME/.gemini/config/config.json" "$ACCOUNT_HOME/.gemini/config/config.json"
 chmod 600 "$ACCOUNT_HOME/.gemini/config/config.json"
 ```
 
-The wrapper verifies before every start that the account policy matches the
-primary's; a missing or drifted policy refuses the job. It never writes this
-file itself.
+The command does this (if the primary file exists) and never overwrites an
+existing account policy. The wrapper verifies before every start that the account
+policy matches the primary's; a missing or drifted policy refuses the job. It
+never writes this file itself at runtime.
 
-### 6. Declare the account
+### 7. Write the settings file
 
-Add it to `~/.config/agy-mcp/config.toml`:
+The command writes `.gemini/antigravity-cli/settings.json` if absent:
+
+```json
+{"trustedWorkspaces": ["/path/from/allowed_workdir_roots"]}
+```
+
+mode 0600, never overwriting an existing file.
+
+### 8. Declare the account
+
+The command appends the block; the manual equivalent is:
 
 ```toml
 max_accounts = 5
@@ -202,9 +297,8 @@ max_concurrent_jobs = 1
 expected_email_sha256 = "<sha256 of the full address, lowercase>"
 ```
 
-Use `expected_email` (the full address) **or** `expected_email_sha256`, not
-both. The hash keeps the address out of the file. An account sharing one quota
-pool with another (for example family members) may set the same `pool` label:
+An account sharing one quota pool with another (for example family members) may
+set the same `pool` label:
 
 ```toml
 [[accounts]]
@@ -223,6 +317,12 @@ The implicit `default` account is never declared in `[[accounts]]`. Without a
 before; the optional table can disable it or give it the same
 `expected_email`/`expected_email_sha256` pair as a declared account (D116).
 `max_accounts` counts it too, so the example allows at most four extra accounts.
+
+**CLI-written blocks** are wrapped in `# agy-mcp:account <name> begin/end`
+markers. The CLI finds a **hand-written** block by parsing its `name` and only
+edits the span from its `[[accounts]]` header to the next table header (or EOF),
+so comments and unrelated keys are preserved. It refuses ambiguous or corrupt
+blocks rather than guessing.
 
 ## Fields
 
@@ -253,8 +353,8 @@ doctor module is present it prints one line per check, for example:
 account -: registry: ok: 1 extra account(s)
 account default: default_home: ok: the invoking user's real home
 account default: policy: ok: primary login
-account default: isolation_and_login: ok: isolated /usage ok as jo***81@example.com
-account default: email: ok: jo***81@example.com (unchecked)
+account default: isolation_and_login: ok: isolated /usage ok as pla***on@example.com
+account default: email: ok: pla***on@example.com (unchecked)
 account account-b: home: ok: exists, mode 0700
 account account-b: policy: ok: matches the primary
 account account-b: isolation_and_login: ok: isolated /usage ok as doc***er@example.com
@@ -295,6 +395,10 @@ The same module can be run directly:
 ~/.config/ai-stack/agymcp/venv/bin/python -m agy_mcp.accounts.doctor \
   --config ~/.config/agy-mcp/config.toml --agy-binary ~/.local/bin/agy
 ```
+
+`account add` ends by running the same per-account checks and printing them, so
+a fresh account shows the same `home`, `policy`, `isolation_and_login` and
+`email` lines.
 
 ## How to read the decision trace
 
@@ -356,22 +460,29 @@ exceeded it. Emails appear only in the masked form already used by
 | Symptom | Cause | Fix |
 |---|---|---|
 | `/usage` shows the primary's quota with the account HOME | `DBUS_SESSION_BUS_ADDRESS` missing | Always set `unix:path=/dev/null` for the account |
+| `account_cli_isolation_leak` during `account add` | The fresh home reached a keyring login | Do not log in; check `DBUS_SESSION_BUS_ADDRESS` and that the home is new/empty |
 | `Authentication required` during a job | The account was never logged in, or the token expired | Log in again with the isolated command |
 | `account_home_permissions` | Home is group/other accessible | `chmod 700 "$ACCOUNT_HOME"` |
-| `account_permission_policy_missing` / `_drift` | Policy not copied or differs from the primary | Re-copy the primary policy (step 5) |
+| `account_permission_policy_missing` / `_drift` | Policy not copied or differs from the primary | Re-run `account add` (it does not overwrite an existing policy) or copy the policy manually |
 | `account_identity_mismatch` | Wrong login for the configured expectation | Check the account, or fix the expectation |
 | `default_account_disabled` | `[default_account] enabled = false`, but a caller named `default` or a job is pinned to it | Pass an enabled account; the job is not moved automatically |
 | `account_none_enabled` | The default and every declared account are disabled | Enable the default or one `[[accounts]]` entry |
-| Doctor says `shared_keyring` or `shared_identity` | The default still uses the shared keyring, or two names are one login | Use [Recommended setup: all accounts isolated](#recommended-setup-all-accounts-isolated) |
+| `account_cli_jobs_active` on `remove` | A job is still running on that account | Wait or cancel it, then retry |
+| `account_cli_delete_home_unsafe` | The home is a symlink, outside the root, or has paused jobs | Remove the config block only, or fix the path first |
+| Doctor says `shared_keyring` or `shared_identity` | The default still uses the shared keyring, or two names are one login | Use [Recommended setup](#recommended-setup-every-account-isolated) |
 | Command tool auto-denied in a job | Account policy is weaker than the primary | Copy the primary policy; do not weaken it |
 
 ## Sources
 
 - `doc/design/multi-account.md` — the registry, isolation and policy rules.
-- `doc/design/decisions.md` — D102–D116.
+- `doc/design/decisions.md` — D102–D117.
+- `doc/reference/cli-accounts.md` — the account CLI flags, exit codes and errors.
 - `doc/audits/2026-11-03-multi-account/03-experiments.md` — the isolation and policy evidence.
 - `doc/findings-and-experiments/15-multi-account-recon.md` — the feasibility summary.
 - `doc/findings-and-experiments/16-shared-keyring-default-collision.md` — the 2026-11-05 observation.
+- `src/agy_mcp/accounts/cli.py` — the human-run commands and safety gates.
+- `src/agy_mcp/accounts/config_edit.py` — the conservative config edits.
+- `src/agy_mcp/accounts/provision.py` — home, isolation probe, login handoff and files.
 - `src/agy_mcp/accounts/registry.py` — validation rules and the implicit default.
 - `src/agy_mcp/accounts/env.py` — the dead D-Bus override.
 - `src/agy_mcp/accounts/identity.py` — masking and verification.

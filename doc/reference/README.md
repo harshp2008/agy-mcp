@@ -13,12 +13,13 @@ silently.
 |---|---|---|---|
 | [errors.md](errors.md) | Every `error.code`: meaning, who raises it, how to recover. | `manager.py`, `runner.py`, `worktree.py`, `server.py` | error codes |
 | [environment.md](environment.md) | The 16 variables read by the server and the installer. | `os.environ` reads, `installer/install.sh` | variables |
-| [exit-codes.md](exit-codes.md) | Exit statuses for the five entry points. | `server.py`, both cleaners, `install.sh`, `scripts/` | none |
+| [exit-codes.md](exit-codes.md) | Exit statuses for the six entry points. | `server.py`, both cleaners, `install.sh`, `scripts/` | none |
 | [config-keys.md](config-keys.md) | The 27 config keys: type, default, validator, effect. | `Config` dataclass, `_validate_config_dict` | keys/types/defaults |
 | [mcp-tools.md](mcp-tools.md) | The 10 MCP tools: parameters, returns, errors, examples. | `server.py`, `manager.py`, `tools_schema.json` | parameters |
 | [state-layout.md](state-layout.md) | State paths, per-job files, permissions, the 55 `job.json` fields. | `jobs.py`, `models.py`, `manager.py` | `job.json` fields |
 | [log-formats.md](log-formats.md) | `audit.jsonl` events, `usage.jsonl` rows, `server.log`, `cli.log`. | `jobs.py`, `usage.py`, `server.py`, `cli_log.py` | audit events |
 | [manifests.md](manifests.md) | Cleanup manifest and `--json` schemas for both cleaners. | `cleanup_jobs.py`, `cleanup_fixtures.py` | none |
+| [cli-accounts.md](cli-accounts.md) | The human account CLI: `list`/`add`/`remove`/`enable`/`disable`, safety gates, exits. | `accounts/cli.py`, `config_edit.py`, `provision.py`, D117 | none |
 | [cli-cleanup-jobs.md](cli-cleanup-jobs.md) | The job-record cleaner: flags, modes, refusals, exits, JSON. | `cleanup_jobs.py`, SPEC §23 | none |
 | [cli-cleanup-fixtures.md](cli-cleanup-fixtures.md) | The fixture cleaner: signature, flags, refusals, exits, JSON. | `cleanup_fixtures.py`, SPEC §22 | none |
 | [cli-scripts.md](cli-scripts.md) | The nine `scripts/` helpers: flags, writes, exits, safety. | `scripts/*.py` | none |

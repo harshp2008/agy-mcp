@@ -19,27 +19,47 @@ traceback to `server.log` and returned as `internal_error` without details.
 
 The table below is generated from the `code=` literals and exception defaults in
 `src/agy_mcp/`. The 40 stable codes named by the Part 2 audit are here, plus the
-account-registry/identity codes and the two server-generated fallbacks
-(`invalid_input`, `internal_error`).
+account-registry/identity codes, the human account CLI codes (D117) and the two
+server-generated fallbacks (`invalid_input`, `internal_error`). The CLI also
+maps a code to a documented exit status; see
+[the account CLI page](cli-accounts.md#exit-codes).
 
 ## Codes by source
 
 <!-- BEGIN GENERATED: error-codes -->
 | Code | Raised in |
 |---|---|
+| `account_cli_agy_missing` | `cli.py` |
+| `account_cli_block_ambiguous` | `config_edit.py` |
+| `account_cli_block_corrupt` | `config_edit.py` |
+| `account_cli_block_not_found` | `cli.py`, `config_edit.py` |
+| `account_cli_config_changed` | `config_edit.py` |
+| `account_cli_config_error` | `cli.py`, `config_edit.py` |
+| `account_cli_confirmation_required` | `cli.py` |
+| `account_cli_default_removal` | `cli.py` |
+| `account_cli_delete_home_unsafe` | `cli.py` |
+| `account_cli_doctor_failed` | `cli.py` |
+| `account_cli_expected_email_required` | `provision.py` |
+| `account_cli_isolation_leak` | `provision.py` |
+| `account_cli_isolation_unproven` | `provision.py` |
+| `account_cli_jobs_active` | `cli.py` |
+| `account_cli_login_failed` | `cli.py`, `provision.py` |
+| `account_cli_non_tty` | `provision.py` |
+| `account_cli_provision_failed` | `provision.py` |
+| `account_cli_write_failed` | `config_edit.py` |
 | `account_concurrency_limit` | `manager.py` |
 | `account_config_invalid` | `identity.py`, `registry.py` |
 | `account_disabled` | `manager.py` |
 | `account_error` | `errors.py` |
-| `account_home_invalid` | `registry.py` |
-| `account_home_permissions` | `registry.py` |
-| `account_identity_mismatch` | `identity.py` |
-| `account_identity_unknown` | `identity.py` |
-| `account_limit_exceeded` | `registry.py` |
-| `account_name_duplicate` | `registry.py` |
+| `account_home_invalid` | `provision.py`, `registry.py` |
+| `account_home_permissions` | `provision.py`, `registry.py` |
+| `account_identity_mismatch` | `cli.py`, `identity.py` |
+| `account_identity_unknown` | `identity.py`, `provision.py` |
+| `account_limit_exceeded` | `cli.py`, `registry.py` |
+| `account_name_duplicate` | `cli.py`, `registry.py` |
 | `account_name_invalid` | `registry.py` |
 | `account_none_enabled` | `manager.py`, `selection.py` |
-| `account_not_found` | `manager.py`, `registry.py` |
+| `account_not_found` | `cli.py`, `manager.py`, `registry.py` |
 | `account_transfer_conflict` | `transfer.py` |
 | `account_transfer_corrupt` | `transfer.py` |
 | `account_transfer_incomplete` | `transfer.py` |

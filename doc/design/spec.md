@@ -1052,6 +1052,75 @@ A job record directory in `store/jobs/` is eligible for removal if all of the fo
   4. In `--job` mode, if at least one requested ID was an eligible candidate and its deletion fails (or only a subset is deleted), manifest status is `"partial"`, `failed_ids` lists it, and CLI exits 1. Exit 2 with no manifest written occurs only when every requested ID is ineligible.
   5. The manifest is atomically replaced with permissions `0600` recording `status: "completed" | "partial"`, `mode`, `project` (if project mode), `planned_ids`, `removed_ids` (only actually deleted IDs), and `failed_ids` (failed or skipped IDs).
 
+## 24. Account Management CLI (D117)
+
+`agy-mcp account` is a human-run command over the same config and registry the
+server reads. It is never an MCP tool and never runs from an agent.
+
+### Entry point
+- `agy-mcp account <command>` and `python -m agy_mcp account <command>` are the
+  same CLI. `agy-mcp` / `python -m agy_mcp` with no subcommand, or with any
+  option that is not the literal first argument `account`, starts the stdio
+  server exactly as before.
+- `list` is read-only and offline by default. `--probe` runs one isolated
+  `/usage` per account; failures are informational.
+
+### Writing rules
+- Every writing command is a dry run without `--yes`; `--dry-run` wins.
+- A write takes `.<config>.lock`, writes a timestamped backup, then replaces
+  `config.toml` via temp file + `fsync` + `rename` with mode 0600.
+- Edits are conservative line spans, never a TOML round-trip. Blocks the CLI
+  writes are wrapped in `# agy-mcp:account <name> begin/end`; a hand-written
+  block is located by its parsed `name` and the removed/replaced span runs from
+  its `[[accounts]]` header to the next table header or EOF. Ambiguous or
+  corrupt blocks are refused.
+- The edited document is re-parsed with `tomllib` and the registry schema before
+  it is written. A concurrent change is refused. A running server does not
+  reload; every writing command prints the restart hint.
+
+### `add` (human login, never automation)
+- Validate the name, home, pool, cap and `max_accounts`; require stdin and
+  stdout to be terminals.
+- Create a real 0700 home (refuse a symlink/non-directory; keep and tighten an
+  existing directory).
+- For a fresh/empty home, run the isolated `/usage` and require an
+  `Authentication required` answer with no quota rows. Any quota row aborts with
+  `account_cli_isolation_leak` before login. A non-empty home is a resume and
+  skips this proof.
+- Launch interactive `agy` in `build_account_env` attached to the terminal. The
+  wrapper never supplies credentials, never automates login/sign-up and never
+  reads a token/keyring/cookie/credential file.
+- Verify the isolated `/usage`, ask for the expected email with hidden input,
+  compare the SHA-256 of the typed value with the observed login's digest, and
+  store only `expected_email_sha256`.
+- Copy the primary policy and write the minimal settings file when absent, both
+  0600. Append the block (or refresh an identical one without rewriting), run
+  the per-account doctor checks, and print the restart hint.
+- A failure after the home exists keeps the home and prints what was done plus
+  the exact resume command. `add` is idempotent and resumable.
+
+### `remove`, `enable`, `disable`
+- `remove default` is refused; use `enable/disable default`, which edits
+  `[default_account]`.
+- `remove` refuses while a pinned job is `queued`/`running` (exit 3) and, when
+  paused/resumable jobs are pinned, warns that they become unresumable and
+  requires the typed phrase `remove account <name>`. It removes only the block.
+- `--delete-home` requires a real directory (not a symlink) directly under the
+  configured root, no non-terminal pinned job, and the typed phrase
+  `delete account home <name>`; it never follows symlinks and prints the
+  server-side Google revocation reminder.
+- `enable`/`disable` flip only `enabled`. `disable` never refuses but warns about
+  active jobs (they finish, no new ones start) and about leaving no enabled
+  account.
+
+### Output and statuses
+- No command prints a full email; listings show names, flags, home/mode,
+  active/paused counts and identity-hash presence, and probes show masked emails
+  and quota.
+- Exit: 0 success/dry run, 2 usage/validation, 3 safety refusal, 4
+  conflict/missing target, 5 identity/isolation, 6 config/I/O, 1 unexpected.
+  The stable codes and the mapping are in `doc/reference/cli-accounts.md`.
+
 ## Sources
 
 - `src/agy_mcp/server.py` — MCP tool implementations and envelope definitions.

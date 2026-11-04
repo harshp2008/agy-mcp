@@ -16,7 +16,7 @@ table changes and `scripts/check_docs.py` fails until this page is refreshed.
 |---|---|---|
 | `HOME` | production | `fixtures_cli.py`, `jobs_cli.py` |
 | `PATH` | production | `util.py` |
-| `XDG_CONFIG_HOME` | production | `config.py` |
+| `XDG_CONFIG_HOME` | production | `config.py`, `config_edit.py` |
 | `XDG_STATE_HOME` | production | `jobs.py` |
 | `AGY_MCP_AGY_BINARY` | installer | `installer/install.sh` |
 | `AGY_MCP_ALLOW_INSIDE_DSH` | installer | `installer/install.sh` |

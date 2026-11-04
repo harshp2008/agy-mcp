@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- **Additive: a human-run `agy-mcp account` CLI (D117).** `account
+  list|add|remove|enable|disable` edits `config.toml` conservatively (one
+  line-span, `# agy-mcp:account <name> begin/end` markers for CLI-written
+  blocks, a timestamped backup, a file lock and temp+rename), refuses ambiguous
+  or hand-damaged blocks, and is a dry run unless `--yes` is passed. `add`
+  creates the 0700 home, proves the fresh home cannot see the host keyring via
+  the isolated `/usage` (dead D-Bus) and aborts on any quota row, then hands the
+  terminal to an isolated `agy` so the human signs in; it verifies the login,
+  asks for the expected email with `getpass`, stores only its SHA-256, copies the
+  permission policy, writes a minimal `settings.json` (both 0600, no
+  overwrite), appends the block and runs the doctor checks. It is idempotent and
+  resumable. `remove` refuses while a pinned job is active, warns and requires a
+  typed phrase for paused jobs, refuses the implicit default, and its optional
+  `--delete-home` refuses symlinks/other roots/non-terminal jobs. The wrapper
+  never authenticates, never reads a token/keyring/cookie and never prints a
+  full email. `python -m agy_mcp` with no subcommand still starts the MCP server;
+  the entry point is unchanged. Exit statuses and codes are in
+  `doc/reference/cli-accounts.md`.
 - **Change: the implicit `default` account is optional and verifiable.** A
   2026-11-05 human observation showed the default using the shared desktop
   keyring; after the Antigravity chat app switched accounts, plain

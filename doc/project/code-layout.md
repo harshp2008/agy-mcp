@@ -204,7 +204,8 @@ them (it only scans `src/agy_mcp/*.py`).
 ### `accounts/` (package)
 - **Purpose:** multi-account foundation: parse/validate `[[accounts]]` from
   `config.toml`, build the implicit `default` account, mask and verify account
-  emails, and build each account's sanitized child environment (D102–D104).
+  emails, build each account's sanitized child environment, and run the human
+  account CLI that provisions those homes (D102–D104, D117).
 - **Modules:**
   - `registry.py` — `AccountConfig`, `AccountRegistry`, `parse_accounts()`,
     `build_registry()`, `validate_account_home()`; reserves the `default` name,
@@ -235,6 +236,14 @@ them (it only scans `src/agy_mcp/*.py`).
     move (D111).
   - `doctor.py` — the read-only account checks behind `installer/install.sh
     --doctor` (D113).
+  - `config_edit.py` — conservative line-span edits of one `[[accounts]]`
+    block or the `[default_account]` table, timestamped backups, the config
+    file lock and the temp+rename write (D117).
+  - `provision.py` — create the 0700 home, prove isolation with the isolated
+    `/usage`, the interactive login seam, the hidden expected-email prompt and
+    the policy/settings placement (D117).
+  - `cli.py` — `agy-mcp account list|add|remove|enable|disable`, its safety
+    gates, output hygiene and exit-code mapping (D117).
   - `errors.py` — `AccountError` with a stable `.code`.
 - **Imports from `agy_mcp`:** `config.py` imports the registry; `env.py` imports
   `util.env_allowlist`; `identity.py` imports only `errors`.
@@ -245,8 +254,10 @@ them (it only scans `src/agy_mcp/*.py`).
   `tests/test_accounts_pools.py`, `tests/test_usage_account.py`,
   `tests/test_accounts_scheduler.py`, `tests/test_accounts_wiring.py`,
   `tests/test_accounts_transfer.py`, `tests/test_accounts_handoff_wiring.py`,
-  `tests/test_accounts_single_account_equivalence.py`.
-- **Implements:** D102–D111; full design in `doc/design/multi-account.md`.
+  `tests/test_accounts_single_account_equivalence.py`,
+  `tests/test_accounts_cli.py`, `tests/test_accounts_config_edit.py`.
+- **Implements:** D102–D117; full design in `doc/design/multi-account.md` and
+  the CLI reference `doc/reference/cli-accounts.md`.
 
 ### `audit.py`
 - **Purpose:** capture and compare the security baseline: worktree `.git`
@@ -557,7 +568,8 @@ them (it only scans `src/agy_mcp/*.py`).
 - **Purpose:** the FastMCP stdio server: register the ten tools, translate
   exceptions into standard error envelopes with path sanitization, parse CLI
   args, load config, create the state dir/logger/`JobManager`, and run startup
-  recovery and clean shutdown.
+  recovery and clean shutdown. `main()` also dispatches the literal `account`
+  subcommand to the human account CLI (D117); no subcommand starts the server.
 - **Public API:**
   - `get_manager()` / `set_manager()` — process-global manager accessors.
   - `make_error_envelope()` / `_format_error()` — uniform error payloads.
@@ -571,7 +583,7 @@ them (it only scans `src/agy_mcp/*.py`).
   `runner.LocalProcessRunner`.
 - **Called by:** `__main__.py`, `tests/server/test_server_e2e.py` (as a subprocess),
   `tests/server/test_server_unit.py`, `tests/test_config_fail_closed.py`, `tests/server/test_path_leaks.py`, `test_usage_tool.py`.
-- **Implements:** SPEC §8, §18; D56, D58, D59.
+- **Implements:** SPEC §8, §18, §24; D56, D58, D59, D117.
 
 ### `states.py`
 - **Purpose:** the authoritative job state enum, terminal-state set and
