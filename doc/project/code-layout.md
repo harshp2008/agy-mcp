@@ -791,6 +791,8 @@ by hand. It exists so a stale module list or line count fails CI.
 | `__init__.py` | 9 | _(no public definitions)_ |
 | `__main__.py` | 14 | _(no public definitions)_ |
 | `accounts.__init__.py` | 29 | _(no public definitions)_ |
+| `accounts.cli.py` | 868 | `CliSeams`; `cmd_list()`; `cmd_add()`; `cmd_remove()`; `cmd_toggle()`; `build_parser()`; `main()` |
+| `accounts.config_edit.py` | 606 | `AccountBlock` (`text`); `WriteResult`; `resolve_config_path()`; `read_config_text()`; `find_account_block()`; `remove_account_block()`; `append_account_block()`; `replace_account_block()`; `set_account_enabled()`; `set_default_enabled()`; `render_account_block()`; `validate_config_text()`; `write_config_text()` |
 | `accounts.doctor.py` | 351 | `DoctorFinding`; `doctor_report()`; `render_report()`; `main()` |
 | `accounts.env.py` | 45 | `build_account_env()` |
 | `accounts.errors.py` | 22 | `AccountError` |
@@ -798,7 +800,8 @@ by hand. It exists so a stale module list or line count fails CI.
 | `accounts.identity.py` | 123 | `mask_email()`; `email_sha256()`; `IdentityCheck`; `verify_identity()` |
 | `accounts.policy.py` | 81 | `PolicyCheck` (`account_rule_count`); `check_policy_parity()` |
 | `accounts.pools.py` | 226 | `WindowReading` (`remaining_pct`); `PoolReading` (`window`, `weekly`, `five_hour`); `AccountUsage` (`pool`, `pool_for_model`); `pool_for_model()`; `identity_pool_key()`; `account_usage_from_reading()` |
-| `accounts.registry.py` | 381 | `DefaultAccountConfig`; `AccountConfig` (`expanded_home`, `agy_home`, `pool_key`); `AccountRegistry` (`all`, `enabled`, `by_name`, `configured`); `parse_default_account()`; `parse_accounts()`; `build_registry()`; `validate_account_home()` |
+| `accounts.provision.py` | 392 | `ProvisionPaths`; `accounts_root()`; `default_home_value()`; `ensure_account_home()`; `home_is_empty()`; `probe_isolation()`; `run_interactive_login()`; `require_interactive_terminal()`; `verify_login()`; `read_expected_email()`; `copy_permission_policy()`; `write_settings()`; `provision_files()` |
+| `accounts.registry.py` | 426 | `DefaultAccountConfig`; `AccountConfig` (`expanded_home`, `agy_home`, `pool_key`); `AccountRegistry` (`all`, `enabled`, `by_name`, `configured`); `parse_default_account()`; `validate_account_name()`; `validate_account_home_value()`; `validate_account_pool()`; `validate_max_concurrent_jobs()`; `parse_account_entry()`; `parse_accounts()`; `build_registry()`; `validate_account_home()` |
 | `accounts.scheduler.py` | 640 | `estimate_cost()`; `schedule_account()`; `account_eligibility()`; `remaining_until_reset()` |
 | `accounts.scheduler_types.py` | 194 | `parse_utc()`; `format_utc()`; `CostEstimate`; `HistoryCostModel`; `SchedulerConfig`; `AccountState`; `JobRequest` (`validated`); `RankedAccount`; `TraceAccount`; `DecisionTrace`; `SchedulerResult` |
 | `accounts.selection.py` | 533 | `RejectedAccount`; `Selection` (`account_name`); `scheduler_config_from_config()`; `decision_trace_detail()`; `shared_identity_pools()`; `AccountSelector` (`select`) |
@@ -822,7 +825,7 @@ by hand. It exists so a stale module list or line count fails CI.
 | `recovery.py` | 356 | `check_process_liveness()`; `get_liveness_summary()`; `reconcile_on_startup()` |
 | `runner.py` | 361 | `RunnerError`; `PromptTooLargeError`; `ProcessHandle`; `read_proc_stat_field()`; `read_proc_start_time()`; `build_argv()`; `Runner` (`launch`, `poll`, `kill`, `cleanup`); `LocalProcessRunner` (`launch`, `poll`, `kill`, `cleanup`) |
 | `scratchpad.py` | 453 | `ScratchFile` (`ok`); `cap_text_bytes()`; `tail_text_bytes()`; `report_claims_tests_passed()`; `normalize_checklist()`; `build_plan_content()`; `write_metadata_file()`; `seed_scratchpad()`; `parse_plan_text()`; `read_scratchpad_file()`; `read_plan()`; `copy_to_jobdir()`; `format_plan_nudge()`; `format_state_block()` |
-| `server.py` | 611 | `get_manager()`; `set_manager()`; `make_error_envelope()`; `agy_start()`; `agy_status()`; `agy_wait()`; `agy_result()`; `agy_cancel()`; `agy_list()`; `agy_resume()`; `agy_review()`; `agy_cleanup()`; `agy_usage()`; `parse_args()`; `resolve_agy_binary()`; `setup_server()`; `main()` |
+| `server.py` | 624 | `get_manager()`; `set_manager()`; `make_error_envelope()`; `agy_start()`; `agy_status()`; `agy_wait()`; `agy_result()`; `agy_cancel()`; `agy_list()`; `agy_resume()`; `agy_review()`; `agy_cleanup()`; `agy_usage()`; `parse_args()`; `resolve_agy_binary()`; `setup_server()`; `main()` |
 | `states.py` | 180 | `JobState`; `StateTransition` |
 | `supervisor.py` | 1660 | `select_conversation_id()`; `JobSupervisor` (`terminate_group`, `tick`, `stop`, `run_loop`) |
 | `transcript.py` | 263 | `DeniedCall` (`to_dict`); `cli_step_to_transcript_step()`; `read_denied_calls()` |

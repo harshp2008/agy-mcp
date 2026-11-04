@@ -203,6 +203,81 @@ def parse_default_account(raw: Any) -> Optional[DefaultAccountConfig]:
     )
 
 
+def validate_account_name(value: Any) -> str:
+    """Validate and return one registry account name.
+
+    Public because the account CLI validates an argument before it writes
+    anything; it enforces exactly the rule :func:`_parse_account_entry` uses, so
+    the command and the config loader cannot drift. Raises
+    ``account_name_invalid`` and never touches the filesystem.
+    """
+    name = _require_string(value, "name")
+    if name == DEFAULT_ACCOUNT_NAME:
+        raise AccountError(
+            "'default' is reserved for the implicit account and cannot be declared",
+            code="account_name_invalid",
+        )
+    if not _NAME_RE.match(name):
+        raise AccountError(
+            "account name must match [a-z0-9][a-z0-9-]{0,31}",
+            code="account_name_invalid",
+        )
+    return name
+
+
+def validate_account_home_value(value: Any) -> Path:
+    """Validate and expand one account ``home`` value, returning its real path.
+
+    Shares the loader's rule (non-empty string, absolute after ``~`` expansion)
+    without checking that the directory exists; the CLI does that separately so
+    it can create a fresh home.
+    """
+    home = _require_string(value, "home")
+    expanded = os.path.expanduser(home)
+    if not os.path.isabs(expanded):
+        raise AccountError(
+            "account home must be an absolute path after ~ expansion",
+            code="account_home_invalid",
+        )
+    return Path(expanded)
+
+
+def validate_account_pool(value: Any) -> str:
+    """Validate and return one optional pool label (the loader's rule)."""
+    pool = _require_string(value, "pool")
+    if not _POOL_RE.match(pool):
+        raise AccountError(
+            "account pool must match [a-z0-9][a-z0-9-]{0,31}",
+            code="account_config_invalid",
+        )
+    return pool
+
+
+def validate_max_concurrent_jobs(value: Any) -> int:
+    """Validate one optional per-account concurrency cap (>= 1 integer)."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise AccountError(
+            "account max_concurrent_jobs must be an integer",
+            code="account_config_invalid",
+        )
+    if value < 1:
+        raise AccountError(
+            "account max_concurrent_jobs must be >= 1",
+            code="account_config_invalid",
+        )
+    return value
+
+
+def parse_account_entry(entry: Any) -> AccountConfig:
+    """Validate one raw ``[[accounts]]`` entry and return its parsed account.
+
+    Public wrapper around the loader's row parser so the account CLI can
+    re-validate the exact entry it is about to append, using the same rules and
+    stable codes as :func:`parse_accounts`.
+    """
+    return _parse_account_entry(entry)
+
+
 def _parse_account_entry(entry: Any) -> AccountConfig:
     if not isinstance(entry, dict):
         raise AccountError("each [[accounts]] entry must be a table", code="account_config_invalid")
@@ -220,34 +295,13 @@ def _parse_account_entry(entry: Any) -> AccountConfig:
             code="account_config_invalid",
         )
 
-    name = _require_string(entry["name"], "name")
-    if name == DEFAULT_ACCOUNT_NAME:
-        raise AccountError(
-            "'default' is reserved for the implicit account and cannot be declared",
-            code="account_name_invalid",
-        )
-    if not _NAME_RE.match(name):
-        raise AccountError(
-            "account name must match [a-z0-9][a-z0-9-]{0,31}",
-            code="account_name_invalid",
-        )
-
+    name = validate_account_name(entry["name"])
     home = _require_string(entry["home"], "home")
-    expanded = os.path.expanduser(home)
-    if not os.path.isabs(expanded):
-        raise AccountError(
-            f"account '{name}' home must be an absolute path after ~ expansion",
-            code="account_home_invalid",
-        )
+    validate_account_home_value(home)
 
     pool = entry.get("pool")
     if pool is not None:
-        pool = _require_string(pool, "pool")
-        if not _POOL_RE.match(pool):
-            raise AccountError(
-                f"account '{name}' pool must match [a-z0-9][a-z0-9-]{{0,31}}",
-                code="account_config_invalid",
-            )
+        pool = validate_account_pool(pool)
 
     enabled = entry.get("enabled", True)
     if not isinstance(enabled, bool):
@@ -257,16 +311,7 @@ def _parse_account_entry(entry: Any) -> AccountConfig:
 
     max_concurrent = entry.get("max_concurrent_jobs")
     if max_concurrent is not None:
-        if isinstance(max_concurrent, bool) or not isinstance(max_concurrent, int):
-            raise AccountError(
-                f"account '{name}' max_concurrent_jobs must be an integer",
-                code="account_config_invalid",
-            )
-        if max_concurrent < 1:
-            raise AccountError(
-                f"account '{name}' max_concurrent_jobs must be >= 1",
-                code="account_config_invalid",
-            )
+        max_concurrent = validate_max_concurrent_jobs(max_concurrent)
 
     expires_at = entry.get("expires_at")
     if expires_at is not None:

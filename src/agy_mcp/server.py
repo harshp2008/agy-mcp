@@ -575,8 +575,21 @@ def setup_server(
 
 
 def main(argv: Optional[list[str]] = None) -> None:
-    """Console script entrypoint for agy-mcp stdio server."""
-    args = parse_args(argv)
+    """Console script entrypoint: the MCP server, or the human account CLI.
+
+    ``agy-mcp`` with no subcommand (and ``python -m agy_mcp``) must keep starting
+    the stdio server exactly as before. Only the literal first argument
+    ``account`` is routed to :mod:`agy_mcp.accounts.cli`; the import is lazy so
+    the server path pays nothing for the CLI and the CLI is never a dependency of
+    normal startup (D117).
+    """
+    effective_argv = list(sys.argv[1:] if argv is None else argv)
+    if effective_argv and effective_argv[0] == "account":
+        from agy_mcp.accounts.cli import main as account_main
+
+        raise SystemExit(account_main(effective_argv[1:]))
+
+    args = parse_args(effective_argv)
     try:
         manager = setup_server(
             agy_binary=args.agy_binary,
