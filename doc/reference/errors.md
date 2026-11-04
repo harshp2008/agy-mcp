@@ -29,6 +29,7 @@ account-registry/identity codes and the two server-generated fallbacks
 |---|---|
 | `account_concurrency_limit` | `manager.py` |
 | `account_config_invalid` | `identity.py`, `registry.py` |
+| `account_disabled` | `manager.py` |
 | `account_error` | `errors.py` |
 | `account_home_invalid` | `registry.py` |
 | `account_home_permissions` | `registry.py` |
@@ -37,6 +38,7 @@ account-registry/identity codes and the two server-generated fallbacks
 | `account_limit_exceeded` | `registry.py` |
 | `account_name_duplicate` | `registry.py` |
 | `account_name_invalid` | `registry.py` |
+| `account_none_enabled` | `manager.py`, `selection.py` |
 | `account_not_found` | `manager.py`, `registry.py` |
 | `account_transfer_conflict` | `transfer.py` |
 | `account_transfer_corrupt` | `transfer.py` |
@@ -51,6 +53,7 @@ account-registry/identity codes and the two server-generated fallbacks
 | `checklist_too_long` | `manager.py` |
 | `cleanup_failed` | `manager.py` |
 | `concurrency_limit_exceeded` | `manager.py` |
+| `default_account_disabled` | `manager.py`, `selection.py` |
 | `forbidden_flag` | `runner.py` |
 | `handoff_checkpoint_failed` | `manager.py` |
 | `home_prohibited` | `worktree.py` |
@@ -159,6 +162,8 @@ fail-closed: a start or resume does not proceed.
 | `account_identity_unknown` | An expectation is configured but agy did not report an email. | Re-login the account; check that the CLI still logs `applyAuthResult`. |
 | `account_not_found` | An `account` name was requested that the registry does not contain, or a pinned job's account was removed. | Use a name from the registry or omit the override. |
 | `account_disabled` | The account is declared with `enabled = false`. | Enable it or use another account. |
+| `default_account_disabled` | The implicit `default` account is disabled by `[default_account] enabled = false`, and a caller named it explicitly or a job is pinned to it. The job is never silently moved. | Pass another enabled account, or set `[default_account] enabled = true`. |
+| `account_none_enabled` | No account at all is enabled (the default is disabled and every `[[accounts]]` entry is disabled or absent). | Enable the default or at least one declared account. |
 | `account_not_eligible` | An explicit `account` cannot take the job under the strict quota filter (`force` skips only this check). | Wait for the reset, use another account, or pass `force=true` for a quota-only override. |
 | `account_usage_unavailable` | That account's `/usage` failed, timed out, was unparsable, or failed identity verification. | Check the account login and the `reason`; the account is skipped for this start. |
 | `account_model_unavailable` | The account rejected the requested model. | Use a model that account accepts; model sets are per account. |

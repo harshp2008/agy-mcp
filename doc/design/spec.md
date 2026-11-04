@@ -275,7 +275,7 @@ The `plan`, `facts`, `agent_report` and `scratchpad` fields are wrapper-owned (D
   - `verify`: `Optional[str]` = `None` (Verification command, must be in `verify_allowlist`)
   - `checklist`: `Optional[List[str]]` = `None` (Optional PLAN.md seed; at most 30 items of at most 200 characters each, sanitized to single lines. When omitted the wrapper seeds the two default steps described in section 9.)
   - `verify_timeout_seconds`: `Optional[int]` = `None` (Per-job verify timeout; `None` uses the config's `verify_timeout_seconds`, default `900`. Must be 1..86400.)
-  - `account`: `Optional[str]` = `None` (Registry name to pin; `None` lets the scheduler choose. With no `[[accounts]]` registry only `default` is acceptable. An explicit account must pass identity/policy/model/cap checks; it must also pass the quota filter unless `force`.)
+  - `account`: `Optional[str]` = `None` (Registry name to pin; `None` lets the scheduler choose. With no `[[accounts]]` registry only `default` is acceptable, and only while `[default_account] enabled` is true (D116); an explicit disabled `default` is `default_account_disabled`. An explicit account must pass identity/policy/model/cap checks; it must also pass the quota filter unless `force`.)
   - `priority`: `str` = `"normal"` (`normal` or `background`; background may burn quota that is about to reset and never takes an account's last free slot while a normal job waits for it, D109).
   - `force`: `bool` = `False` (Skip only the quota filter/reservations for an explicit `account`; never skip identity, permission policy, home or the model/cap checks.)
 - **Returns:** Standard envelope, plus `account`/`account_email` only when a registry selected an account (`account_email` is masked). `state` is `"queued"` while worktree is provisioned and process spawned, transitioning to `"running"`. `branch` is the final `agy/<slug>-<shortid>` name: it is allocated once and persisted in `job.json` before this envelope is returned, so `agy_status`, `agy_wait`, `agy_review`, `agy_result`, `agy_cleanup` and git all report the same ref (D72).
@@ -361,11 +361,13 @@ The `plan`, `facts`, `agent_report` and `scratchpad` fields are wrapper-owned (D
 - *Safety:* Refuses cleanup if the worktree is dirty or the branch holds unmerged commits unless `force=True`. "Unmerged" means some commit reachable from the job branch is not reachable from the repository's current HEAD or from any other local branch (`rev-list --count <branch> --not HEAD <other local branches>`); a branch merged into an `integration` branch, or fast-forwarded into the default branch, is therefore deletable, and deletion uses `git branch -D` after that reachability gate. Squash and cherry-pick merges leave the original commits unreachable and stay refused (D70).
 
 #### 10. `agy_usage`
-- **Parameters:** None (read-only; it never starts, resumes, cancels, or mutates a job).
+- **Parameters:**
+  - `account`: `Optional[str]` = `None` (D116). `None` keeps the historical default reading. With `[default_account] enabled = false` and no name, the first enabled account by name order is read. A named account must be enabled; a disabled name is `default_account_disabled` / `account_disabled`, an unknown name is `account_not_found`, and no enabled account is `account_none_enabled`.
 - **Returns:**
   - `available`: `bool`; `reason`: `Optional[str]` (`unrecognized_format`, `timeout`, `auth_required`, `command_failed`, `unavailable`)
   - `cached`: `bool` (in-memory reading reused within 60s)
   - `account`: `{masked_email: str|null, auth_method: str|null, identity?: str}` (email always masked; `identity` appears only when an expectation is configured)
+  - `account_name`: `Optional[str]` (additive; present when a registry account was named or chosen by the disabled-default fallback, never in the plain default reading)
   - `groups`: `List[{name: str, buckets: List[{window: "weekly"|"5h", remaining_fraction: float, reset_time_utc: str|null, resets_in_seconds: int|null, low: bool}]}]`
 - Per-bucket `low` uses `low_quota_five_hour_pct` (default 15) and `low_quota_weekly_pct` (default 10).
 
@@ -784,6 +786,7 @@ Successful audit passes are not individually logged; only violations, state chan
 | `quota_error_patterns` | `List[str]` | `[]` | Regexes matched against stderr and cli.log tail to diagnose quota exhaustion; UNVERIFIED against real agy. |
 | `auth_error_patterns` | `List[str]` | `[]` | Regexes matched against stderr, cli.log tail, and `/usage` output to diagnose an expired login; UNVERIFIED against real agy. MUST NOT contain `not logged in` or a broader match: a healthy job logs `You are not logged into Antigravity.` before keyring auth succeeds (D63). |
 | `accounts` | `List[Table]` | `[]` | Additional accounts beyond the implicit `default` (D102–D104). Each entry: required `name` and absolute `home`; optional `pool`, `enabled`, `max_concurrent_jobs`, `expires_at`, and at most one of `expected_email`/`expected_email_sha256`. Invalid entries fail closed. |
+| `default_account` | `Table` | `null` | Optional table for the implicit `default` (D116): `enabled` (bool, default `true`) and at most one of `expected_email`/`expected_email_sha256`. `enabled = false` refuses the explicit/resumed default (`default_account_disabled`) and requires another enabled account (`account_none_enabled`); an expectation verifies the default like a declared account. Absent = today's behavior. |
 | `max_accounts` | `int` | `5` | Maximum **total** accounts including the implicit `default` (1..32). `[[accounts]]` may declare at most `max_accounts - 1` entries. |
 
 

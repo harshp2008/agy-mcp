@@ -34,7 +34,7 @@ client shows to a model) are the canonical "when to call / next action" wording.
 | `agy_resume` | `job_id`: string (required), `answer`: string (required), `follow_up`: boolean = false, `allow_handoff`: boolean = false |
 | `agy_review` | `job_id`: string (required) |
 | `agy_cleanup` | `job_id`: string (required), `remove_worktree`: boolean = true, `delete_branch`: boolean = false, `force`: boolean = false |
-| `agy_usage` | none |
+| `agy_usage` | `account`: string|null = null |
 <!-- END GENERATED: mcp-tools -->
 
 ## `agy_start`
@@ -203,12 +203,22 @@ successful readings), `account` (`masked_email`, `auth_method`) and `groups`
 `output_too_large`, `auth_required`, `command_failed`, `unrecognized_format`),
 not an error envelope. The email is always masked and is never persisted.
 
-- **Errors:** none for a usage failure; an unexpected internal failure is
-  `internal_error`.
+The optional `account` parameter names an `[[accounts]]` entry to read instead of
+the implicit default (D116). With no argument the historical default reading is
+unchanged. If `[default_account] enabled = false` and no account is named, the
+first enabled account by name is used and the additive `account_name` key reports
+which one; `account_name` is also present when a caller names an account
+explicitly. A named disabled account is a refusal (`default_account_disabled` or
+`account_disabled`), never a silent fallback, and an unknown name is
+`account_not_found`.
+
+- **Errors:** none for a usage failure; `default_account_disabled`,
+  `account_disabled`, `account_not_found`, `account_none_enabled` for the
+  selection errors above; an unexpected internal failure is `internal_error`.
 - **Example:**
 
 ```json
-{}
+{"account": "account-b"}
 ```
 
 ## Sources

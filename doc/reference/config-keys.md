@@ -50,6 +50,7 @@ removed; `scripts/check_docs.py` fails until it is.
 | `agy_home` | `str` | `"~/.gemini/antigravity-cli"` |
 | `timezone` | `str | null` | `null` |
 | `accounts` | `list[AccountConfig]` | `[]` |
+| `default_account` | `DefaultAccountConfig | null` | `null` |
 | `max_accounts` | `int` | `5` |
 | `account_cost_tokens_per_minute` | `int` | `35300` |
 | `account_cost_expected_minutes` | `int` | `30` |
@@ -94,6 +95,7 @@ removed; `scripts/check_docs.py` fails until it is.
 | `auth_error_patterns` | list of non-empty `str`, each a valid regex | Regexes matched against stderr, cli.log tail and `/usage` output to diagnose an expired login. Must not contain `not logged in`; a healthy job logs that line before keyring auth succeeds (D63). |
 | `timezone` | `null`, or a non-empty `str`; `local`/`system` are accepted, otherwise `zoneinfo.ZoneInfo(name)` must resolve | Calendar timezone for `daily_jobs_cap` and for rebuilding `daily_cap.json` (`get_daily_date`). `null`/`local`/`system` use the system zone. It does not change job timestamps: `job.json`, `audit.jsonl` and `usage.jsonl` stay UTC. |
 | `accounts` | array of tables; see [the multi-account design](../design/multi-account.md) | Additional accounts beyond the implicit `default`. Each entry needs `name` and an absolute `home`; optional `pool`, `enabled`, `max_concurrent_jobs`, `expires_at` and one of `expected_email`/`expected_email_sha256`. Invalid entries fail closed (`ConfigError`). |
+| `default_account` | table: `enabled` (`bool`, default `true`) and at most one of `expected_email`/`expected_email_sha256` | Optional table for the implicit default account (D116). Absent = today's enabled, no-expectation default. `enabled = false` removes it from scheduling and makes an explicit `default` a `default_account_disabled` refusal; at least one enabled account must remain (`account_none_enabled`). An expectation makes the default a verified identity like any `[[accounts]]` entry (mismatch = `account_identity_mismatch`). |
 | `max_accounts` | `int` (not `bool`), `1..32` | Maximum **total** accounts including the implicit `default`; `[[accounts]]` may declare at most `max_accounts - 1` entries. Exceeding it is `account_limit_exceeded`. |
 | `account_cost_tokens_per_minute` | `int` (not `bool`), `>= 1` | Cost-estimate rate for a job with no history (default 35300, the median of the seven calibration jobs). |
 | `account_cost_expected_minutes` | `int` (not `bool`), `>= 1` | Expected job duration used as the cost horizon; `max_minutes` is a ceiling, so the horizon is `min(max_minutes, this)`. |
@@ -121,9 +123,17 @@ verify_allowlist = ["pytest", "ruff"]
 
 `[[accounts]]` is described in full in
 [the multi-account design](../design/multi-account.md) and the user recipe in
-[accounts](../using/accounts.md). The implicit `default` account always exists
-and is not declared here, so a config with no `[[accounts]]` table is exactly the
-pre-multi-account configuration.
+[accounts](../using/accounts.md). The implicit `default` account is still what a
+config with no `[[accounts]]` table uses, so that configuration is exactly the
+pre-multi-account one. It can now be disabled or given an identity expectation
+with the optional `[default_account]` table (D116); it is never declared as an
+`[[accounts]]` entry.
+
+```toml
+[default_account]
+enabled = false                       # do not schedule the shared-keyring login
+# expected_email = "jordan.lee81@example.com"   # or expected_email_sha256
+```
 
 ## Sources
 

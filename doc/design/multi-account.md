@@ -7,7 +7,7 @@ Design for running `agy` jobs across several Google accounts the user
 legitimately owns, with per-account isolation, quota-aware selection, job
 pinning and conversation transfer. Every choice names a recommendation and the
 alternative it rejects; the normative rules are recorded as
-[D102](decisions.md#d102-multi-account-registry-and-implicit-default-account)–[D112](decisions.md#d112-cleaner-compatibility-with-new-job-fields).
+[D102](decisions.md#d102-multi-account-registry-and-implicit-default-account)–[D116](decisions.md#d116-the-implicit-default-account-is-optional-and-verifiable).
 With no `[accounts]` configuration the existing single-account behavior is
 unchanged; that is a testable invariant, not an intention.
 
@@ -43,17 +43,65 @@ Validation (all fail closed with a stable code in
 | `expires_at` is an ISO-8601 timestamp | `account_config_invalid` |
 | at most one of `expected_email` / `expected_email_sha256`; the hash is 64 lowercase hex | `account_config_invalid` |
 
-The **implicit `default` account always exists**, using today's real
-`home`/`agy_home` and no isolation override; it cannot be declared, renamed or
-disabled. `[[accounts]]` entries are *additional* accounts, so the total is
-`1 + len(accounts)` and must be ≤ `max_accounts` (default 5, i.e. up to four
-extra). Every N≥1 path (registry, scheduler, envelopes, tests) is exercised for
-N=1, 2 and 5 total accounts, including two accounts sharing a `pool`. More than
-`max_accounts` is a startup error, not a silent truncation.
+```toml
+max_accounts = 5
+
+[default_account]
+enabled = true                          # optional; default true
+# expected_email = "<primary full address>"  # or expected_email_sha256
+```
+
+The **implicit `default` account** exists unless `enabled = false`, uses today's
+real `home`/`agy_home`, and is never declared as an `[[accounts]]` entry. The
+optional `[default_account]` table can disable it or give it the same identity
+expectation as a declared account (D116). `[[accounts]]` entries are *additional*
+accounts, so the total is `1 + len(accounts)` and must be ≤ `max_accounts`
+(default 5, i.e. up to four extra). Every N≥1 path (registry, scheduler,
+envelopes, tests) is exercised for N=1, 2 and 5 total accounts, including two
+accounts sharing a `pool`. More than `max_accounts` is a startup error, not a
+silent truncation.
+
+**Why the default became optional.** The 2026-11-05 observation: the implicit
+default reads the shared desktop keyring, which the Antigravity chat app rewrites
+on an account switch. It silently became the same login as `account-b`, and
+because it had no identity expectation nothing noticed while the scheduler
+counted one quota pool twice (finding 16). The rule is therefore "no account is
+implicitly trusted": the default can be disabled, can be verified, and must
+never be the only enabled account.
+
+### A1. Disabled and verified default
+
+- `enabled = false`: the scheduler never picks it; an explicit
+  `account="default"` is refused with `default_account_disabled`; a job already
+  pinned to it (including an old record whose `account` is `None`) fails resume
+  with the same code and is **never** silently moved; if no account remains
+  enabled the registry refuses with `account_none_enabled`.
+- `expected_email` / `expected_email_sha256` (at most one): the identity check
+  runs on start, resume and `agy_usage` exactly like a declared account. A
+  mismatch is `account_identity_mismatch` (or `account_identity_unknown`) and no
+  job is created.
+- No table and no `[[accounts]]`: byte-identical to the pre-multi-account
+  behavior (single-account job records, usage shape and error codes).
+
+### A2. One login is one quota pool
+
+Every registry-scoped `/usage` probe records a non-reversible digest of the
+observed address (never the address itself). When two enabled accounts report
+the same digest and at least one verified an expectation, they get one
+`scheduler` pool key (`identity:<masked>`): the minimum remaining governs both,
+and reservations are summed once. For the implicit default, the declared
+account's isolated reading is authoritative because the keyring reading can
+change under the desktop app. A duplicate group where every name is unverified is
+reported by the doctor (`shared_identity`) but not merged, because the legacy
+masked shape cannot prove the two names are one login. The doctor also warns
+(`shared_keyring`) when the default is enabled without an expectation while
+other accounts exist; neither advisory fails the doctor.
 
 **Rejected alternatives.** A separate per-account config file (two sources of
 truth, harder installer); an environment-only registry (invisible, untestable);
-making `default` declarable (breaks the "no registry = today" invariant).
+making `default` declarable (breaks the "no registry = today" invariant); always
+merging every equal masked value (the legacy first-two mask is not an identity
+proof, and it would silently collapse genuinely separate accounts).
 
 ## B. Email handling
 
@@ -374,12 +422,17 @@ unmodified.
   `HOME=<home> DBUS_SESSION_BUS_ADDRESS=unix:path=/dev/null agy -p "/usage"`
   and confirm `Authentication required`; the **human** logs in interactively;
   confirm the account's own quota; copy the primary permission policy; add the
-  `[[accounts]]` entry. The wrapper never logs in or out.
-- `--doctor` (read-only, masked emails, never logs in): registry parses;
-  each home exists with mode 0700; permission policy matches; expected email
-  matches (via a short `/usage` probe with the account env); isolation env is
-  effective; `pool` labels are sane. Findings are warnings, exit 1 on any
-  problem, like today's doctor.
+  `[[accounts]]` entry. The wrapper never logs in or out. The same recipe is
+  documented once for the main account ("Recommended setup: all accounts
+  isolated") with `[default_account] enabled = false`, so no agy-mcp account
+  depends on the shared keyring.
+- `--doctor` (read-only, masked emails, never logs in): registry parses; the
+  implicit default is probed while enabled; each home exists with mode 0700;
+  permission policy matches; expected email matches (via a short `/usage` probe
+  with the account env); isolation env is effective; `pool` labels are sane.
+  `shared_keyring` (default without an expectation, other accounts exist) and
+  `shared_identity` (two enabled names report one login) are advisories that do
+  not fail; a real problem still exits 1, like today's doctor.
 - Installer: documents and optionally prints the recipe; it never creates a
   login, never runs `agy auth`/login, never writes into an account home except
   the policy copy the human explicitly requests (`--account-recipe` prints, it
@@ -395,7 +448,7 @@ credentials); doctor writing anything (read-only is the contract).
 | Wrong account used | Expected email/hash verification before start; masked email in every envelope |
 | Keyring leak | Non-default accounts always get the dead D-Bus override; doctor checks the env |
 | Token file permissions | Account home 0700; agy's file fallback is 0600 (observed) |
-| Desktop-app logout | Never touches the default keyring for non-default accounts; the default path is unchanged |
+| Desktop-app logout | Never touches the default keyring for declared accounts; a verified duplicate is one pool; the recommended setup disables the default |
 | Exhaustion races | One `concurrency_lock` for count, cap and reservation; per-account reservations |
 | Clock skew on resets | Eligibility and `resume_after` come from `/usage` resets, not the local clock; wait durations are computed from the injected clock and re-checked |
 | Corrupt/locked transfer db | SQLite header check, lock, fallback to summary handoff, source kept until success |
@@ -451,16 +504,20 @@ At most eight; each has the default this design proceeds with when unattended.
 
 ## Sources
 
-- `src/agy_mcp/config.py` — config schema, permission path, defaults.
+- `src/agy_mcp/config.py` — config schema, permission path, defaults, `default_account`.
+- `src/agy_mcp/accounts/registry.py` — registry validation, `DefaultAccountConfig`, `parse_default_account`.
+- `src/agy_mcp/accounts/selection.py` — shared-identity pool keys and the disabled-default gates.
+- `src/agy_mcp/accounts/doctor.py` — `shared_keyring` and `shared_identity` advisories.
 - `src/agy_mcp/util.py` — child env allowlist.
-- `src/agy_mcp/usage.py` — `/usage` parsing, cache key, `usage.jsonl`.
+- `src/agy_mcp/usage.py` — `/usage` parsing, cache key, the observed-identity digest, `usage.jsonl`.
 - `src/agy_mcp/worktree.py` — HOME preflight and permission inspection.
-- `src/agy_mcp/manager.py` — start/resume, caps, usage guard.
+- `src/agy_mcp/manager.py` — start/resume, caps, usage guard, `agy_usage` account choice.
 - `src/agy_mcp/supervisor.py` — exhaustion detection, run-time accumulation.
 - `src/agy_mcp/models.py` — Job fields and schema version.
 - `src/agy_mcp/cleanup/jobs_cli.py` — cleaner's job.json handling.
 - `src/agy_mcp/cleanup/store_io.py` — fail-closed job.json loader.
 - `doc/findings-and-experiments/08-quota-calibration.md` — cost coefficients.
 - `doc/findings-and-experiments/15-multi-account-recon.md` — isolation and transfer facts.
+- `doc/findings-and-experiments/16-shared-keyring-default-collision.md` — the 2026-11-05 collision.
 - `doc/audits/2026-11-03-multi-account/02-code-map.md` — single-account assumptions.
 - `tests/frozen.sha256` — the frozen cleaner contract.

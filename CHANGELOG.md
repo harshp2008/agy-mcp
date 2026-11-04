@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+- **Change: the implicit `default` account is optional and verifiable.** A
+  2026-11-05 human observation showed the default using the shared desktop
+  keyring; after the Antigravity chat app switched accounts, plain
+  `agy -p "/usage"` returned `account-b`'s exact quota and the scheduler counted
+  one pool as two. The new optional `[default_account]` table has `enabled`
+  (default `true`) and at most one of `expected_email`/`expected_email_sha256`.
+  With `enabled = false` the scheduler never picks default, an explicit
+  `account="default"` is `default_account_disabled`, a job pinned to default
+  fails resume with that code instead of moving, and no enabled account is
+  `account_none_enabled`. An expectation verifies the default exactly like an
+  `[[accounts]]` entry. With no table and no `[[accounts]]` behavior is unchanged
+  (D116; finding 16).
+- **Additive: `agy_usage` takes an optional `account` parameter.** No argument
+  keeps the historical default reading; with the default disabled it reads the
+  first enabled account by name and reports it in the new `account_name` key. A
+  named disabled account is refused, never silently replaced. The non-frozen
+  `tests/fixtures/tools_schema.json` and wrapper snapshot were updated
+  deliberately.
+- **Fix: one verified login is one quota pool (D116).** Every registry-scoped
+  `/usage` probe now carries a non-reversible SHA-256 digest of the observed
+  login. Enabled accounts with the same digest are merged under one pool key when
+  at least one verified an identity expectation, so a duplicate identity cannot
+  be scheduled as two independent quota buckets. The doctor reports
+  `shared_identity` for any duplicate login and `shared_keyring` (advisory, never
+  a failure) when the default is enabled without an expectation and other
+  accounts exist.
+- **Docs: "Recommended setup: all accounts isolated".** The user recipe now
+  explains how to log the main account into its own HOME, copy the permission
+  policy, declare it, and disable the shared-keyring default, so agy-mcp never
+  depends on the desktop keyring.
 - **Fix: a full quota window no longer counts as expiring quota.** Real `/usage`
   reports an untouched window at `100%` remaining with a rolling placeholder
   reset (for example, both five-hour rows on an untouched account show the same

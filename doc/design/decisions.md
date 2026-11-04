@@ -861,9 +861,21 @@ Append-only record of architectural, security, and design decisions across agy-m
   4. The full-window margin is a validated config key, not a buried literal; the trace cap is a named constant with a docstring.
 - *Tests:* table-driven urgency/full-window cases including the 96%-used/1-hour worked example and a full-window alternative, the tunable-margin boundary, burn-binding-window selection, N=1/2/5 accounts, a shared pool, background priority, trace content/rule/rank, the audit emission and no-registry byte-identical detail, the trace cap, and the planted-email hygiene test.
 
+### D116: The implicit default account is optional and verifiable
+- *Rationale:* A 2026-11-05 human observation: the implicit `default` account used the shared desktop keyring. The Antigravity chat app writes that keyring when the user switches accounts, so `default` silently became the same login as the configured `account-b`; plain `agy -p "/usage"` returned account-b's exact quota. `default` had no identity expectation, so nothing noticed, and the scheduler counted one quota pool as two accounts. The user wants every agy-mcp account to be an isolated HOME, including the main account, so agy-mcp never depends on the shared keyring.
+- *Rule:*
+  1. The new optional `[default_account]` table has `enabled` (bool, default true) and at most one of `expected_email` / `expected_email_sha256`, validated exactly like an `[[accounts]]` entry. With no table and no `[[accounts]]` the built registry, the scheduler path, `agy_usage` and `job.json` are byte-identical to before.
+  2. With `enabled = false`, the scheduler never picks `default`, an explicit `account="default"` is refused with `default_account_disabled`, a job already pinned to default (including a legacy `account=None` record) fails resume with the same code and is never moved, and a registry with no enabled account fails with `account_none_enabled`.
+  3. An expectation makes the default verifiable: the identity check runs on start, resume and `agy_usage` exactly like a declared account, and a mismatch is `account_identity_mismatch` / `account_identity_unknown` and never starts.
+  4. `agy_usage` gains an optional `account` parameter. No argument keeps the historical default reading; with the default disabled and no argument, the first enabled account by name is used and the additive `account_name` key reports which one. A named disabled account is refused, never silently replaced.
+  5. Shared-pool safety: every registry-scoped `/usage` probe carries a non-reversible digest of the observed login. Enabled accounts with the same digest are one quota pool when at least one member verified an expectation; the declared account's isolated reading is authoritative for the implicit default. A group where every name is unverified is reported by the doctor but not merged, because the legacy masked shape cannot prove identity.
+  6. The doctor warns (never fails) when the default is enabled, has no expectation, and other accounts exist (`shared_keyring`), and reports two enabled accounts with the same observed login (`shared_identity`).
+  7. The recommended setup documents isolating the main account into its own HOME and disabling the default, so agy-mcp never touches the shared keyring.
+- *Tests:* config parsing and validation for the table; 0/1/2/5 accounts; default disabled (start, explicit name, resume of a pinned legacy job, no enabled account); default expectation match/mismatch; verified duplicate pool merge and unverified doctor report; `agy_usage` with/without an account and with the default disabled; no-table single-account equivalence; the updated non-frozen tool schema and wrapper snapshot.
+
 ## Sources
 
-- `src/agy_mcp/` — codebase architecture and implementations corresponding to D1–D115.
+- `src/agy_mcp/` — codebase architecture and implementations corresponding to D1–D116.
 - `tests/` — automated test suites validating architectural and security decisions.
 
 
