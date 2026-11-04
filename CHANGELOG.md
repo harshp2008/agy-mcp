@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Fix: `account add` proves isolation as soon as agy asks for authentication.**
+  On a fresh home real `agy -p "/usage"` prints
+  `Authentication required...` and then keeps running for its own 60 s login
+  timeout without exiting, so the old proof waited for exit and failed with
+  `account_cli_isolation_unproven` (reason: timeout). The proof now reads the
+  probe's merged stdout/stderr incrementally, records the pass on the marker,
+  and terminates the probe's process group (SIGTERM, then SIGKILL after 2 s).
+  Output after the marker, including the OAuth state URL, is never logged or
+  stored. A probe that exits on its own is evaluated as before, a logged-in
+  home still aborts with `account_cli_isolation_leak`, and a silent hang still
+  times out with `account_cli_isolation_unproven`.
 - **Additive: a human-run `agy-mcp account` CLI (D117).** `account
   list|add|remove|enable|disable` edits `config.toml` conservatively (one
   line-span, `# agy-mcp:account <name> begin/end` markers for CLI-written

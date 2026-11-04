@@ -80,9 +80,13 @@ block text, changes nothing and exits 0. With `--yes` it:
 3. creates the home as a real directory with mode 0700 (an existing directory is
    kept and tightened; a symlink is refused);
 4. for a fresh or empty home, proves isolation by running the isolated
-   `/usage` and requiring `Authentication required` with **no** quota rows. Any
-   quota rows are a keyring leak (`account_cli_isolation_leak`, exit 5) and no
-   login starts. A non-empty home is treated as a resume and skips this proof;
+   `/usage` and requiring `Authentication required` with **no** quota rows. The
+   proof ends as soon as the marker appears: it reads the probe's merged output
+   incrementally and terminates the probe's process group, rather than waiting
+   for agy's own 60 s login timeout. The URL that follows the marker is never
+   logged or stored. Any quota rows are a keyring leak
+   (`account_cli_isolation_leak`, exit 5) and no login starts. A non-empty home
+   is treated as a resume and skips this proof;
 5. launches interactive `agy` in the isolated environment (`HOME=<home>`, dead
    `DBUS_SESSION_BUS_ADDRESS`) attached to the terminal, so the **human** signs
    in;

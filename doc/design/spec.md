@@ -1084,9 +1084,12 @@ server reads. It is never an MCP tool and never runs from an agent.
 - Create a real 0700 home (refuse a symlink/non-directory; keep and tighten an
   existing directory).
 - For a fresh/empty home, run the isolated `/usage` and require an
-  `Authentication required` answer with no quota rows. Any quota row aborts with
-  `account_cli_isolation_leak` before login. A non-empty home is a resume and
-  skips this proof.
+  `Authentication required` answer with no quota rows. Read the probe's merged
+  output incrementally and end the proof as soon as that marker appears,
+  terminating the probe's process group instead of waiting for agy's own login
+  timeout. Nothing after the marker (including any auth URL) is logged or
+  stored. Any quota row aborts with `account_cli_isolation_leak` before login.
+  A non-empty home is a resume and skips this proof.
 - Launch interactive `agy` in `build_account_env` attached to the terminal. The
   wrapper never supplies credentials, never automates login/sign-up and never
   reads a token/keyring/cookie/credential file.

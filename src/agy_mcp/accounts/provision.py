@@ -13,10 +13,14 @@ import getpass
 import json
 import os
 import shutil
+import signal
 import stat
 import subprocess
 import tempfile
+import threading
+import time
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -24,11 +28,20 @@ from agy_mcp.accounts.env import build_account_env
 from agy_mcp.accounts.errors import AccountError
 from agy_mcp.accounts.registry import AccountConfig
 from agy_mcp.config import AGY_PERMISSION_CONFIG_REL
-from agy_mcp.usage import read_usage_once
+from agy_mcp.usage import (
+    MAX_USAGE_STREAM_BYTES,
+    USAGE_PROMPT,
+    mask_email,
+    matches_patterns,
+    parse_auth_line,
+    parse_usage_output,
+    read_usage_once,
+)
 
 DEFAULT_ACCOUNTS_ROOT = Path("~/.local/share/agy-accounts")
 ADD_PROBE_TIMEOUT_SECONDS = 45.0
 AUTH_REQUIRED_PATTERN = "Authentication required"
+PROBE_TERMINATE_GRACE_SECONDS = 2.0
 SETTINGS_REL = Path(".gemini") / "antigravity-cli" / "settings.json"
 
 LoginRunner = Callable[[AccountConfig, Path, str], int]
@@ -112,6 +125,178 @@ def home_is_empty(home: Path) -> bool:
         return False
 
 
+def _probe_unavailable(reason: str, account: Optional[dict] = None) -> dict:
+    """Return an unavailable reading without ever carrying probe output."""
+    return {
+        "available": False,
+        "reason": reason,
+        "groups": [],
+        "account": account or {"masked_email": None, "auth_method": None},
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _terminate_probe_group(proc: "subprocess.Popen[bytes]") -> None:
+    """Stop the whole probe process group (SIGTERM, then SIGKILL after 2 s).
+
+    The unauthenticated agy process keeps running while it waits for its own
+    60 s login timeout. The isolation proof is already decided when the marker
+    appears, so this function must not let that wait outlive the probe.
+    """
+    try:
+        pgid = os.getpgid(proc.pid)
+    except OSError:
+        pgid = proc.pid
+    try:
+        os.killpg(pgid, signal.SIGTERM)
+    except (ProcessLookupError, PermissionError, OSError):
+        pass
+    try:
+        proc.wait(timeout=PROBE_TERMINATE_GRACE_SECONDS)
+    except Exception:
+        pass
+    try:
+        os.killpg(pgid, signal.SIGKILL)
+    except (ProcessLookupError, PermissionError, OSError):
+        pass
+    try:
+        proc.wait(timeout=PROBE_TERMINATE_GRACE_SECONDS)
+    except Exception:
+        pass
+
+
+def _probe_usage_stream(
+    account: AccountConfig,
+    agy_binary: str,
+    timeout_seconds: float,
+) -> dict:
+    """Run the isolated ``/usage`` probe and stop as soon as auth is required.
+
+    Real agy prints ``Authentication required`` on a fresh home and then keeps
+    running for its own 60 s login timeout. Waiting for exit would time out even
+    though the isolation fact is already known. This reads merged stdout/stderr
+    incrementally, records a boolean when the marker appears, and terminates the
+    process group immediately. Output after the marker (which can carry OAuth
+    state) is discarded and never logged or returned.
+    """
+    tmp_dir = Path(tempfile.mkdtemp(prefix="agy-usage-"))
+    try:
+        try:
+            os.chmod(tmp_dir, 0o700)
+        except OSError:
+            pass
+        log_file = tmp_dir / "usage.log"
+        env = build_account_env(account, tmp_dir)
+        argv = [
+            str(agy_binary),
+            "--log-file",
+            str(log_file),
+            "--output-format",
+            "json",
+            "-p",
+            USAGE_PROMPT,
+        ]
+        try:
+            proc = subprocess.Popen(
+                argv,
+                cwd=str(tmp_dir),
+                env=env,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+            )
+        except (OSError, ValueError):
+            return _probe_unavailable("unavailable")
+
+        marker = AUTH_REQUIRED_PATTERN.encode("utf-8")
+        chunks: list[bytes] = []
+        seen_marker = threading.Event()
+
+        def _read_output() -> None:
+            fd = proc.stdout.fileno() if proc.stdout is not None else -1
+            if fd < 0:
+                return
+            tail = b""
+            while True:
+                try:
+                    chunk = os.read(fd, 4096)
+                except OSError:
+                    return
+                if not chunk:
+                    return
+                chunks.append(chunk)
+                scan = tail + chunk
+                if marker in scan:
+                    seen_marker.set()
+                # Keep enough of the previous chunk to match a marker split
+                # across two os.read boundaries.
+                tail = scan[-(len(marker) - 1):] if len(marker) > 1 else b""
+
+        reader = threading.Thread(
+            target=_read_output, name="agy-probe-reader", daemon=True
+        )
+        reader.start()
+
+        deadline = time.monotonic() + timeout_seconds
+        early = False
+        timed_out = False
+        while True:
+            if seen_marker.is_set():
+                early = True
+                break
+            if proc.poll() is not None:
+                break
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                timed_out = True
+                break
+            seen_marker.wait(min(0.05, remaining))
+
+        if early or timed_out:
+            _terminate_probe_group(proc)
+        reader.join(timeout=PROBE_TERMINATE_GRACE_SECONDS)
+        combined = b"".join(chunks)
+
+        if timed_out:
+            return _probe_unavailable("timeout")
+        if len(combined) > MAX_USAGE_STREAM_BYTES:
+            return _probe_unavailable("output_too_large")
+        if early:
+            # The marker alone is the proof. Do not inspect, store or return
+            # anything that followed it: it can contain an OAuth state URL.
+            return _probe_unavailable("auth_required")
+
+        combined_text = combined.decode("utf-8", errors="replace")
+        log_text = ""
+        if log_file.is_file():
+            try:
+                if log_file.stat().st_size <= MAX_USAGE_STREAM_BYTES:
+                    log_text = log_file.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                log_text = ""
+        email, auth_method = parse_auth_line(log_text)
+        account_info = {
+            "masked_email": mask_email(email) if email else None,
+            "auth_method": auth_method or None,
+        }
+        combined_all = "\n".join([combined_text, log_text])
+        if matches_patterns(combined_all, [AUTH_REQUIRED_PATTERN]):
+            return _probe_unavailable("auth_required", account_info)
+        if proc.returncode != 0:
+            return _probe_unavailable("command_failed", account_info)
+        reading = parse_usage_output(combined_text)
+        if not reading.get("available"):
+            return _probe_unavailable(
+                str(reading.get("reason") or "unrecognized_format"), account_info
+            )
+        reading["account"] = account_info
+        reading["fetched_at"] = datetime.now(timezone.utc).isoformat()
+        return reading
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
 def probe_isolation(
     account: AccountConfig,
     agy_binary: str,
@@ -119,17 +304,13 @@ def probe_isolation(
 ) -> dict:
     """Prove the home is isolated: require an auth-required answer and no quota.
 
-    Runs the same isolated ``/usage`` the doctor and scheduler use. Quota rows
-    for a home that was never logged in mean the keyring leaked; the caller must
-    abort before logging in. Returns the unavailable reading so the caller can
-    quote its reason.
+    Runs the same isolated ``/usage`` the doctor and scheduler use, but ends as
+    soon as the auth-required marker is printed. Quota rows for a home that was
+    never logged in mean the keyring leaked; the caller must abort before
+    logging in. Returns the unavailable reading so the caller can quote its
+    reason.
     """
-    reading = read_usage_once(
-        agy_binary,
-        account=account,
-        timeout_seconds=timeout_seconds,
-        auth_error_patterns=[AUTH_REQUIRED_PATTERN],
-    )
+    reading = _probe_usage_stream(account, agy_binary, timeout_seconds)
     if reading.get("available") is True:
         raise AccountError(
             "the isolated /usage returned quota rows for a home that was never "
